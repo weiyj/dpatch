@@ -1,0 +1,140 @@
+<div id="repos"></div>
+{% if user.is_authenticated %}
+<div id="dialognew" title="New Git Repo" style="display:none">
+<div id="dialogedit" title="Edit Git Repo" style="display:none">
+{% endif %}
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+{% if user.is_authenticated %}
+			function onGridLoadSuccess(grid) {			
+				$("#repos .edit").click(function () {
+					id = $(this).attr('id');
+					ajaxShowDialog("#dialogedit", "GET",
+							   "/sysadmin/gitrepo/edit/" + id + '/', {})
+				});
+				$("#repos .status").click(function () {
+					id = $(this).attr('id');
+					showModelDialog('/sysadmin/gitrepo/enable/' + id + '/', {},
+								'GET', '#repos');
+				});
+			}
+{% endif %}
+
+			$('#repos').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'Git Repo',
+				url: '/sysadmin/gitrepo/list',
+				method: 'GET',
+				colModel : [ { display: 'ID', name : 'id', width : 32, align: 'left'},
+				             { display: 'Name', name : 'name', width : 120, align: 'left'},
+				             { display: 'User', name : 'user', width : 80, align: 'left'},
+				             { display: 'Email', name : 'email', width : 160, align: 'left'},
+				             { display: 'URL', name : 'url', width : 420, align: 'left'},
+				             { display: 'Status', name : 'status', width : 80, align: 'left'},
+				             { display: 'Action', name : 'action', width : 80, align: 'center'},],
+				usepager: true,
+{% if user.is_authenticated %}
+				showCheckbox: true,
+				buttons : [ { name : 'Add', bclass : 'add', onpress: onGitRepoNew },
+				            { name : 'Delete', bclass : 'delete', onpress: onGitRepoDelete},
+				            { separator : true } ],
+{% else %}
+				showCheckbox: false,
+{% endif %}
+				onSuccess: onGridLoadSuccess,
+			});
+
+{% if user.is_authenticated %}
+			function getGridSelected() {
+				var ids = [];
+				$('#repos tr.trSelected').each( function(){
+					id = $(this).find("td:eq(2)").eq(0).text();
+				   	ids.push(id);
+				});
+				return ids;
+			}
+
+			function onGitRepoDelete() {
+				var ids = getGridSelected();
+				if (ids.length < 1) {
+					alert('DELETE ERROR: at least one row must be selected!');
+					return;
+				}
+				showModelDialog("/sysadmin/gitrepo/delete/", {'ids': ids.join()}, 'GET', '#repos');
+			}
+
+			function onGitRepoNew() {				
+				ajaxShowDialog("#dialognew", "GET", "/sysadmin/gitrepo/add/", {})
+			}
+
+			function doNewRepoPost() {
+	      		name = $(this).find("input[id=name]").eq(0).val();
+	      		user = $(this).find("input[id=user]").eq(0).val();
+	      		email = $(this).find("input[id=email]").eq(0).val();
+	      		url = $(this).find("input[id=url]").eq(0).val();
+	      		if (name.length == 0) {
+	      			alert('Name can not be null');
+	      			return 0;
+	      		} 
+				$(this).dialog("close");
+	      		showModelDialog('/sysadmin/gitrepo/add/',
+							{'name': name, 'user': user, 'email': email, 'url': url},
+							'POST', '#repos');
+			}
+
+			$('#dialognew').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 480,
+				height:240,
+				buttons:
+					[{
+						text: "Save",
+				      	click: doNewRepoPost
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}],
+			});
+
+			function doEditRepoPost() {
+	      		id = $(this).find("input[id=id]").eq(0).val();
+	      		name = $(this).find("input[id=name]").eq(0).val();
+	      		user = $(this).find("input[id=user]").eq(0).val();
+	      		email = $(this).find("input[id=email]").eq(0).val();
+	      		url = $(this).find("input[id=url]").eq(0).val();
+	      		if (name.length == 0) {
+	      			alert('Name can not be null');
+	      			return 0;
+	      		} 
+				$(this).dialog("close");
+	      		showModelDialog('/sysadmin/gitrepo/edit/' + id + '/',
+							{'name': name, 'user': user, 'email': email, 'url': url},
+							'POST', '#repos');
+			}
+
+			$('#dialogedit').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 480,
+				height:240,
+				buttons:
+					[{
+						text: "Save",
+				      	click: doEditRepoPost
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}],
+			});
+{% endif %}
+		});
+	})(jQuery);
+</script>

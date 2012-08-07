@@ -1,0 +1,15 @@
+<input id="id" type="hidden" value="{{ patch.id }}">
+<table>
+	<tr>
+		<td>Title:</td>
+		<td><input id="title" type="text" name="title" maxlength="80" size="50" value="{{ patch.title }}"></td>
+	</tr>
+	<tr>
+		<td>Description:</td>
+		<td><textarea id="desc" rows="4" cols="50" name="desc">{{ patch.desc }}</textarea></td>
+	</tr>
+	<tr>
+		<td>Emails:</td>
+		<td><textarea id="emails" rows="6" cols="50" name="emails">{{ patch.emails}}</textarea></td>
+	</tr>
+</table>

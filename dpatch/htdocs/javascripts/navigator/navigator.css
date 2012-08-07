@@ -1,0 +1,63 @@
+@charset "utf-8";
+/* navigation */
+
+.ui-nav {
+	background: #F4785B url(images/nav_bg_body.gif) repeat-x scroll 0 0;
+	padding-bottom: 1px;
+	border-bottom: 2px solid #CE161F;
+}
+
+.ui-nav ul {
+	background: url(images/nav_bg.gif) no-repeat scroll left -99px transparent;
+	height:33px;
+	padding:0 0 0 2px;
+	margin:0 25px;
+	overflow:hidden;
+}
+
+.ui-nav ul li.ui-nav-menu {
+	background:url(images/nav_bg.gif) no-repeat left top;
+	margin: 0;
+	list-style:none;
+	list-style-image: none;
+	background:url(images/nav_bg.gif) no-repeat left top;
+	float:left;
+	height:33px;
+}
+
+.ui-nav ul li.ui-nav-menu a.ui-nav-link {
+	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+	background:url(images/nav_btn_right.gif) no-repeat right top;
+	display:block;
+	text-decoration:none;
+	line-height:33px;
+	font-size:12px;
+	font-family:Arial, Helvetica, sans-serif;
+	padding:0 28px 0 28px;
+	font-weight:bold;
+	color:#fff;
+}
+
+.ui-nav ul li.ui-nav-menu.hover {
+	background-position:right -66px;
+}
+
+.ui-nav ul li.ui-nav-menu a.ui-nav-link.hover {
+	background-position:right -66px;	
+}
+
+.ui-nav ul li.ui-nav-selected {
+	background-position:0 -33px;
+}
+
+.ui-nav ul li.ui-nav-selected.hover {
+	background-position:0 -66px;
+}
+
+.ui-nav ul li.ui-nav-selected a.ui-nav-link {   
+	background-position:right -33px;
+}
+
+.ui-nav ul li.ui-nav-selected a.ui-nav-link.hover {
+	background-position:right -66px;
+}

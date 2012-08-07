@@ -1,0 +1,103 @@
+<script language="JavaScript" type="text/javascript" src="/javascripts/SmartWizard/jquery.smartWizard-2.0.js"></script>
+<link type="text/css" href="/javascripts/SmartWizard/smart_wizard.css" rel="stylesheet">
+
+<div id="wizard" class="swMain">
+	<ul>
+		<li>
+			<a href="#step-1">
+				<label class="stepNumber">1</label>
+				<span class="stepDesc">Step 1<br />
+					<small>Patch Review</small>
+                		</span>
+            	</a>
+            </li>
+		<li>
+			<a href="#step-2">
+				<label class="stepNumber">2</label>
+				<span class="stepDesc">Step 2<br />
+					<small>Patch Check</small>
+                		</span>
+            	</a>
+            </li>
+		<li>
+			<a href="#step-3">
+				<label class="stepNumber">3</label>
+				<span class="stepDesc">Step 3<br />
+					<small>Send Test</small>
+                		</span>
+            	</a>
+            </li>
+		<li>
+			<a href="#step-4">
+				<label class="stepNumber">4</label>
+				<span class="stepDesc">Step 4<br />
+					<small>Send Mail</small>
+                		</span>
+            	</a>
+            </li>
+	</ul>
+	<div id="step-1">
+		step1
+	</div>
+	<div id="step-2">
+		step2
+	</div>
+	<div id="step-3">
+		step3
+	</div>
+	<div id="step-4">
+		step4
+	</div>
+</div>
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+	  		$('#wizard').smartWizard({
+	  			contentURL: '/patch/send/wizard/{{ patchid }}/step/',
+	  			contentCache: false,
+	  			transitionEffect:'slideleft',
+	  			onLeaveStep: leaveAStepCallback,
+	  			onFinish:onFinishCallback
+	  		});
+
+			function leaveAStepCallback(obj){
+				var step_num= obj.attr('rel');
+				return validateSteps(step_num);
+			}
+
+			function validateSteps(step){
+				var isStepValid = true;
+				if (step == 2) {
+					errors = $("#step-2").find("div[id='steperrors']").length
+					if (errors) {
+						isStepValid = false;
+		      			msg = 'You did not pass the test';
+		      			$('#wizard').smartWizard('showMessage', msg);
+					}
+				}
+		      	if (step == 3) {
+					errors = $("#step-3").find("div[id='steperrors']").length
+					if (errors) {
+						isStepValid = false;
+		      			msg = 'You did not pass the test';
+		      			$('#wizard').smartWizard('showMessage', msg);
+		      			return isStepValid;
+					}
+		      		checked = $("#step-3").find("input[id='warnning']").eq(0).attr("checked");
+		      		if (!checked) {
+		      			isStepValid = false;
+		      			msg = 'You must agree with the warnning';
+		      			$('#wizard').smartWizard('showMessage', msg);
+		      			}
+		      		}
+		      	return isStepValid;
+		      	}
+
+			function onFinishCallback() {
+				$('#patchlist').flexReload();
+				$("#dialogsend").dialog('close');
+			}
+		});
+	})(jQuery);
+</script>
+

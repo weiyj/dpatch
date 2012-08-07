@@ -1,0 +1,75 @@
+.s_cfx:before, .s_cfx:after { content: "\0020"; display: block; height: 0; overflow: hidden; }
+.s_cfx:after { clear: both; }
+.s_cfx { zoom: 1; }
+
+
+.splitterMask {
+	position:absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background-image: url(images/spacer.gif);
+	z-index: 20000;
+}
+.container_splitter {
+	height:100%;
+	margin:7px;
+	padding:0;
+}
+.container_splitter .splitter {
+	height:100%;
+	width:100%;
+	margin:0;
+	padding:0;
+}
+.container_splitter .splitter .sidebar {
+	float:left;
+	width:15%;
+	height:100%;
+	border:solid 1px #848174;
+	overflow: auto;
+	white-space: nowrap;
+}
+.container_splitter .splitter .content {
+	width:100%;
+	height:100%;
+	float: right;
+	background-color: white;
+	border:solid 1px #848174;
+}
+
+/* Splitbar styles; these are the default class names and required styles */
+.splitbarV {
+	float:left;
+	width:10px;
+	height:100%;
+	line-height:0px;
+	font-size:0px;
+}
+.splitbuttonV {
+	top:40%;
+	position:relative;
+	height:41px;
+	width:10px;
+	background:transparent url(images/expand.png) no-repeat top left;
+}
+.splitbuttonV.invert {
+	margin-left: -1px;
+	border-left: 1px solid #707070;
+	background:transparent url(images/collapse.png) no-repeat  top left;
+}
+.splitbarV.working,.splitbarH.working {
+	-moz-opacity:.50;
+	filter:alpha(opacity=50);
+	opacity:.50;
+  background-color: #EEE;
+  border: 1px solid #CCC;
+}
+.splitbuttonV.working,.splitbuttonH.working {
+	-moz-opacity:.85;
+	filter:alpha(opacity=85);
+	opacity:.85;
+}
+

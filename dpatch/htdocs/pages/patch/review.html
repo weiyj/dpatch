@@ -1,0 +1,30 @@
+<script language="JavaScript" type="text/javascript" src="/javascripts/syntaxhighlighter/scripts/shCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/syntaxhighlighter/scripts/shBrushDiff.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/syntaxhighlighter/scripts/shBrushCpp.js"></script>
+
+<table width="100%" style="border: solid 1px #CBCBCB;background-color: #EFF2ED;border-spacing:0;">
+	<tr>
+		<td>Diff </td>
+	</tr>
+	<tr>
+		<td valign='top'><pre class="brush: diff">{{ patch.diff }}</pre></td>
+	</tr>
+</table>
+<br>
+<table width="100%" style="border: solid 1px #CBCBCB;background-color: #EFF2ED;">
+	<tr>
+		<td>Source File</td>
+	</tr>
+	<tr>
+		<td><pre class="brush: c">{{ src }}</pre></td>
+	</tr>
+</table>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			SyntaxHighlighter.all();
+			SyntaxHighlighter.highlight();
+		});
+	})(jQuery);
+</script>

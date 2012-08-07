@@ -1,0 +1,33 @@
+<pre>
+	Check Includes Engine
+
+Find and remove files included more than once.
+
+This engine checks for duplicate includes. It also has support
+to remove them in place and automake patch for kernel source
+files.
+
+Some times many include files is under #ifdef's, this engine
+try to dec
+
+This engine try to check whether some include files can be
+duplicate include in one file using gcc -E option for preprocessing
+a falk file, 
+
+	#define __FILE_H_
+	#include <file.h>
+
+If the preprocessing is empty, we will treat this include file
+can be duplicate includes, otherwise, this file.
+
+# checkincludes: find/remove files included more than once
+#
+# Copyright abandoned, 2000, Niels Kristian Bech Jensen <nkbj@image.dk>.
+# Copyright 2009 Luis R. Rodriguez <mcgrof@gmail.com>
+#
+# This script checks for duplicate includes. It also has support
+# to remove them in place. Note that this will not take into
+# consideration macros so you should run this only if you know
+# you do have real dups and do not have them under #ifdef's. You
+# could also just review the results.
+</pre>

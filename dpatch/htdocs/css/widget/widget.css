@@ -1,0 +1,118 @@
+/* Widgets */
+.dashboard {
+    height: 100%;
+    //background-color: rgb(238, 238, 238);
+    background-color: #fff,
+    border: 1px solid rgb(204, 204, 204);
+    padding: 5px;
+}
+
+.widget_placeholder {
+    border: 2px dashed #CAE0E2;
+    float: left;
+    height: 188px;
+    margin: 0 3px;
+    position: relative;
+    width: 500px;
+}
+.widget {
+    border: 2px solid transparent;
+    float: left;
+    margin: 0 3px;
+    position: relative;
+    width: 500px;
+    height: 280px;
+    font-size: 11px;
+}
+.widget .w_wc {
+    position: relative;
+}
+.widget .w_tp > .right, .widget .w_md > .right, .widget .w_bt > .right {
+    display: block;
+    position: absolute;
+    right: -1px;
+    top: 0;
+    width: 3px;
+}
+.widget .w_tp {
+    background: url("images/widgetbox_bg.png") no-repeat scroll left top transparent;
+    cursor: move;
+    height: 18px;
+    padding: 10px;
+}
+.widget .w_tp > .right {
+    background: url("images/widgetbox_bg.png") no-repeat scroll right top transparent;
+    height: 38px;
+}
+.widget .w_tp .icon {
+    float: right;
+}
+.widget .w_tp .icon a.btn_refresh {
+    background: url("images/icon_refresh.png") no-repeat scroll 0 0 transparent;
+}
+.widget .w_tp .icon a.btn_setting {
+    background: url("images/icon_edit.png") no-repeat scroll 0 0 transparent;
+}
+.widget .w_tp .icon a.btn_close {
+    background: url("images/icon_close.png") no-repeat scroll 0 0 transparent;
+}
+.widget .w_tp .icon a {
+    cursor: pointer;
+    float: right;
+    height: 16px;
+    margin-left: 2px;
+    padding: 0;
+    width: 16px;
+}
+.widget .w_tp .icon a:hover {
+    background-position: 0 -16px;
+}
+.widget .w_tp .icon a:active {
+    background-position: 0 -32px;
+}
+.widget .w_tp .title {
+    color: #676767;
+    float: left;
+    font-size: 1.1em;
+    font-weight: bold;
+    line-height: 1.3em;
+    overflow: hidden;
+    text-align: left;
+    white-space: nowrap;
+}
+.widget .w_md {
+    background: url("images/widgetbox_bg.png") no-repeat scroll 0 -38px transparent;
+    font-size: 12px;
+    height: 220px;
+    max-height: 280px;
+    min-height: 110px;
+    overflow: hidden;
+    padding: 10px 10px 0;
+}
+.widget .w_md > .right {
+    background: url("images/widgetbox_bg.png") no-repeat scroll right -38px transparent;
+    padding-bottom: 10px;
+    height: 220px;
+}
+.widget .w_bt {
+    background: url("images/widgetbox_bg.png") no-repeat scroll left bottom transparent;
+    height: 20px;
+}
+.widget .w_bt > .right {
+    background: url("images/widgetbox_bg.png") no-repeat scroll right bottom transparent;
+    height: 20px;
+}
+.widget .w_bt .w_details {
+    background: url("images/widgetbox_details.png") no-repeat scroll 0 0 transparent;
+    border: 0 none;
+    bottom: 9px;
+    display: block;
+    height: 19px;
+    position: absolute;
+    right: 0;
+    text-decoration: none;
+    width: 22px;
+}
+.widget a {
+    color: #0066CC !important;
+}

@@ -1,0 +1,18 @@
+<center><h2><font color=red>WARNNING</font></h2></center>
+
+<p>
+You saw this warnning because you have passed all the tests of patch
+send wizard. But this does not mean that you patch has no errors, so
+you also need to do at least the build test, and function test if you
+think you must to do. After all the thing be done, the patch can be
+send to comm.
+</p>
+<p>
+<b>After you press the 'Next' button, the patch will be sent to the
+following address:</b>
+{% for mail in emails %}
+	<br>&nbsp;&nbsp;&nbsp;&nbsp;<font color=green><b>{{ mail }}</b></font>
+{% endfor %}
+</p>
+<br>
+<input id="warnning" type="checkbox">I agree with above warnning.

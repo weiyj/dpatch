@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{% block title %}Dailypatch{% endblock %} - Dailypatch</title>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/jquery-1.7.2.min.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/jquery-ui-1.8.18.custom.min.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/navigator/navigator.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/splitter/splitter.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/lists/lists.js"></script>
+    <script language="JavaScript" type="text/javascript" src="/javascripts/common.js"></script>
+
+    <link type="text/css" href="/css/base/jquery.ui.all.css" rel="stylesheet">
+    <link type="text/css" href="/javascripts/navigator/navigator.css" rel="stylesheet">
+    <link type="text/css" href="/javascripts/lists/lists.css" rel="stylesheet">
+    <link type="text/css" href="/javascripts/flexigrid/flexigrid.css" rel="stylesheet">
+    <link type="text/css" href="/javascripts/syntaxhighlighter/styles/shCoreDefault.css" rel="stylesheet"/>
+    <link type="text/css" href="/css/style.css" rel="stylesheet">
+    {% block headers %}{% endblock %}
+  </head>
+
+  <body>
+    <div id="dp_header">
+      <a class="dp_logo" href="/"></a>
+      <ul id="dp_header_links" data-dropdown="dropdown">
+{% if user.is_authenticated %}
+        <li class="dropdown">
+          Welcome, <strong>{{ user.username }}</strong>
+        </li>
+        <li><a href="/user/logout/">Logout</a></li>
+{% else %}
+        <li class="dropdown">
+          Welcome
+        </li>
+        <li><a href="/user/login/">Login</a></li>
+{% endif %}
+      </ul>
+    </div>
+
+    <div id='navs'>
+      <ul>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/patchstatus">Patch Status</a></li>
+        <li><a href="/patchengine">Patch Engine</a></li>
+        <li><a href="/event">Logs & Events</a></li>
+{% if user.is_authenticated %}
+        <li><a href="/administration">Administration</a></li>
+{% endif %}
+        <!--li><a href="">Help</a></li-->
+      </ul>
+    </div>
+    {% block body %}{% endblock %}
+ 
+<script type="text/javascript">
+(function($) {
+		$(document).ready(function () {
+ 		});
+})(jQuery);
+</script>
+ 
+  </body>
+</html>

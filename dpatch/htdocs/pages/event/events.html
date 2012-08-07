@@ -1,0 +1,23 @@
+<div id="eventlist"></div>
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			$('#eventlist').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'Events',
+				url: '/event/events/data/',
+				method: 'GET',
+				colModel : [ { display: 'Date', name : 'date', width : 120, align: 'left'},
+				             { display: 'User', name : 'user', width : 120, align: 'left'},
+				             { display: 'Event', name : 'event', width : 480, align: 'left'},
+				             { display: 'Status', name : 'status', width : 80, align: 'left'}],
+				showCheckbox: false,
+				singleSelect: true,
+				usepager: true,
+			});
+		});
+	})(jQuery);
+</script>

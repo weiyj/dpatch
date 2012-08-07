@@ -1,0 +1,15 @@
+<script language="JavaScript" type="text/javascript" src="/javascripts/syntaxhighlighter/scripts/shCore.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/syntaxhighlighter/scripts/shBrushDiff.js"></script>
+
+<div id='patch' style="float:right;position:absolute;top:0px;background-color:#FFF;filter: alpha(opacity=30);">
+	<pre class="brush: diff">{{ patchctx }}</pre>
+</div>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			SyntaxHighlighter.all();
+			SyntaxHighlighter.highlight();
+		});
+	})(jQuery);
+</script>

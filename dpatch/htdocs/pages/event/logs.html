@@ -1,0 +1,42 @@
+<div id="logs"></div>
+<div id="dialogdetail" title="Log Detail Information" style="display:none">
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			function onGridLoadSuccess(grid) {			
+				$("#logs .detail").click(function () {
+					id = $(this).attr('id');
+					ajaxShowDialog("#dialogdetail", "GET",
+							   "/event/logs/detail/" + id + '/', {})
+				});
+			}
+
+			$('#logs').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'Scan Logs',
+				url: '/event/logs/data/',
+				method: 'GET',
+				colModel : [ { display: 'Start Time', name : 'start', width : 120, align: 'left'},
+				             { display: 'End Time', name : 'end', width : 120, align: 'left'},
+				             { display: 'Repo Name', name : 'repo', width : 80, align: 'left'},
+				             { display: 'Tag Name', name : 'tag', width : 80, align: 'left'},
+				             { display: 'Description', name : 'desc', width : 420, align: 'left'},
+				             { display: 'Actions', name : 'actions', width : 80, align: 'center'},],
+				showCheckbox: false,
+				singleSelect: true,
+				usepager: true,
+				onSuccess: onGridLoadSuccess,
+			});
+
+			$('#dialogdetail').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 640,
+				height:400,
+			});
+		});
+	})(jQuery);
+</script>

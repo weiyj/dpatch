@@ -1,0 +1,104 @@
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+
+<div class='subtoptitle'>SMTP Mail Server</div>
+
+<form method="post" action="#">
+	<table>
+		<tr>
+			<td>SMTP Server Name:</td>
+			<td><input id="server" type="text" maxlength="80" size="40" value="{{smtpserver}}"/>*</td>
+		</tr>
+		<tr>
+			<td>SMTP Server Port:</td>
+			<td><input id="port" type="text" maxlength="80" size="40" value="{{smtpserverport}}"/>*</td>
+		</tr>
+		<tr>
+			<td>SMTP Encryption:</td>
+			<td><input id="crypt" type="text" maxlength="80" size="40" value="{{smtpencryption}}"/>*</td>
+		</tr>
+		<tr>
+			<td>User Name:</td>
+			<td><input id="user" type="text" maxlength="80" size="40" value="{{smtpuser}}"/>*</td>
+		</tr>
+		<tr>
+			<td>Password:</td>
+			<td><input id="password" type="password" maxlength="80" size="40" value="{{smtppass}}"/>*</td>
+		</tr>
+		<tr>
+			<td>Email Address:</td>
+			<td><input id="from" type="text" maxlength="80" size="40" value="{{from}}"/>*</td>
+		</tr>
+		<tr>
+			<td colspan=2 align='center'>
+	<div class="input">
+              <button id='apply' class="btn danger">Apply</button>&nbsp;&nbsp;&nbsp;&nbsp;
+              <button class="btn danger" onclick="this.form.reset();return false;">Reset</button>
+      </div>
+			</td>
+		</tr>
+	</table>
+</form>
+
+<script type="text/javascript">
+(function($) {
+		$(document).ready(function () {
+			function getvalue(name) {
+				return $('#' + name).eq(0).val();
+			}
+
+			$('#apply').click(function () {
+				server = getvalue('server');
+				port = getvalue('port');
+				crypt = getvalue('crypt');
+				user = getvalue('user');
+				password = getvalue('password');
+				from = getvalue('from');
+
+				if (server.length == 0) {
+					alert("Server Name field is required.")
+					return false;
+				}
+
+				if (port.length == 0) {
+					alert("Server Port field is required.")
+					return false;
+				}
+
+				if (crypt.length == 0) {
+					alert("Encryption field is required.")
+					return false;
+				}
+
+				if (user.length == 0) {
+					alert("User Name field is required.")
+					return false;
+				}
+
+				if (password.length == 0) {
+					alert("Password field is required.")
+					return false;
+				}
+
+				if (from.length == 0) {
+					alert("Email Address field is required.")
+					return false;
+				}
+				server = getvalue('server');
+				port = getvalue('port');
+				crypt = getvalue('crypt');
+				user = getvalue('user');
+				password = getvalue('password');
+				from = getvalue('from');
+
+				args = {'server': server,
+					  'port': port,
+					  'crypt': crypt,
+					  'user': user,
+					  'password': password,
+					  'from': from};
+				showModelDialog('/sysadmin/gitemail/', args, 'POST', '');
+				return false;
+			});
+ 		});
+})(jQuery);
+</script>

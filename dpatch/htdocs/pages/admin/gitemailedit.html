@@ -1,0 +1,31 @@
+<div class='title'>SMTP Mail Server</div>
+<form method="post" action="/sysadmin/gitemail/">
+	{% csrf_token %}
+	<table>
+		<tr>
+			<td>SMTP Server Name:</td>
+			<td><input id="user" type="text" maxlength="80" size="40" value="{{smtpserver}}"/>*</td>
+		</tr>
+		<tr>
+			<td>SMTP Server Port:</td>
+			<td><input id="email" type="text" maxlength="80" size="40" value="{{smtpserverport}}"/>*</td>
+		</tr>
+		<tr>
+			<td>SMTP Encryption:</td>
+			<td><input id="name" type="text" maxlength="80" size="40" value="{{smtpencryption}}"/>*</td>
+		</tr>
+		<tr>
+			<td>User Name:</td>
+			<td><input id="url" type="text" maxlength="80" size="40" value="{{smtpuser}}"/>*</td>
+		</tr>
+		<tr>
+			<td>Password:</td>
+			<td><input id="url" type="text" maxlength="80" size="40" value="{{smtppass}}"/>*</td>
+		</tr>
+		<tr>
+			<td>Email Address:</td>
+			<td><input id="url" type="text" maxlength="80" size="40" value="{{from}}"/>*</td>
+		</tr>
+	</table>
+	<input type="submit" value="Save"/>
+</form>

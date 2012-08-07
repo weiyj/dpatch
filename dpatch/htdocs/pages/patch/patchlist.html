@@ -1,0 +1,197 @@
+<div id="patchlist"></div>
+<div id="dialog" title="Patch" style="display:none">
+<div id="dialogsend" title="Patch Send" style="display:none">
+<div id="dialogedit" title="Edit Patch" style="display:none">
+<div id="review" title="Review Patch" style="display:none" height="100%">
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		function onGridDoubleClick(e, row) {
+			var id = row.find("td:eq(2)").eq(0).text();
+			$('#review').load('/patch/review/' + id);
+			$('#review').dialog('open');
+		}
+
+		function onGridLoadSuccess(grid) {			
+			$("#patchlist .detail").click(function () {
+				id = $(this).attr('id');
+				$('#dialog').load('/patch/' + id);
+				$('#dialog').dialog('open');
+			});
+			$("#patchlist .edit").click(function () {
+				id = $(this).attr('id');
+				$.ajax({
+					type: "GET",
+					url: '/patch/edit/' + id,
+					success: function(data){
+						$("#dialogedit").html(data).dialog('open'); 
+					},
+					error: function(xhr, status, throwerr){
+					}
+				});				
+			});
+			$("#patchlist .send").click(function () {
+				id = $(this).attr('id');
+				$.ajax({
+					type: "GET",
+					url: '/patch/send/wizard/' + id,
+					success: function(data){
+						$("#dialogsend").html(data).dialog('open');
+					},
+					error: function(xhr, status, throwerr){
+					}
+				});	
+			});
+		}
+
+{% if user.is_authenticated %}
+		function getGridSelected() {
+			var ids = [];
+			$('#patchlist tr.trSelected').each( function(){
+				id = $(this).find("td:eq(2)").eq(0).text();
+			   ids.push(id);
+			});
+			return ids;
+		}
+
+		function showModelDialog(url, args, type) {
+			$.blockUI(); 
+			$.ajax({
+				type: type,
+				url: url,
+				data: args,
+				success: function(data){
+					$.blockUI({ message: "<h1>" + data + "</h1>" });
+					setTimeout($.unblockUI, 1000);
+					$('#patchlist').flexReload();
+				},
+				error: function(xhr, status, throwerr){
+					$.blockUI({ message: "<h1>ERROR: " + url + "</h1>" });
+					setTimeout($.unblockUI, 1000);
+				}
+			});
+		}
+
+		function alertBox(msg) {
+			$.blockUI({ message: "<h1>" + msg + "</h1>" });
+			//$('.blockOverlay').click($.unblockUI);
+			setTimeout($.unblockUI, 1000);			
+		}
+
+		function doPatchMerge() {
+			var ids = getGridSelected();
+
+			if (ids.length < 2) {
+				alertBox("MERGER ERROR: at least two rows must be selected!");
+			} else {
+				showModelDialog("/patch/merge/", {'ids': ids.join()}, 'GET')
+			}
+		}
+
+		function doPatchUnMerge() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('UNMERGER ERROR: at least one row must be selected!');
+			} else {
+				showModelDialog("/patch/unmerge/", {'ids': ids.join()}, 'GET');
+			}
+		}
+
+		function doPatchDelete() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('DELETE ERROR: at least one row must be selected!');
+			} else {
+				showModelDialog("/patch/delete/", {'ids': ids.join()}, 'GET');
+			}
+		}
+{% endif %}
+
+		$(document).ready(function () {
+			$('#patchlist').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'Tag {{ tag }}',
+				url: '/patch/list/{{ tag }}/data/',
+				method: 'GET',
+				colModel : [ { display: 'ID', name : 'id', width : 30, align: 'center'},
+				             { display: 'TITLE', name : 'title', width : 360, align: 'left'},
+				             { display: 'FILENAME', name : 'file', width : 240, align: 'left'},
+				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
+				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
+				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
+				             { display: 'ACTION', name : 'action', width : 120, align: 'center'},],
+				searchitems : [ {display: 'Title', name : 'title'},
+				            	 {display: 'Filename', name : 'file'},
+				            	 {display: 'Status', name : 'status'},
+				            	 {display: 'Type', name : 'type', isdefault: true}],
+				rp: 15,
+				usepager: true,
+{% if user.is_authenticated %}
+				showCheckbox: true,
+				buttons : [ { name : 'Merge', bclass : 'merge', onpress : doPatchMerge },
+				            { name : 'Unmerge', bclass : 'unmerge', onpress : doPatchUnMerge },
+				            { separator : true },
+				            { name : 'Delete', bclass : 'delete', onpress : doPatchDelete },
+				            //{ separator : true },
+					      //{ name : 'Save To File', bclass : 'mail',  },
+				            { separator : true } ],
+{% else %}
+				showCheckbox: false,
+				singleSelect: true,
+{% endif %}
+				onRowDoubleClick: onGridDoubleClick,
+				onSuccess: onGridLoadSuccess,
+			});
+
+			$('#dialog').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 860,
+				height:480
+			});
+
+			$('#review').dialog({
+				autoOpen: false,
+				modal: true,
+				width: $(window).width() - 84,
+				height: $(window).height() - 84,
+			});
+
+			$('#dialogsend').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 800,
+				height: 540,
+				resizable: false,
+			});
+
+			$('#dialogedit').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 600,
+				resizable: false,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		id = $(this).find("input[id=id]").eq(0).val();
+				      		title = $(this).find("input[id=title]").eq(0).val();
+				      		desc = $(this).find("textarea[id=desc]").eq(0).val();
+				      		emails = $(this).find("textarea[id=emails]").eq(0).val();
+							$(this).dialog("close");
+				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails}, 'POST');
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}],
+			});
+		});
+	})(jQuery);
+</script>

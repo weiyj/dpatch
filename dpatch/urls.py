@@ -1,0 +1,107 @@
+import os
+
+from django.conf.urls import patterns, include, url
+from django.conf import settings
+
+from django.contrib.auth import views as auth_views
+
+# Uncomment the next two lines to enable the admin:
+from django.contrib import admin
+admin.autodiscover()
+
+htdocs = os.path.join(settings.ROOT_DIR, 'htdocs')
+
+urlpatterns = patterns('',
+    # Examples:
+    # url(r'^$', 'dpatch.views.home', name='home'),
+    # url(r'^dpatch/', include('dpatch.foo.urls')),
+
+    # Uncomment the admin/doc line below to enable admin documentation:
+    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    # Uncomment the next line to enable the admin:
+    url(r'^admin/', include(admin.site.urls)),
+
+    url(r'^javascripts/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': os.path.join(htdocs, 'javascripts')}),
+    url(r'^images/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': os.path.join(htdocs, 'images')}),
+    url(r'^css/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': os.path.join(htdocs, 'css')}),
+
+    url(r'^engine/(?P<path>.*\.html)$', 'django.views.static.serve',
+        {'document_root': os.path.join(htdocs, 'pages/engine')}),
+
+    # login/logout
+    url(r'^user/login/$', auth_views.login,
+        {'template_name': 'login.html'},
+        name = 'auth_login'),
+    url(r'^user/logout/$', auth_views.logout,
+        {'next_page': '/'},
+        name = 'auth_logout'),
+)
+
+urlpatterns += patterns('dpatch.views.base',
+    url(r'^$', 'dashboard'),
+    url(r'^dashboard/$', 'dashboard'),
+    url(r'^patchstatus/$', 'patchstatus'),
+    url(r'^patchengine/$', 'patchengine'),
+    url(r'^event/$', 'patchevent'),
+    url(r'^administration/$', 'administration'),
+)
+
+urlpatterns += patterns('dpatch.views.patch',
+    url(r'^patch/list/(?P<tag_name>[^/]*)/data/$', 'patchlistdata'),
+    url(r'^patch/list/(?P<tag_name>[^/]*)/$', 'patchlist'),
+    url(r'^patch/(?P<patch_id>\d+)/$', 'showpatch'),
+    url(r'^patch/merge/$', 'patchlistmerge'),
+    url(r'^patch/unmerge/$', 'patchunmerge'),
+    url(r'^patch/delete/$', 'patchdelete'),
+    url(r'^patch/edit/(?P<patch_id>\d+)/$', 'patchedit'),
+    url(r'^patch/edit/(?P<patch_id>\d+)/save/$', 'patcheditsave'),
+    url(r'^patch/review/(?P<patch_id>\d+)/$', 'patchreview'),
+    url(r'^patch/send/wizard/(?P<patch_id>\d+)/$', 'patchsendwizard'),
+    url(r'^patch/send/wizard/(?P<patch_id>\d+)/step/$', 'patchsendwizardstep'),
+)
+
+urlpatterns += patterns('dpatch.views.engine',
+    url(r'^engine/cocci/semantic/$', 'semantic'),
+    url(r'^engine/cocci/list/$', 'semantic_list'),
+    url(r'^engine/cocci/edit/(?P<cocci_id>\d+)/$', 'semantic_edit'),
+    url(r'^engine/cocci/detail/(?P<cocci_id>\d+)/$', 'semantic_detail'),
+    url(r'^engine/cocci/new/$', 'semantic_new'),
+    url(r'^engine/cocci/delete/$', 'semantic_delete'),
+    url(r'^engine/cocci/export/$', 'semantic_export'),
+    url(r'^engine/cocci/export/all/$', 'semantic_export_all'),
+    url(r'^engine/type/(?P<type_id>\d+)/enable/$', 'enabletype'),
+
+    url(r'^engine/exceptfile/$', 'exceptfile'),
+    url(r'^engine/exceptfile/list/$', 'exceptfile_list'),
+    url(r'^engine/exceptfile/new/$', 'exceptfile_new'),
+    url(r'^engine/exceptfile/delete/$', 'exceptfile_delete'),
+)
+
+urlpatterns += patterns('dpatch.views.event',
+    url(r'^event/logs/$', 'logs'),
+    url(r'^event/logs/data/$', 'log_data'),
+    url(r'^event/logs/detail/(?P<log_id>\d+)/$', 'log_detail'),
+    url(r'^event/events/$', 'events'),
+    url(r'^event/events/data/$', 'event_data'),
+)
+
+urlpatterns += patterns('dpatch.views.admin',
+    url(r'^sysadmin/gitrepo/$', 'gitrepo'),
+    url(r'^sysadmin/gitrepo/list/$', 'gitrepolist'),
+    url(r'^sysadmin/gitrepo/add/$', 'gitrepoadd'),
+    url(r'^sysadmin/gitrepo/edit/(?P<repo_id>\d+)/$', 'git_repo_edit'),
+    url(r'^sysadmin/gitrepo/delete/$', 'gitrepodelete'),
+    url(r'^sysadmin/gitrepo/enable/(?P<repo_id>\d+)/$', 'git_repo_enable'),
+
+    url(r'^sysadmin/gitemail/$', 'git_email'),
+)
+
+urlpatterns += patterns('dpatch.views.dash',
+    url(r'^dashboard/patch/types/$', 'patch_by_type'),
+    url(r'^dashboard/patch/tags/$', 'patch_by_tag'),
+    url(r'^dashboard/patch/daily/$', 'patch_by_daily'),
+)

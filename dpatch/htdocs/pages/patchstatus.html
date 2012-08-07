@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block headers %}
+{% endblock %}
+
+{% block body %}
+<div id='tags'>
+	<ul>
+		<li><h2>Git Tags</h2></li>
+{% for tag in tags %}
+		<li>
+			<img src="/images/tag.png"/>
+			<a href="/patch/list/{{ tag.name }}/">{{ tag.name }}</a><br>
+	{% if tag.running %}
+			<span>Repo: {{tag.repo.name }} Scanning:</span>
+			<img src="/images/running.gif" style="width:16px;height:16px;float:none;padding:0">
+	{% else %}
+			<span>Repo: {{tag.repo.name }} Total Patch: {{ tag.total }}</span>
+	{% endif %}
+		</li>
+{% endfor %}
+	</ul>
+</div>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			$('#navs').navigator({ selected: 1 });
+			$("#tags").lists({ removeHeight:85 });
+		});
+	})(jQuery);
+</script>
+
+{% endblock %}
