@@ -84,13 +84,16 @@ class CocciEngine(models.Model):
     def rawformat(self, title, desc, exceptinfo = []):
         spctx = '/// %s\n' %  title
         spctx += '///\n'
-        spctx = '/// Options: %s\n' % self.options
-        spctx += '///\n'
+        if len(self.options) > 0:
+            spctx += '/// Options: %s\n' % self.options
+            spctx += '///\n'
         for einfo in exceptinfo:
             if einfo.has_key('reason'):
                 spctx += '/// Except File: %s : %s\n' %  (einfo['file'], einfo['reason'])
             else:
                 spctx += '/// Except File: %s\n' % einfo['file']
+        if len(exceptinfo) > 0:
+            spctx += '///\n'
         for line in desc.split('\n'):
             spctx += '/// %s\n' %  line
         spctx += '///\n'
