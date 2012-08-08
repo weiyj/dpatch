@@ -82,6 +82,9 @@ def semantic_edit(request, cocci_id):
             logevent("EDIT: coccinelle semantic, ERROR: no content specified")
             return HttpResponse('EDIT ERROR: no semantic content specified')
 
+        if options is None:
+            options = ''
+
         coccis = CocciEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             logevent("EDIT: coccinelle semantic, ERROR: id %s does not exists" % cocci_id)
@@ -136,7 +139,7 @@ def semantic_detail(request, cocci_id):
         return ""
     cocci = coccis[0]
     try:
-        cfile = open(cocci.fullpath(), 'w')
+        cfile = open(cocci.fullpath(), 'r')
         content = cfile.read()
         cfile.close()
     except:
@@ -213,6 +216,9 @@ def semantic_new(request):
             logevent("NEW: coccinelle semantic, ERROR: no content specified")
             return HttpResponse('NEW ERROR: no semantic content specified')
     
+        if options is None:
+            options = ''
+
         fname = '%s.cocci' % name        
         engine = CocciEngine(file = fname, content = content, options = options)
         if os.path.exists(engine.fullpath()):
@@ -387,11 +393,11 @@ def exceptfile_new(request):
         einfo = ExceptFile(type = rtypes[0], file = fname, reason = reason)
         einfo.save()
 
-        if typeid > 3000:
-            coccis = CocciEngine.objects.filter(id = typeid - 3000)
+        if int(typeid) > 3000:
+            coccis = CocciEngine.objects.filter(id = int(typeid) - 3000)
             if len(coccis) > 0:
                 rewrite_engine(coccis[0])
-        
+
         logevent("NEW: except file, SUCCEED: new id %s" % einfo.id)
         return HttpResponse('NEW: except file, SUCCEED')
     else:
@@ -399,6 +405,8 @@ def exceptfile_new(request):
         context['form'] = ExceptFileForm()
         return render_to_response("engine/exceptfilesedit.html", context)
 
+@login_required
+@csrf_exempt
 def exceptfile_delete(request):
     tids = get_request_paramter(request, 'ids')
     if tids is None:
