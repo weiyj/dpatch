@@ -12,7 +12,8 @@
 				title: 'Special Files',
 				url: '/engine/exceptfile/list/',
 				method: 'GET',
-				colModel : [ { display: 'Type', name : 'type', width : 160, align: 'left'},
+				colModel : [ { display: 'ID', name : 'id', width : 30, align: 'left'},
+				             { display: 'Type', name : 'type', width : 160, align: 'left'},
 				             { display: 'Filename', name : 'file', width : 320, align: 'left'},
 				             { display: 'Reason', name : 'reason', width : 480, align: 'left'},],
 				usepager: true,
@@ -47,7 +48,7 @@
 				if (ids.length < 1) {
 					alertBox("DELETE ERROR: at least one row must be selected!");
 				} else {
-					showModelDialog("/engine/exceptfile/delete/", {'ids': ids.join()}, 'POST', '#exceptnew')
+					showModelDialog("/engine/exceptfile/delete/", {'ids': ids.join()}, 'POST', '#exceptfiles')
 				}
 			}
 
