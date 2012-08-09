@@ -113,7 +113,7 @@ class Type(models.Model):
     def __unicode__(self):
         return u'%s' %(self.name)
 
-class Commit(models.Model):
+class GitCommit(models.Model):
     id = models.AutoField(primary_key = True)
     repo = models.ForeignKey(GitRepo)
     type = models.ForeignKey(Type)

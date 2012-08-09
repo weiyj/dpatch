@@ -26,7 +26,7 @@ import subprocess
 
 from time import gmtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Status, Type, Patch, ScanLog, ExceptFile, Commit
+from dpatch.models import GitRepo, GitTag, Status, Type, Patch, ScanLog, ExceptFile, GitCommit
 from dpatch.patchformat import PatchFormat 
 from checkversion import CheckVersionDetector
 from checkinclude import CheckIncludeDetector
@@ -118,9 +118,9 @@ def check_patch(repo, rtag, flists, commit):
             # for new type, the commit may not sync with repo
             # we need to scan all the files from last type commit
             # per repo has own commit config
-            cmts = Commit.objects.filter(repo = repo, type = rtype)
+            cmts = GitCommit.objects.filter(repo = repo, type = rtype)
             if len(cmts) == 0:
-                cmt = Commit(repo = repo, type = rtype)
+                cmt = GitCommit(repo = repo, type = rtype)
                 cmt.save()
                 # rtype save the first repo's commit
                 if repo.id == 1:
