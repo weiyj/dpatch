@@ -144,7 +144,7 @@ def main(args):
                 print "import fail: file %s is not a *.cocci file" % fname
                 continue
             fp = open(fname, 'r')
-            if importcoccifile(fname, fp.readlines()):
+            if importcoccifile(os.path.basename(fname), fp.readlines()):
                 print 'import succeed: %s' % fname
             else:
                 print 'import fail: %s is not a cocci file' % fname
