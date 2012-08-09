@@ -102,6 +102,10 @@ def check_patch(repo, rtag, flists, commit):
     logs.save()
 
     scaninfo = []
+    logger.logger.info('File changes:')
+    logger.logger.info('=' * 40)
+    logger.logger.info('%s' % '\n'.join(flists))
+    logger.logger.info('=' * 40)
     for dot in [CheckVersionDetector, CheckIncludeDetector, CheckCocciDetector]:
         scount = 0
         test = dot(repo.dirname(), logger.logger)
