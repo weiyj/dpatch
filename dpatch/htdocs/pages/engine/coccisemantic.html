@@ -7,6 +7,7 @@
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.download.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/ajaxupload.js"></script>
 
 <script type="text/javascript">
 	(function($) {
@@ -180,6 +181,16 @@
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
 					}],
+			});
+
+			var load = new AjaxUpload($('.import'), {
+				action: "/engine/cocci/import/",
+				type: "POST",
+				name: 'file',
+				onComplete: function (file, response) {
+					$.blockUI({ message: "<h1>" + response + "</h1>" });
+					setTimeout($.unblockUI, 2000);
+				}
 			});
 {% endif %}
 		});

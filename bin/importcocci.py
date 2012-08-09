@@ -100,6 +100,9 @@ def importcoccifile(fname, lines):
                 else:
                     desc.append(descline)
                 continue
+            else:
+                isdesc = False
+                isctx = True
 
         if isctx == False:
             continue
@@ -110,8 +113,6 @@ def importcoccifile(fname, lines):
     if len(title) == 0 or len(desc) == 0 or len(content) == 0:
         return False
 
-    print exceptfiles
-        
     importsemantic(fname, title, options, '\n'.join(desc), '\n'.join(content), exceptfiles)
     
     return True

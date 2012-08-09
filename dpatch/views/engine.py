@@ -21,6 +21,8 @@
 
 import os
 import tarfile
+import tempfile
+import subprocess
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
@@ -306,6 +308,33 @@ def rewrite_engine(cocci):
             except:
                 pass
 
+@login_required
+@csrf_exempt
+def semantic_import(request):
+    fp = request.FILES['file']
+    if fp != None:
+        if os.path.splitext(fp.name)[1] == ".cocci":
+            fname = os.path.join('/tmp', fp.name)
+        else:
+            fname = tempfile.mktemp()
+
+        with open(fname, 'w+') as destination:
+            for chunk in fp.chunks():
+                destination.write(chunk)
+
+        args = '/usr/dpatch/bin/importcocci.sh %s' % fname
+        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+        shellOut = shelllog.communicate()[0]
+
+        if os.path.exists(fname):
+            os.unlink(fname)
+
+        logevent("IMPORT: coccinelle semantic, SUCCEED", True)
+        return HttpResponse(shellOut)
+    else:
+        return HttpResponse('IMPORT ERROR: no file found')
+
 def semantic_export(request):
     cids = get_request_paramter(request, 'ids')
     if cids is None:
@@ -330,6 +359,7 @@ def semantic_export(request):
 
     archive.close()
 
+    logevent("EXPORT: coccinelle semantic [%s], SUCCEED" % (cids), True)
     return response
 
 def semantic_export_all(request):
@@ -348,6 +378,7 @@ def semantic_export_all(request):
 
     archive.close()
 
+    logevent("EXPORT: coccinelle semantic all, SUCCEED", True)
     return response
 
 def exceptfile(request):
