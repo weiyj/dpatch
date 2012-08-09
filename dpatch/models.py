@@ -142,7 +142,7 @@ class Patch(models.Model):
         return u'%s %s' %(self.tag, self.file)
 
     def filename(self):
-        fname = re.sub(r'[ .:/\\<>()]+', '-', self.title)
+        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', self.title)
         fname = re.sub(r'[\(\)]+', '', fname)
         if len(fname) > 52:
             fname = fname[:52]

@@ -91,7 +91,8 @@ def semantic_edit(request, cocci_id):
             return HttpResponse('EDIT ERROR: semantic id %s does not exists' % cocci_id)
 
         engine = coccis[0]
-        fname = '%s.cocci' % name
+        ofname = engine.fullpath()
+        fname = '%s.cocci' % name.strip()
         engine.file = fname
         engine.content = content
         engine.options = options
@@ -107,6 +108,8 @@ def semantic_edit(request, cocci_id):
             cocci = open(engine.fullpath(), "w")
             cocci.write(spctx)
             cocci.close()
+            if ofname != engine.fullpath() and os.path.exists(ofname):
+                os.unlink(ofname)
         except:
             logevent("EDIT: coccinelle semantic, ERROR: can not write file %s" % engine.fullpath())
             return HttpResponse('EDIT ERROR: can not write file %s' % engine.fullpath())
@@ -219,7 +222,7 @@ def semantic_new(request):
         if options is None:
             options = ''
 
-        fname = '%s.cocci' % name        
+        fname = '%s.cocci' % name.strip()
         engine = CocciEngine(file = fname, content = content, options = options)
         if os.path.exists(engine.fullpath()):
             logevent("NEW: coccinelle semantic, ERROR: name %s already exists" % name)
