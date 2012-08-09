@@ -26,7 +26,7 @@ import subprocess
 
 from time import gmtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Status, Type, Patch, ScanLog, ExceptFile
+from dpatch.models import GitRepo, GitTag, Status, Type, Patch, ScanLog, ExceptFile, Commit
 from dpatch.patchformat import PatchFormat 
 from checkversion import CheckVersionDetector
 from checkinclude import CheckIncludeDetector
@@ -117,8 +117,22 @@ def check_patch(repo, rtag, flists, commit):
 
             # for new type, the commit may not sync with repo
             # we need to scan all the files from last type commit
-            if rtype.commit != repo.commit:
-                rflists = repo_get_changelist(repo, rtype.commit, commit)
+            # per repo has own commit config
+            cmts = Commit.objects.filter(repo = repo, type = rtype)
+            if len(cmts) == 0:
+                cmt = Commit(repo = repo, type = rtype)
+                cmt.save()
+                # rtype save the first repo's commit
+                if repo.id == 1:
+                    oldcommit = rtype.commit
+                else:
+                    oldcommit = cmt.commit
+            else:
+                cmt = cmts[0]
+                oldcommit = cmt.commit
+
+            if oldcommit != repo.commit:
+                rflists = repo_get_changelist(repo, oldcommit, commit)
             else:
                 rflists = flists
 
@@ -174,9 +188,14 @@ def check_patch(repo, rtag, flists, commit):
 
                     scount += 1
 
-            # save last scan commit to type 
-            rtype.commit = commit
-            rtype.save()
+            # save last scan commit to type
+            cmt.commit = commit
+            cmt.save()
+
+            # we only save the first repo's commit to rtype
+            if repo.id == 1:
+                rtype.commit = commit
+                rtype.save()
 
             logger.logger.info('End scan type %d' % test.get_type())
             test.next_token()

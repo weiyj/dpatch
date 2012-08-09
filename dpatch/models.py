@@ -113,6 +113,12 @@ class Type(models.Model):
     def __unicode__(self):
         return u'%s' %(self.name)
 
+class Commit(models.Model):
+    id = models.AutoField(primary_key = True)
+    repo = models.ForeignKey(GitRepo)
+    type = models.ForeignKey(Type)
+    commit = models.CharField(max_length = 256, default = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2')
+
 class ExceptFile(models.Model):
     id = models.AutoField(primary_key = True)
     type = models.ForeignKey(Type)
