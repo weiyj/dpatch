@@ -190,6 +190,7 @@
 				onComplete: function (file, response) {
 					$.blockUI({ message: "<h1>" + response + "</h1>" });
 					setTimeout($.unblockUI, 2000);
+					$('#semantics').flexReload();
 				}
 			});
 {% endif %}
