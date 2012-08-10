@@ -150,9 +150,18 @@ def check_patch(repo, rtag, flists, commit):
 
                 patchs = Patch.objects.filter(file = sfile, type = rtype)
                 rpatchs = []
+                opatchs = []
                 for p in patchs:
-                    if p.status == new or p.status == sent:
+                    if p.status != new and p.status != sent:
+                        continue
+                    
+                    # repo id == 1 is the main kernel tree, so only
+                    # allow other tree update main kernel tree's patch
+                    if repo == p.tag.repo or p.tag.repo.id == 1:
                         rpatchs.append(p)
+                    # the patch found by the same repo
+                    if repo == p.tag.repo:
+                        opatchs.append(p)
 
                 test.set_filename(sfile)
                 # source file maybe removed
@@ -169,7 +178,7 @@ def check_patch(repo, rtag, flists, commit):
                         p.status = fixed
                         p.save()
 
-                if len(rpatchs) == 0 and should_patch == True:
+                if len(opatchs) == 0 and should_patch == True:
                     text = test.format_patch()
                     patch = Patch(tag = rtag, file = sfile, type = rtype, 
                                   status = new, diff = text)

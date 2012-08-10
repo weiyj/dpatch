@@ -1,3 +1,96 @@
+/*** Tabbed Nav ***/
+.dash-widget .ui-tabs-panel {
+	background-color: #EEE;
+	border: 1px solid #CCC;
+	padding: 5px;
+}
+
+.dash-widget .ui-widget-header {
+	border: 0 !important;
+	background: none;
+}
+
+.dash-widget .ui-tabs-selected {
+	margin-top: 0px !important;
+	background: transparent url(images/tabs.png) repeat-x scroll left -52px !important;
+	color: white;
+}
+	
+.dash-widget {
+	-moz-border-radius-topleft: 0px/*{cornerRadius}*/;
+	-webkit-border-top-left-radius: 0px/*{cornerRadius}*/;
+	-khtml-border-top-left-radius: 0px/*{cornerRadius}*/;
+	border-top-left-radius: 0px/*{cornerRadius}*/;
+	-moz-border-radius-topright: 0px/*{cornerRadius}*/;
+	-webkit-border-top-right-radius: 0px/*{cornerRadius}*/;
+	-khtml-border-top-right-radius: 0px/*{cornerRadius}*/;
+	border-top-right-radius: 0px/*{cornerRadius}*/;
+}
+
+.dash-widget .ui-state-active {
+	border: 0 !important;
+	background: transparent url(images/tabs.png) repeat-x scroll left -52px !important;
+}
+
+.dash-widget .ui-state-default {
+	border: 0 !important;
+	background: none;
+}
+.widget-tab li {
+	float: left;
+	background: none;
+	display:block;
+	float:left;
+	position:relative;
+	cursor: pointer;
+	padding-left: 2px;
+	height: 26px;
+}
+
+.widget-tab  li .ui-tab-item {
+	background: transparent url(images/tabs.png) repeat-x scroll left 0;
+	padding: 2px 5px 3px 10px;
+	height: 21px;
+	line-height: 22px;
+	float: left;
+}
+
+.widget-tab  li.ui-state-active .ui-tab-item {
+	background: transparent url(images/tabs.png) repeat-x scroll left -52px !important;
+	padding: 2px 5px 3px 10px;
+	height: 21px;
+	line-height: 22px;
+	float: left;
+}
+
+.widget-tab  li.ui-state-active a {
+	color: white;
+}
+
+.widget-tab  li.ui-state-active .right {
+	background: transparent url(images/tabs.png) repeat-x scroll right -52px  !important;
+}
+
+.widget-tab li a {
+	padding: 0px !important;
+}
+
+.widget-tab li .right {
+	background: transparent url(images/tabs.png) repeat-x scroll right 0;
+	height: 26px;
+	width: 5px;
+	line-height: 22px;
+	display: inline-block;
+}
+
+.widget-tab li:hover .ui-tab-item {
+	background: transparent url(images/tabs.png) repeat-x scroll left -26px;
+}
+
+.widget-tab li:hover .right {
+	background: transparent url(images/tabs.png) repeat-x scroll right -26px;
+}
+
 /* Widgets */
 .dashboard {
     height: 100%;
@@ -21,7 +114,7 @@
     margin: 0 3px;
     position: relative;
     width: 500px;
-    height: 280px;
+    height: 260px;
     font-size: 11px;
 }
 .widget .w_wc {
@@ -83,8 +176,8 @@
 .widget .w_md {
     background: url("images/widgetbox_bg.png") no-repeat scroll 0 -38px transparent;
     font-size: 12px;
-    height: 220px;
-    max-height: 280px;
+    height: 200px;
+    max-height: 270px;
     min-height: 110px;
     overflow: hidden;
     padding: 10px 10px 0;
@@ -92,7 +185,7 @@
 .widget .w_md > .right {
     background: url("images/widgetbox_bg.png") no-repeat scroll right -38px transparent;
     padding-bottom: 10px;
-    height: 220px;
+    height: 200px;
 }
 .widget .w_bt {
     background: url("images/widgetbox_bg.png") no-repeat scroll left bottom transparent;

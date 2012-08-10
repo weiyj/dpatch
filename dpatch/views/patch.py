@@ -32,7 +32,7 @@ from time import gmtime, strftime
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
-from dpatch.models import GitTag, Patch, Status, Event
+from dpatch.models import GitRepo, GitTag, Patch, Status, Event
 from dpatch.patchformat import PatchFormat 
 
 def get_request_paramter(request, key, default=None):
@@ -61,20 +61,26 @@ def execute_shell(args):
 def patchlist(request, tag_name):
     context = RequestContext(request)
     context['tag'] = tag_name
+    context['repo'] = get_request_paramter(request, 'repo', '1')
     return render_to_response("patch/patchlist.html", context)
 
 def patchlistdata(request, tag_name):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
+    id = int(get_request_paramter(request, 'repo', '1'))
+
     patchs = {'page': 1, 'total': 0, 'rows': [] }
-    rtag = GitTag.objects.filter(name = tag_name)
+    repo = GitRepo.objects.filter(id = id)
+    if (len(repo) == 0):
+        return render_to_response(simplejson.dumps(patchs))
+
+    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
     if (len(rtag) == 0):
         return render_to_response(simplejson.dumps(patchs))
 
     for patch in Patch.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
         action = ''
-
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id

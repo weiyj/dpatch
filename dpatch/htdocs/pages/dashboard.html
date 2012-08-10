@@ -6,219 +6,22 @@
 {% endblock %}
 
 {% block body %}
-<div class="dashboard widget_container ui-sortable">
-	<div class="widget" style="width: 530px;">
-		<div class="w_wc"><div class="w_tp">
-			<!--  Title content here -->
-			<div class="title">Patchs By Types</div>
-			<div class="icon">
-				<a href="#" class="btn_close" title="Close"></a>
-				<a href="#" class="btn_refresh" title="Refresh"></a>
-			</div>
-								
-			<span class="right"></span></div></div>
-			<div class="w_wc"><div class="w_md">
-				<!--  Main Content here -->
-				<div id="container" style="min-width: 400px; height: 232px; margin: 0 auto"></div>
-			<span class="right"></span></div></div>
-		<div class="w_wc"><div class="w_bt">
-		<span class="right"></span></div></div>
-	</div>
-
-	<div class="widget" style="width: 530px;">
-		<div class="w_wc"><div class="w_tp">
-			<!--  Title content here -->
-			<div class="title">Daily Patchs</div>
-			<div class="icon">
-				<a href="#" class="btn_close" title="Close"></a>
-				<a href="#" class="btn_refresh" title="Refresh"></a>
-			</div>
-								
-			<span class="right"></span></div></div>
-			<div class="w_wc"><div class="w_md">
-				<!--  Main Content here -->
-				<div id="dailychart" style="min-width: 400px; height: 232px; margin: 0 auto"></div>
-			<span class="right"></span></div></div>
-		<div class="w_wc"><div class="w_bt">
-		<span class="right"></span></div></div>
-	</div>
-
-	<div class="widget" style="width: 1070px;">
-		<div class="w_wc"><div class="w_tp">
-			<!--  Title content here -->
-			<div class="title">Patchs By Tags</div>
-			<div class="icon">
-				<a href="#" class="btn_close" title="Close"></a>
-				<a href="#" class="btn_refresh" title="Refresh"></a>
-			</div>
-								
-			<span class="right"></span></div></div>
-			<div class="w_wc"><div class="w_md">
-				<!--  Main Content here -->
-				<div id="linechart" style="min-width: 400px; height: 232px; margin: 0 auto"></div>
-			<span class="right"></span></div></div>
-		<div class="w_wc"><div class="w_bt">
-		<span class="right"></span></div></div>
-	</div>
-
+<div id="repostatus" class="dash-widget">
+    <ul class="widget-tab">
+{% for repo in repos %}
+        <li>
+            <div class="ui-tab-item"><a href="/dashboard/status/{{repo.id}}/">{{ repo.name }}</a></div><div class="right"></div>
+        </li>
+{% endfor %}
+    </ul>
 </div>
 
 <script type="text/javascript">
 	(function($) {
 		$(document).ready(function () {
 			$('#navs').navigator({ selected: 0 });
-
-			$(".widget_container").sortable({
-				placeholder: "widget_placeholder",
-				handle: ".w_tp",
-				opacity: 0.7
-			});
-			$( ".w_tp" ).disableSelection();
-
-			var pieoptions = {
-				chart: {
-					renderTo: 'container',
-					plotBackgroundColor: null,
-					plotBorderWidth: null,
-					plotShadow: false
-				},
-				title: {
-					text: ''
-				},
-				tooltip: {
-					formatter: function() {
-						return '<b>'+ this.point.name +'</b>: '+ this.y;
-					}
-				},
-				plotOptions: {
-					pie: {
-						allowPointSelect: true,
-						cursor: 'pointer',
-						dataLabels: {
-							enabled: true,
-							color: '#000000',
-							connectorColor: '#000000',
-							formatter: function() {
-								return '<b>'+ this.point.name +'</b>: '+ this.percentage.toFixed(2) +' %';
-							}
-						}
-					}
-				},
-				series: [{
-					type: 'pie',
-					name: 'Patchs By Types',
-					data: []
-				}]
-			};
-
-			var lineopts = {
-				chart: {
-					renderTo: 'linechart',
-					type: 'line',
-					marginRight: 10,
-				},
-            		title: {
-                			text: ''
-            			},
-            		xAxis: {
-                			categories: []
-            			},
-            		yAxis: {
-            			min: 0,
-                			title: {
-                    			text: 'Found Patchs'
-                			},
-				},
-            		tooltip: {
-                			formatter: function() {
-                        		return '<b>'+ this.x +'</b>: '+ this.y;
-					}
-				},
-				legend: {
-					enabled: false
-				},
-				exporting: {
-					enabled: false
-				},
-				series: [{
-					name: 'Patchs',
-					data: []
-				}]
-			}
-
-			var dailyopts = {
-				chart: {
-					renderTo: 'dailychart',
-					type: 'column',
-					marginRight: 10,
-				},
-            		title: {
-                			text: ''
-            			},
-            		xAxis: {
-					type: 'datetime',
-					tickInterval: 24 * 3600 * 1000,
-            			},
-            		yAxis: {
-            			min: 0,
-                			title: {
-                    			text: 'Daily Patchs'
-                			},
-				},
-            		tooltip: {
-                			formatter: function() {
-                        		//return '<b>'+ this.x +'</b>: '+ this.y;
-                        		//return '<b>'+ this.series.name +'</b><br/>'+
-                        		return Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) +': <b>'+ this.y + '</b>';
-					}
-				},
-				legend: {
-					enabled: false
-				},
-				exporting: {
-					enabled: false
-				},
-				series: [{
-					name: 'Patchs',
-					data: []
-				}]
-			}
-
-			jQuery.get('/dashboard/patch/types/', null, function(data, state, xhr) {
-				pdata = []
-				for (d in data)
-					pdata.push([d, data[d]])
-				pieoptions.series[0].data = pdata;
-				chart = new Highcharts.Chart(pieoptions);
-			}, "json");
-
-			jQuery.get('/dashboard/patch/tags/', null, function(jsondata, state, xhr) {
-				categories = [], sdata = []
-				for (i = 0; i < jsondata.length; i++) {
-					raw = jsondata[i]
-					categories.push(raw['name'])
-					sdata.push(raw['total'])
-				}
-				lineopts.xAxis.categories = categories;
-				lineopts.series[0].data = sdata;
-				var linechart = new Highcharts.Chart(lineopts);
-			}, "json");
-
-			jQuery.get('/dashboard/patch/daily/', null, function(jsondata, state, xhr) {
-				sdata = []
-				for (i = 0; i < jsondata.length; i++) {
-					data = jsondata[i]
-					dt = data['date']
-					count = data['count']
-					sdata.push({x: new Date(Date.parse(dt.replace(/-/g, "/"))),
-							y: parseInt(count)
-					});
-				}
-				dailyopts.series[0].data = sdata;
-				var dailychart = new Highcharts.Chart(dailyopts);
-			}, "json");
+			$("#repostatus").tabs();
 		});
-
 	})(jQuery);
 </script>
 

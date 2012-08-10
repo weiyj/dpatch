@@ -22,28 +22,48 @@
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.utils import simplejson
+from django.template import RequestContext
 
-from dpatch.models import GitTag, Type, Patch, ScanLog
+from dpatch.models import GitRepo, GitTag, Type, Patch, ScanLog
 
-def patch_by_type(request):
+def patch_status(request, repo_id):
+    context = RequestContext(request)
+    context['repo'] = repo_id
+    return render_to_response("dash/dashstatus.html", context)
+
+def patch_by_type(request, repo_id):
     ptypes = {}
 
+    repos = GitRepo.objects.filter(id = repo_id)
+    if len(repos) == 0:
+        return HttpResponse(simplejson.dumps(ptypes))
+
     for rtype in Type.objects.all():
-        cnt = Patch.objects.filter(type = rtype).count()
+        cnt = Patch.objects.filter(type = rtype, tag__repo = repos[0]).count()
         ptypes[rtype.name] = cnt
 
     return HttpResponse(simplejson.dumps(ptypes))
 
-def patch_by_tag(request):
+def patch_by_tag(request, repo_id):
     tags = []
-    for tag in GitTag.objects.all():
+
+    repos = GitRepo.objects.filter(id = repo_id)
+    if len(repos) == 0:
+        return HttpResponse(simplejson.dumps(tags))
+
+    for tag in GitTag.objects.filter(repo = repos[0]):
         tags.append({'name': tag.name, 'total': tag.total})
 
     return HttpResponse(simplejson.dumps(tags))
 
-def patch_by_daily(request):
+def patch_by_daily(request, repo_id):
     dcounts = []
-    for log in ScanLog.objects.all():
+
+    repos = GitRepo.objects.filter(id = repo_id)
+    if len(repos) == 0:
+        return HttpResponse(simplejson.dumps(dcounts))
+
+    for log in ScanLog.objects.filter(reponame = repos[0].name):
         dt = log.starttime
         desc = log.desc
         if desc.find('total:') != -1:

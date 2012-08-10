@@ -102,7 +102,8 @@ urlpatterns += patterns('dpatch.views.admin',
 )
 
 urlpatterns += patterns('dpatch.views.dash',
-    url(r'^dashboard/patch/types/$', 'patch_by_type'),
-    url(r'^dashboard/patch/tags/$', 'patch_by_tag'),
-    url(r'^dashboard/patch/daily/$', 'patch_by_daily'),
+    url(r'^dashboard/status/(?P<repo_id>\d+)/$', 'patch_status'),
+    url(r'^dashboard/patch/types/(?P<repo_id>\d+)/$', 'patch_by_type'),
+    url(r'^dashboard/patch/tags/(?P<repo_id>\d+)/$', 'patch_by_tag'),
+    url(r'^dashboard/patch/daily/(?P<repo_id>\d+)/$', 'patch_by_daily'),
 )

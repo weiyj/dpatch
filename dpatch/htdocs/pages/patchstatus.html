@@ -10,7 +10,7 @@
 {% for tag in tags %}
 		<li>
 			<img src="/images/tag.png"/>
-			<a href="/patch/list/{{ tag.name }}/">{{ tag.name }}</a><br>
+			<a href="/patch/list/{{ tag.name }}/?repo={{tag.repo.id}}">{{ tag.name }} - {{tag.repo.name}}</a><br>
 	{% if tag.running %}
 			<span>Repo: {{tag.repo.name }} Scanning:</span>
 			<img src="/images/running.gif" style="width:16px;height:16px;float:none;padding:0">

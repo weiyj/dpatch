@@ -20,12 +20,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from django.shortcuts import render_to_response
-from dpatch.models import GitTag
+from dpatch.models import GitRepo, GitTag
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
 def dashboard(request):
     context = RequestContext(request)
+    context['repos'] = GitRepo.objects.all()
     return render_to_response("dashboard.html", context)
 
 def patchstatus(request):
