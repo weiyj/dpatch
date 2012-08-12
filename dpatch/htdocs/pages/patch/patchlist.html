@@ -14,7 +14,7 @@
 			$('#review').dialog('open');
 		}
 
-		function onGridLoadSuccess(grid) {			
+				function onGridLoadSuccess(grid) {			
 			$("#patchlist .detail").click(function () {
 				id = $(this).attr('id');
 				$('#dialog').load('/patch/' + id);
@@ -124,7 +124,7 @@
 				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
 				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
 				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
-				             { display: 'ACTION', name : 'action', width : 120, align: 'center'},],
+				             { display: 'ACTION', name : 'action', width : 120, align: 'center'}],
 				searchitems : [ {display: 'Title', name : 'title'},
 				            	 {display: 'Filename', name : 'file'},
 				            	 {display: 'Status', name : 'status'},
@@ -145,7 +145,7 @@
 				singleSelect: true,
 {% endif %}
 				onRowDoubleClick: onGridDoubleClick,
-				onSuccess: onGridLoadSuccess,
+				onSuccess: onGridLoadSuccess
 			});
 
 			$('#dialog').dialog({
@@ -159,7 +159,7 @@
 				autoOpen: false,
 				modal: true,
 				width: $(window).width() - 84,
-				height: $(window).height() - 84,
+				height: $(window).height() - 84
 			});
 
 			$('#dialogsend').dialog({
@@ -167,7 +167,7 @@
 				modal: true,
 				width: 810,
 				height: 536,
-				resizable: false,
+				resizable: false
 			});
 
 			$('#dialogedit').dialog({
@@ -190,7 +190,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 		});
 	})(jQuery);

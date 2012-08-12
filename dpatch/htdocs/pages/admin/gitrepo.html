@@ -46,7 +46,7 @@
 {% else %}
 				showCheckbox: false,
 {% endif %}
-				onSuccess: onGridLoadSuccess,
+				onSuccess: onGridLoadSuccess
 			});
 
 {% if user.is_authenticated %}
@@ -100,7 +100,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 
 			function doEditRepoPost() {
@@ -132,7 +132,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 {% endif %}
 		});

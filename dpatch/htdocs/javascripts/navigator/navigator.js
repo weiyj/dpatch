@@ -4,7 +4,7 @@
 $.widget( "ui.navigator", {
 
 	options: {
-		selected: null,
+		selected: null
 	},
 
 	_create: function() {
@@ -38,7 +38,7 @@ $.widget( "ui.navigator", {
 		.bind('mouseout', function(e) {										
 			$(this).removeClass('hover').find('a:eq(0)').removeClass('hover');
 		});
-	},
+	}
 });
 
 })( jQuery );

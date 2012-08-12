@@ -49,7 +49,7 @@
 			onSuccess: false,
 			onError: false,
 			onSubmit: false, //using a custom populate function
-			onRowDoubleClick:false,
+			onRowDoubleClick:false
 		}, p);
 		$(t).show() //show if hidden
 			.attr({
@@ -712,6 +712,7 @@
 			for (var i = 0; i < p.colModel.length; i++) {
 				var cm = p.colModel[i];
 				var th = document.createElement('th');
+
 				th.innerHTML = cm.display;
 				if (cm.name && cm.sortable) {
 					$(th).attr('abbr', cm.name);

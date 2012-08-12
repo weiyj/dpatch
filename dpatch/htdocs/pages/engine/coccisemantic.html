@@ -80,14 +80,14 @@
 				showCheckbox: false,
 				singleSelect: true,
 {% endif %}
-				onSuccess: onGridLoadSuccess,
+				onSuccess: onGridLoadSuccess
 			});
 
 			$('#dialogdetail').dialog({
 				autoOpen: false,
 				modal: true,
 				width: 580,
-				height:360,
+				height:360
 			});
 
 {% if user.is_authenticated %}
@@ -164,7 +164,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 
 			$('#dialogedit').dialog({
@@ -180,7 +180,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 
 			var load = new AjaxUpload($('.import'), {

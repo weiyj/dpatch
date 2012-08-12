@@ -21,10 +21,10 @@
 				showCheckbox: true,
 				buttons : [ { name : 'Add', bclass : 'add', onpress: onExceptFileNew },
 				            { name : 'Delete', bclass : 'delete', onpress: onExceptFileDelete },
-				            { separator : true }],
+				            { separator : true }]
 {% else %}
 				showCheckbox: false,
-				singleSelect: true,
+				singleSelect: true
 {% endif %}
 			});
 
@@ -83,7 +83,7 @@
 					{
 						text: "Cancel",
 				       	click: function() { $(this).dialog("close"); }
-					}],
+					}]
 			});
 {% endif %}
 		});

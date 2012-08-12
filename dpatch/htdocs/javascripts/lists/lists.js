@@ -6,7 +6,7 @@ $.widget( "ui.lists", {
 		selected: null,
 		removeHeight: 0,
 		navWidth: 280,
-		ajaxOptions: null,
+		ajaxOptions: null
 	},
 
 	_create: function() {
@@ -130,7 +130,7 @@ $.widget( "ui.lists", {
 			delete this.xhr;
 		}
 		return this;
-	},
+	}
 
 });
 
