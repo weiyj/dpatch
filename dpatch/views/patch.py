@@ -253,6 +253,7 @@ def patcheditsave(request, patch_id):
     title = get_request_paramter(request, 'title')
     desc = get_request_paramter(request, 'desc')
     emails = get_request_paramter(request, 'emails')
+    diff = get_request_paramter(request, 'diff')
 
     if title is None or len(title) == 0:
         logevent("EDIT: patch %s, ERROR: no title specified" % patch_id)
@@ -266,6 +267,10 @@ def patcheditsave(request, patch_id):
         logevent("EDIT: patch %s, ERROR: no emails specified" % patch_id)
         return HttpResponse('EDIT ERROR: no patch emails specified')
 
+    if diff is None or len(diff) == 0:
+        logevent("EDIT: patch %s, ERROR: no diff specified" % patch_id)
+        return HttpResponse('EDIT ERROR: no patch diff specified')
+
     patch = Patch.objects.filter(id = patch_id)
     if len(patch) == 0:
         logevent("EDIT: patch %s, ERROR: id does not exists")
@@ -274,6 +279,7 @@ def patcheditsave(request, patch_id):
     patch[0].title = title
     patch[0].desc = desc
     patch[0].emails = emails
+    patch[0].diff = diff
     patch[0].content = patch_format(patch[0])
     patch[0].save()
 

@@ -183,8 +183,9 @@
 				      		title = $(this).find("input[id=title]").eq(0).val();
 				      		desc = $(this).find("textarea[id=desc]").eq(0).val();
 				      		emails = $(this).find("textarea[id=emails]").eq(0).val();
+				      		diff = $(this).find("textarea[id=diff]").eq(0).val();
 							$(this).dialog("close");
-				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails}, 'POST');
+				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails, 'diff': diff}, 'POST');
 						}
 					},
 					{
