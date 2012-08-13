@@ -73,6 +73,7 @@ class CocciEngine(models.Model):
     id = models.AutoField(primary_key = True)
     file = models.CharField(max_length = 256)
     options = models.CharField(max_length = 256, blank = True)
+    fixed = models.CharField(max_length = 256, blank = True)
     content = models.TextField(blank = True)
 
     def __unicode__(self):
@@ -86,6 +87,9 @@ class CocciEngine(models.Model):
         spctx += '///\n'
         if len(self.options) > 0:
             spctx += '/// Options: %s\n' % self.options
+            spctx += '///\n'
+        if len(self.fixed) > 0:
+            spctx += '/// Fixed: %s\n' % self.fixed
             spctx += '///\n'
         for einfo in exceptinfo:
             if einfo.has_key('reason'):

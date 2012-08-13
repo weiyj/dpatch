@@ -65,10 +65,29 @@ class CheckCocciDetector(PatchDetector):
         cocci = self._coccis[self._token]
         return self._type + cocci.id
 
+    def _engine_fixed(self):
+        cocci = self._coccis[self._token]
+        if cocci.fixed is None or len(cocci.fixed) == 0:
+            return self._diff
+
+        fixed = cocci.fixed.split('...')
+        regexpr = fixed[0].strip()
+        target = fixed[1].strip()
+        cpl = re.compile(regexpr)
+        diff = []
+        for line in self._diff:
+            line = cpl.sub(target, line)
+            diff.append(line)
+        return diff
+
     def _modify_source_file(self):
+        # sometimes the engine give as a diff that does not pass
+        # the checkpatch, we need fix it first.
+        diff = self._engine_fixed()
+
         temp = tempfile.mktemp()
         cfg = open(temp, "w")
-        cfg.write('\n'.join(self._diff))
+        cfg.write('\n'.join(diff))
         cfg.close()
 
         self._execute_shell('patch %s < %s' %(self._get_file_path(), temp))
@@ -98,9 +117,9 @@ class CheckCocciDetector(PatchDetector):
         return False
 
 if __name__ == "__main__":
-    repo = "/var/lib/dpatch/repo/linux"
+    repo = "/pub/scm/source/linux-latest/"
     #repo = "/var/lib/patchmaker/repo/linux-next"
-    findlog = subprocess.Popen("cd %s ; find net/netfilter/nfnetlink_queue_core.c -type f" % (repo),
+    findlog = subprocess.Popen("cd %s ; find arch/arm/mach-at91/gpio.c -type f" % (repo),
                                   shell=True, stdout=subprocess.PIPE)
     findOut = findlog.communicate()[0]
 

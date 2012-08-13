@@ -67,6 +67,7 @@ def semantic_edit(request, cocci_id):
         desc = get_request_paramter(request, 'desc')
         content = get_request_paramter(request, 'content')
         options = get_request_paramter(request, 'options')
+        fixed = get_request_paramter(request, 'fixed')
 
         if name is None or len(name) == 0:
             logevent("EDIT: coccinelle semantic, ERROR: no name specified")
@@ -87,6 +88,9 @@ def semantic_edit(request, cocci_id):
         if options is None:
             options = ''
 
+        if fixed is None:
+            fixed = ''
+
         coccis = CocciEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             logevent("EDIT: coccinelle semantic, ERROR: id %s does not exists" % cocci_id)
@@ -97,7 +101,8 @@ def semantic_edit(request, cocci_id):
         fname = '%s.cocci' % name.strip()
         engine.file = fname
         engine.content = content
-        engine.options = options
+        engine.options = options.strip()
+        engine.fixed = fixed.strip()
 
         rtype = Type.objects.get(id = engine.id + 3000)
 
@@ -204,7 +209,8 @@ def semantic_new(request):
         desc = get_request_paramter(request, 'desc')
         content = get_request_paramter(request, 'content')
         options = get_request_paramter(request, 'options')
-    
+        fixed = get_request_paramter(request, 'fixed')
+
         if name is None or len(name) == 0:
             logevent("NEW: coccinelle semantic, ERROR: no name specified")
             return HttpResponse('NEW ERROR: no semantic name specified')
@@ -224,8 +230,11 @@ def semantic_new(request):
         if options is None:
             options = ''
 
+        if fixed is None:
+            fixed = ''
+
         fname = '%s.cocci' % name.strip()
-        engine = CocciEngine(file = fname, content = content, options = options)
+        engine = CocciEngine(file = fname, content = content, options = options, fixed = fixed.strip())
         if os.path.exists(engine.fullpath()):
             logevent("NEW: coccinelle semantic, ERROR: name %s already exists" % name)
             return HttpResponse('NEW ERROR: semantic name %s already exists' % name)

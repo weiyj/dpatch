@@ -133,9 +133,11 @@
 	      		title = $(this).find("input[id=title]").eq(0).val();
 	      		desc = $(this).find("textarea[id=desc]").eq(0).val();
 	      		content = $(this).find("textarea[id=content]").eq(0).val();
+	      		options = $(this).find("input[id=options]").eq(0).val();
+	      		fixed = $(this).find("input[id=fixed]").eq(0).val();
 				$(this).dialog("close");
 	      		showModelDialog('/engine/cocci/new/',
-							{'name': name, 'title': title, 'desc': desc, 'content': content},
+							{'name': name, 'title': title, 'desc': desc, 'content': content, 'options': options, 'fixed': fixed},
 							'POST', '#semantics');				
 			}
 
@@ -145,9 +147,11 @@
 	      		title = $(this).find("input[id=title]").eq(0).val();
 	      		desc = $(this).find("textarea[id=desc]").eq(0).val();
 	      		content = $(this).find("textarea[id=content]").eq(0).val();
+	      		options = $(this).find("input[id=options]").eq(0).val();
+	      		fixed = $(this).find("input[id=fixed]").eq(0).val();
 				$(this).dialog("close");
 	      		showModelDialog('/engine/cocci/edit/' + id + '/',
-							{'name': name, 'title': title, 'desc': desc, 'content': content},
+							{'name': name, 'title': title, 'desc': desc, 'content': content, 'options': options, 'fixed': fixed},
 							'POST', '#semantics');				
 			}
 
@@ -155,7 +159,7 @@
 				autoOpen: false,
 				modal: true,
 				width: 680,
-				height:540,
+				//height:540,
 				buttons:
 					[{
 						text: "Save",
@@ -171,7 +175,7 @@
 				autoOpen: false,
 				modal: true,
 				width: 680,
-				height:540,
+				//height:540,
 				buttons:
 					[{
 						text: "Save",

@@ -36,7 +36,7 @@ class TypeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'ptitle', 'pdesc')
 
 class CocciEngineAdmin(admin.ModelAdmin):
-    list_display = ('id', 'file')
+    list_display = ('id', 'file', 'fixed')
 
 class PatchAdmin(admin.ModelAdmin):
     list_display = ('id', 'tag', 'file', 'type', 'diff', 'mergered', 'mglist', 'status')

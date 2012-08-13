@@ -25,14 +25,14 @@ import tarfile
 
 from dpatch.models import CocciEngine, Type, ExceptFile
 
-def importsemantic(fname, title, options, desc, content, exceptfiles):
+def importsemantic(fname, title, fixed, options, desc, content, exceptfiles):
     name = os.path.splitext(fname)[0]
     
     if CocciEngine.objects.filter(file = fname).count() != 0:
         print 'skip %s, already exists' % fname
         return
 
-    engine = CocciEngine(file = fname, content = content, options = options)
+    engine = CocciEngine(file = fname, content = content, options = options, fixed = fixed)
     ctx = engine.rawformat(title, desc, exceptfiles)
     try:
         cocci = open(engine.fullpath(), "w")
@@ -56,6 +56,7 @@ def importcoccifile(fname, lines):
         return False
     
     options = ''
+    fixed = ''
     desc = []
     content = []
     exceptfiles = []
@@ -75,6 +76,9 @@ def importcoccifile(fname, lines):
             if line.find('/// Options:') == 0:
                 options = line
                 options = options.replace('/// Options:', '').strip()
+            elif line.find('/// Fixed:') == 0:
+                fixed = line
+                fixed = fixed.replace('/// Fixed:', '').strip()
             elif line.find('/// Except File:') == 0:
                 exceptfile = line
                 exceptfile = exceptfile.replace('/// Except File:', '').strip()
@@ -113,7 +117,7 @@ def importcoccifile(fname, lines):
     if len(title) == 0 or len(desc) == 0 or len(content) == 0:
         return False
 
-    importsemantic(fname, title, options, '\n'.join(desc), '\n'.join(content), exceptfiles)
+    importsemantic(fname, title, fixed, options, '\n'.join(desc), '\n'.join(content), exceptfiles)
     
     return True
 
