@@ -27,7 +27,7 @@
 			total: 1, //total pages
 			useRp: true, //use the results per page select box
 			rp: 15, //results per page
-			rpOptions: [10, 15, 20, 30, 50], //allowed per-page values 
+			rpOptions: [10, 15, 20, 30, 50, 100], //allowed per-page values 
 			title: false,
 			pagestat: 'Displaying {from} to {to} of {total} items',
 			pagetext: 'Page',
