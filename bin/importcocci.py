@@ -48,7 +48,7 @@ def importsemantic(fname, title, fixed, options, desc, content, exceptfiles):
     rtype.save()
     
     for finfo in exceptfiles:
-        efile = ExceptFile(type = rtype, file = finfo['fname'], reason = finfo['reason'])
+        efile = ExceptFile(type = rtype, file = finfo['file'], reason = finfo['reason'])
         efile.save()
 
 def importcoccifile(fname, lines):
