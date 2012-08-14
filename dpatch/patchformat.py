@@ -144,6 +144,18 @@ class PatchFormat:
 
         return elist
 
+    def _weak_email_list(self):
+        lists = self._mlist.split('\n')
+        for i in range(len(lists)):
+            if lists[i].find('To:') != -1:
+                lists[i] = re.sub('[^<]*<(.*)>([,]*)', 'To: \g<1>\g<2>', lists[i])
+            elif lists[i].find('Cc:') != -1:
+                break
+            else:
+                lists[i] = re.sub('[^<]*<(.*)>([,]*)', '    \g<1>\g<2>', lists[i])
+
+        return '\n'.join(lists)
+
     def get_mail_list(self):
         if self._mlist is None:
             self._guest_email_list()
@@ -168,8 +180,11 @@ class PatchFormat:
         patch += "From: %s <%s>\n" % (self._user, self._email)
         patch += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
         patch += "Subject: [PATCH] %s\n" % self.format_title()
-        patch += "%s\n" % self._guest_email_list()
-        patch += "From: %s <%s>\n\n" % (self._user, self._email)
+        try:
+            patch += self._guest_email_list()
+        except:
+            patch += self._weak_email_list()
+        patch += "\nFrom: %s <%s>\n\n" % (self._user, self._email)
         patch += "%s\n\n" % self._desc
         patch += "Signed-off-by: %s <%s>\n" % (self._user, self._email)
         patch += "---\n"
