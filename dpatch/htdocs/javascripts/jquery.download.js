@@ -18,7 +18,7 @@ jQuery.download = function(url, data, method){
 		var inputs = '';
 		jQuery.each(data.split('&'), function(){ 
 			var pair = this.split('=');
-			inputs+='<input type="hidden" name="'+ pair[0] +'" value="'+ pair[1] +'" />'; 
+			inputs+='<input type="hidden" name="'+ pair[0] +'" value="'+ decodeURIComponent(pair[1]) +'" />'; 
 		});
 		//send request
 		jQuery('<form action="'+ url +'" method="'+ (method||'post') +'">'+inputs+'</form>')
