@@ -113,27 +113,34 @@ def check_patch(repo, rtag, flists, commit):
             logger.logger.info('Starting scan type %d' % test.get_type())
             rtype = Type.objects.filter(id = test.get_type())[0]
             if rtype.status == False:
+                test.next_token()
                 continue
 
-            # for new type, the commit may not sync with repo
-            # we need to scan all the files from last type commit
-            # per repo has own commit config
-            cmts = GitCommit.objects.filter(repo = repo, type = rtype)
-            if len(cmts) == 0:
-                cmt = GitCommit(repo = repo, type = rtype)
-                cmt.save()
-                # rtype save the first repo's commit
-                if repo.id == 1:
-                    oldcommit = rtype.commit
-                else:
-                    oldcommit = cmt.commit
-            else:
-                cmt = cmts[0]
-                oldcommit = cmt.commit
+            cmt = None
 
-            if oldcommit != repo.commit:
-                rflists = repo_get_changelist(repo, oldcommit, commit)
+            if repo.delta == False:
+                # for new type, the commit may not sync with repo
+                # we need to scan all the files from last type commit
+                # per repo has own commit config
+                cmts = GitCommit.objects.filter(repo = repo, type = rtype)
+                if len(cmts) == 0:
+                    cmt = GitCommit(repo = repo, type = rtype)
+                    cmt.save()
+                    # rtype save the first repo's commit
+                    if repo.id == 1:
+                        oldcommit = rtype.commit
+                    else:
+                        oldcommit = cmt.commit
+                else:
+                    cmt = cmts[0]
+                    oldcommit = cmt.commit
+    
+                if oldcommit != repo.commit:
+                    rflists = repo_get_changelist(repo, oldcommit, commit)
+                else:
+                    rflists = flists
             else:
+                # delta check only
                 rflists = flists
 
             exceptfiles = []
@@ -197,9 +204,10 @@ def check_patch(repo, rtag, flists, commit):
 
                     scount += 1
 
-            # save last scan commit to type
-            cmt.commit = commit
-            cmt.save()
+            if cmt != None:
+                # save last scan commit to type
+                cmt.commit = commit
+                cmt.save()
 
             # we only save the first repo's commit to rtype
             if repo.id == 1:
@@ -248,6 +256,14 @@ def main(args):
             commit = tag_to_commit(repo, tag)
         else:
             commit = commit_from_repo(repo)
+
+        # if delta scan is enbled, skip the first time since we git clone
+        # the tree, treat there is no file change
+        if repo.delta == True:
+            if repo.commit is None or len(repo.commit) == 0:
+                repo.commit = commit
+                repo.save()
+                continue
 
         # file change list from last update
         flists = repo_get_changelist(repo, repo.commit, commit)

@@ -41,6 +41,7 @@ class GitRepo(models.Model):
     url = models.CharField(max_length = 256)
     user = models.CharField(max_length = 60)
     email = models.CharField(max_length = 256)
+    delta = models.BooleanField(default = True)
     commit = models.CharField(max_length = 256, blank = True)
     status = models.BooleanField(default = False)
 

@@ -24,7 +24,8 @@ from dpatch.models import GitRepo, Status, Type
 
 def main(args):
     repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
-                   name = 'linux.git', user = 'Wei Yongjun', email = 'weiyj.lk@gmail.com', status = True)
+                   name = 'linux.git', user = 'Wei Yongjun', email = 'weiyj.lk@gmail.com',
+                   status = True, delta = True)
     repo.save()
 
     for s in ['New', 'Sent', 'Mergered', 'Accepted', 'Rejected', 'Fixed', 'Removed']:
