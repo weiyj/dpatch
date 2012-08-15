@@ -5,6 +5,7 @@
 <div id="review" title="Review Patch" style="display:none" height="100%">
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.download.js"></script>
 
 <script type="text/javascript">
 	(function($) {
@@ -109,6 +110,21 @@
 				showModelDialog("/patch/delete/", {'ids': ids.join()}, 'GET');
 			}
 		}
+
+		function onPatchExport() {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("EXPORT ERROR: at least one row must be selected!");
+			} else {
+				$.download('/patch/export/', {'ids': ids.join()}, 'GET');
+			}
+		}
+
+		function onPatchExportAll() {
+			$.download('/patch/export/all/{{ tag }}/?repo={{repo}}', {}, 'GET');
+		}
+
 {% endif %}
 
 		$(document).ready(function () {
@@ -137,8 +153,9 @@
 				            { name : 'Unmerge', bclass : 'unmerge', onpress : doPatchUnMerge },
 				            { separator : true },
 				            { name : 'Delete', bclass : 'delete', onpress : doPatchDelete },
-				            //{ separator : true },
-					      //{ name : 'Save To File', bclass : 'mail',  },
+				            { separator : true },
+				            { name : 'Export', bclass : 'export', onpress: onPatchExport },
+				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,

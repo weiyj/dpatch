@@ -21,6 +21,7 @@
 
 import os
 import re
+import tarfile
 import subprocess
 
 from django.shortcuts import render_to_response
@@ -290,6 +291,13 @@ def showpatch(request, patch_id):
     patch = Patch.objects.filter(id = patch_id)
     return render_to_response("patch/patch.html", {'patchctx': patch[0].content})
 
+def patch_raw(request, patch_id):
+    patch = Patch.objects.filter(id = patch_id)
+    if len(patch) != 0:
+        return HttpResponse(patch[0].content, mimetype="text/plain")
+    else:
+        return HttpResponse('no such patch id')
+
 @login_required
 def patchlistmerge(request):
     pids = get_request_paramter(request, 'ids')
@@ -435,6 +443,89 @@ def patchunmerge(request):
 
     logevent("UNMERGE: patch [%s], SUCCEED" % (idsarg), True)
     return HttpResponse('UNMERGE SUCCEED: patch ids [%s]' % idsarg)
+
+@login_required
+def patch_export(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('EXPORT ERROR: no patch id specified')
+
+    files = []
+    idx = 1
+    for pid in pids.split(','):
+        patch = Patch.objects.filter(id = pid)
+        if len(patch) == 0:
+            logevent("EXPORT: patch [%s], ERROR: id %s does not exists" % (pids, pid))
+            return HttpResponse('EXPORT ERROR: id %s does not exists' % pid)
+        try:
+            fname = os.path.join(patch[0].dirname(), patch[0].filename(idx))
+            cocci = open(fname, "w")
+            cocci.write(patch[0].content)
+            cocci.close()
+            files.append(fname)
+            idx = idx + 1
+        except:
+            pass
+
+    response = HttpResponse(mimetype='application/x-gzip')
+    response['Content-Disposition'] = 'attachment; filename=patchset.tar.gz'
+    archive = tarfile.open(fileobj=response, mode='w:gz')
+
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
+    archive.close()
+
+    for fname in files:
+        if os.path.exists(fname):
+            os.unlink(fname)
+
+    logevent("EXPORT: patch [%s], SUCCEED" % (pids), True)
+    return response
+
+@login_required
+def patch_export_all(request, tag_name):
+    id = int(get_request_paramter(request, 'repo', '1'))
+
+    patchs = {'page': 1, 'total': 0, 'rows': [] }
+    repo = GitRepo.objects.filter(id = id)
+    if (len(repo) == 0):
+        return render_to_response(simplejson.dumps(patchs))
+
+    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
+    if (len(rtag) == 0):
+        return render_to_response(simplejson.dumps(patchs))
+
+    files = []
+    idx = 1
+    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
+        try:
+            fname = os.path.join(patch.dirname(), patch.filename(idx))
+            cocci = open(fname, "w")
+            cocci.write(patch.content)
+            cocci.close()
+            files.append(fname)
+            idx = idx + 1
+        except:
+            pass
+
+    response = HttpResponse(mimetype='application/x-gzip')
+    response['Content-Disposition'] = 'attachment; filename=patchset.tar.gz'
+    archive = tarfile.open(fileobj=response, mode='w:gz')
+
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
+    archive.close()
+
+    for fname in files:
+        if os.path.exists(fname):
+            os.unlink(fname)
+
+    logevent("EXPORT: all patchs, SUCCEED", True)
+    return response
 
 @login_required
 def patchdelete(request):

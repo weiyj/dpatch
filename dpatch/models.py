@@ -152,12 +152,12 @@ class Patch(models.Model):
     def __unicode__(self):
         return u'%s %s' %(self.tag, self.file)
 
-    def filename(self):
+    def filename(self, prefix = 1):
         fname = re.sub(r'[ .:/\\<>\(\)]+', '-', self.title)
         fname = re.sub(r'[\(\)]+', '', fname)
         if len(fname) > 52:
             fname = fname[:52]
-        return "0001-%s.patch" % fname
+        return "%04d-%s.patch" % (prefix, fname)
 
     def dirname(self):
         return '/var/lib/dpatch/repo/PATCH/'
