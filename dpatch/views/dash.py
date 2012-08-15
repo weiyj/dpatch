@@ -40,7 +40,8 @@ def patch_by_type(request, repo_id):
 
     for rtype in Type.objects.all():
         cnt = Patch.objects.filter(type = rtype, tag__repo = repos[0]).count()
-        ptypes[rtype.name] = cnt
+        if cnt != 0:
+            ptypes[rtype.name] = cnt
 
     return HttpResponse(simplejson.dumps(ptypes))
 
