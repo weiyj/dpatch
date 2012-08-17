@@ -198,20 +198,84 @@ def report_fix(request, report_id):
 
 @login_required
 def report_export(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('EXPORT ERROR: no report id specified')
+
+    files = []
+    idx = 1
+    for pid in pids.split(','):
+        report = Report.objects.filter(id = pid)
+        if len(report) == 0:
+            logevent("EXPORT: patch [%s], ERROR: id %s does not exists" % (pids, pid))
+            return HttpResponse('EXPORT ERROR: id %s does not exists' % pid)
+
+        if report[0].content is None or len(report[0].content) == 0:
+            continue
+
+        try:
+            fname = os.path.join(report[0].dirname(), report[0].filename(idx))
+            cocci = open(fname, "w")
+            cocci.write(report[0].content)
+            cocci.close()
+            files.append(fname)
+            idx = idx + 1
+        except:
+            pass
+
     response = HttpResponse(mimetype='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=rpatchset.tar.gz'
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
     archive.close()
+
+    for fname in files:
+        if os.path.exists(fname):
+            os.unlink(fname)
 
     return response
 
 @login_required
 def report_export_all(request, tag_name):
+    repo = GitRepo.objects.filter(id = id)
+    if (len(repo) == 0):
+        return render_to_response("repo id not specified")
+
+    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
+    if (len(rtag) == 0):
+        return render_to_response("tag id not specified")
+
+    files = []
+    idx = 1
+    for report in Report.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
+        if report.content is None or len(report.content) == 0:
+            continue
+        try:
+            fname = os.path.join(report.dirname(), report.filename(idx))
+            cocci = open(fname, "w")
+            cocci.write(report.content)
+            cocci.close()
+            files.append(fname)
+            idx = idx + 1
+        except:
+            pass
+
     response = HttpResponse(mimetype='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=rpatchset.tar.gz'
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
     archive.close()
+
+    for fname in files:
+        if os.path.exists(fname):
+            os.unlink(fname)
 
     return response

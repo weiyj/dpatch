@@ -29,17 +29,15 @@ from time import gmtime, strftime
 from dpatch.models import GitRepo, GitTag, Type, Status, CocciReport, ExceptFile, Report, ScanLog
 from logger import MyLogger
 
-logger = None
-
-def error(msg):
+def error(logger, msg):
     if logger != None:
         logger.logger.error(msg)
 
-def info(msg):
+def info(logger, msg):
     if logger != None:
         logger.logger.info(msg)
 
-def warning(msg):
+def warning(logger, msg):
     if logger != None:
         logger.logger.info(msg)
 
@@ -72,7 +70,7 @@ def is_source_file(sfile):
         return True
     return False
 
-def checkreport(repo, rtag, cocci, flists):
+def checkreport(repo, rtag, cocci, flists, logger):
     spfile = cocci.fullpath()
     if not os.path.exists(spfile):
         print('sp_file %s does not exists' % spfile)
@@ -82,7 +80,7 @@ def checkreport(repo, rtag, cocci, flists):
     if rtype.status == False:
         return 0
 
-    info('Starting scan type %d' % rtype.id)
+    info(logger, 'Starting scan type %d' % rtype.id)
 
     new = Status.objects.filter(name = 'New')[0]
     fixed = Status.objects.filter(name = 'Fixed')[0]
@@ -135,7 +133,7 @@ def checkreport(repo, rtag, cocci, flists):
         report.save()
         rcount += 1
 
-    info('End scan type %d, report %d' % (rtype.id, rcount))
+    info(logger, 'End scan type %d, report %d' % (rtype.id, rcount))
 
     return rcount
 
@@ -162,12 +160,14 @@ def main(args):
         rtag.save()
 
         for cocci in CocciReport.objects.all():
-            rcount += checkreport(repo, rtag, cocci, flists)
+            rcount += checkreport(repo, rtag, cocci, flists, logger)
 
         rtag.rptotal += rcount
         rtag.running = False
         rtag.save()
 
+        logs.desc = 'coccinelle engine: %d, total: %d' % (rcount, rcount)
+        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         logs.logs = logger.getlog()
         logs.save()
 
