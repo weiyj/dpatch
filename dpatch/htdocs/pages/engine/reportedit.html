@@ -1,0 +1,25 @@
+<table>
+    <tr>
+        <td>Name:</td>
+        <td>
+            <input id="name" type="text" maxlength="80" size="60" value="{{type.name}}"/>
+            <input id="id" type="hidden" value="{{cocci.id}}"/>
+        </td>
+    </tr>
+    <tr>
+        <td>Patch Title:</td>
+        <td><input id="title" type="text" size="60" value="{{type.ptitle}}"/></td>
+    </tr>
+    <tr>
+        <td>Patch Desc:</td>
+        <td><textarea id="desc" rows="4" cols="60">{{type.pdesc}}</textarea></td>
+    </tr>
+    <tr>
+        <td>Semantics:</td>
+        <td><textarea id="content" rows="12" cols="60">{{cocci.content}}</textarea></td>
+    </tr>
+    <tr>
+        <td>Options:</td>
+        <td><input id="options" type="text" size="60" value="{{cocci.options}}"/></td>
+    </tr>
+</table>

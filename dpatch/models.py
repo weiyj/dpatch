@@ -57,6 +57,7 @@ class GitTag(models.Model):
     repo = models.ForeignKey(GitRepo)
     name = models.CharField(max_length = 60)
     total = models.IntegerField()
+    rptotal = models.IntegerField(default = 0)
     flist = models.TextField(blank = True)
     running = models.BooleanField(default = False)
 
@@ -91,6 +92,37 @@ class CocciEngine(models.Model):
             spctx += '///\n'
         if len(self.fixed) > 0:
             spctx += '/// Fixed: %s\n' % self.fixed
+            spctx += '///\n'
+        for einfo in exceptinfo:
+            if einfo.has_key('reason'):
+                spctx += '/// Except File: %s : %s\n' %  (einfo['file'], einfo['reason'])
+            else:
+                spctx += '/// Except File: %s\n' % einfo['file']
+        if len(exceptinfo) > 0:
+            spctx += '///\n'
+        for line in desc.split('\n'):
+            spctx += '/// %s\n' %  line
+        spctx += '///\n'
+        spctx += self.content
+        return spctx
+
+class CocciReport(models.Model):
+    id = models.AutoField(primary_key = True)
+    file = models.CharField(max_length = 256)
+    options = models.CharField(max_length = 256, blank = True)
+    content = models.TextField(blank = True)
+
+    def __unicode__(self):
+        return u'%d %s' %(self.id, self.file)
+
+    def fullpath(self):
+        return os.path.join('/var/lib/dpatch/pattern/cocci/report/%s' % self.file)
+
+    def rawformat(self, title, desc, exceptinfo = []):
+        spctx = '/// %s\n' %  title
+        spctx += '///\n'
+        if len(self.options) > 0:
+            spctx += '/// Options: %s\n' % self.options
             spctx += '///\n'
         for einfo in exceptinfo:
             if einfo.has_key('reason'):
@@ -173,6 +205,54 @@ class Patch(models.Model):
             return self.tag.repo.email
         else:
             return self.type.email
+
+    def fullpath(self):
+        return '/var/lib/dpatch/repo/PATCH/%s' % self.filename()
+
+class Report(models.Model):
+    id = models.AutoField(primary_key = True)
+    tag = models.ForeignKey(GitTag)
+    type = models.ForeignKey(Type)
+    status = models.ForeignKey(Status)
+    file = models.CharField(max_length = 256)
+    date = models.DateTimeField(default = datetime.datetime.now())
+    mergered = models.IntegerField(default = 0)
+    mglist = models.CharField(max_length = 256, blank = True)
+    commit = models.CharField(max_length = 60, blank = True)
+    reportlog = models.TextField()
+    diff = models.TextField(default = '')
+    title = models.CharField(max_length = 256, blank = True)
+    desc = models.TextField(max_length = 256, blank = True)
+    emails = models.CharField(max_length = 256, blank = True)
+    content = models.TextField(blank = True)
+
+    def __unicode__(self):
+        return u'%s %s' %(self.tag, self.file)
+
+    def filename(self, prefix = 1):
+        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', self.title)
+        fname = re.sub(r'[\(\)]+', '', fname)
+        if len(fname) > 52:
+            fname = fname[:52]
+        return "%04d-%s.patch" % (prefix, fname)
+
+    def dirname(self):
+        return '/var/lib/dpatch/repo/PATCH/'
+
+    def username(self):
+        if len(self.type.user) == 0:
+            return self.tag.repo.user
+        else:
+            return self.type.user
+
+    def email(self):
+        if len(self.type.email) == 0:
+            return self.tag.repo.email
+        else:
+            return self.type.email
+
+    def sourcefile(self):
+        return os.path.join(self.tag.repo.dirname(), self.file)
 
     def fullpath(self):
         return '/var/lib/dpatch/repo/PATCH/%s' % self.filename()

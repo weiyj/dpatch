@@ -1,0 +1,28 @@
+<input id="id" type="hidden" value="{{ report.id }}">
+
+<div>
+    <div>Source File: {{ report.file }} <div id="tip" style="float:right;"><U>REPORT&gt;&gt;</U></div></div>
+    <div id="log" style="border: solid 1px #CBCBCB;height: 100px;display:none;overflow-y:auto;">
+        <pre>{{ report.reportlog }}</pre>
+    </div>
+
+    <textarea id="src" rows="25" cols="80" name="src">{{ src }}</textarea>
+</div>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			$('#tip').click(function () {
+				if ($(this).data("show") == true) {
+					$('#log').css("display", "none");
+					$('#tip').html("<U>REPORT&gt;&gt;</U>")
+					$(this).data("show", false);
+				} else {
+					$('#log').css("display", "block");
+					$('#tip').html("<U>REPORT&lt;&lt;</U>")
+					$(this).data("show", true);
+				}
+			});
+		});
+	})(jQuery);
+</script>

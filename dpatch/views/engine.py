@@ -31,7 +31,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 
-from dpatch.models import CocciEngine, Type, Event, Patch, ExceptFile
+from dpatch.models import CocciEngine, CocciReport, Type, Event, Patch, Report, ExceptFile
 from dpatch.forms import ExceptFileForm
 
 def get_request_paramter(request, key):
@@ -474,3 +474,303 @@ def exceptfile_delete(request):
 
     logevent("DELETE: except file [%s], SUCCEED" % tids, True)
     return HttpResponse('DELETE SUCCEED: except file ids [%s]' % tids)
+
+def report_semantic(request):
+    context = RequestContext(request)
+    return render_to_response("engine/reportengine.html", context)
+
+def report_semantic_list(request):
+    page = int(get_request_paramter(request, 'page'))
+    rp = int(get_request_paramter(request, 'rp'))
+
+    coccis = {'page': 1, 'total': 0, 'rows': [] }
+    for cocci in CocciReport.objects.all():
+        rtype = Type.objects.get(id = cocci.id + 10000)
+        if rtype.status == False:
+            status = '<a href="#" class="status" id="%s">Disabled</a>' % rtype.id
+        else:
+            status = '<a href="#" class="status" id="%s">Enabled</a>' % rtype.id
+
+        action = '<a href="#" class="detail" id="%s">Detail</a>' % cocci.id
+        if request.user.is_authenticated():
+            action += '<a href="#" class="edit" id="%s">Edit</a>' % cocci.id
+
+        coccis['rows'].append({
+            'id': cocci.id,
+            'cell': {
+                'id': cocci.id,
+                'file': cocci.file,
+                'status': status,
+                'name': rtype.name,
+                'title': rtype.ptitle,
+                'desc': rtype.pdesc,
+                'options': '-',
+                'action': action,
+        }}) # comment
+
+    if rp * page > len(coccis['rows']):
+        end = len(coccis['rows'])
+    else:
+        end = rp * page
+    start = rp * (page - 1)
+    coccis['page'] = page
+    coccis['total'] = len(coccis['rows'])
+    coccis['rows'] = coccis['rows'][start:end]
+
+    return HttpResponse(simplejson.dumps(coccis))
+
+@login_required
+@csrf_exempt
+def report_semantic_new(request):
+    if request.method == "POST":
+        name = get_request_paramter(request, 'name')
+        title = get_request_paramter(request, 'title')
+        desc = get_request_paramter(request, 'desc')
+        content = get_request_paramter(request, 'content')
+        options = get_request_paramter(request, 'options')
+
+        if name is None or len(name) == 0:
+            logevent("NEW: coccinelle report semantic, ERROR: no name specified")
+            return HttpResponse('NEW ERROR: no semantic name specified')
+    
+        if title is None or len(title) == 0:
+            logevent("NEW: coccinelle report semantic, ERROR: no title specified")
+            return HttpResponse('NEW ERROR: no semantic title specified')
+    
+        if desc is None or len(desc) == 0:
+            logevent("NEW: coccinelle report semantic, ERROR: no desc specified")
+            return HttpResponse('NEW ERROR: no semantic desc specified')
+    
+        if content is None or len(content) == 0:
+            logevent("NEW: coccinelle report semantic, ERROR: no content specified")
+            return HttpResponse('NEW ERROR: no semantic content specified')
+    
+        if options is None:
+            options = ''
+
+        fname = '%s.cocci' % name.strip()
+        engine = CocciReport(file = fname, content = content, options = options)
+        if os.path.exists(engine.fullpath()):
+            logevent("NEW: coccinelle report semantic, ERROR: name %s already exists" % name)
+            return HttpResponse('NEW ERROR: semantic name %s already exists' % name)
+
+        spctx = engine.rawformat(title, desc)
+        try:
+            cocci = open(engine.fullpath(), "w")
+            cocci.write(spctx)
+            cocci.close()
+        except:
+            logevent("NEW: coccinelle report semantic, ERROR: can not write file %s" % engine.fullpath())
+            return HttpResponse('NEW ERROR: can not write file %s' % engine.fullpath())
+    
+        engine.save()
+    
+        rtype = Type(id = engine.id + 10000, name = name, ptitle = title, pdesc = desc, status = False)
+        rtype.save()
+    
+        logevent("NEW: coccinelle report semantic, SUCCEED: new type id %s" % rtype.id, True)
+        return HttpResponse('NEW: coccinelle report semanticm, SUCCEED: new type %s' % rtype.id)
+    else:
+        context = RequestContext(request)
+        return render_to_response("engine/reportedit.html", context)
+
+@login_required
+@csrf_exempt
+def report_semantic_delete(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('DELETE ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciReport.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("DELETE: coccinelle report semantic [%s], ERROR: id %s does not exists" % (pids, i))
+            return HttpResponse('DELETE ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 10000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+
+            # delete patchs owner by this type
+            patchs = Report.objects.filter(type = rtype)
+            for patch in patchs:
+                tag = patch.tag
+                patch.delete()
+                tag.total -= 1
+                tag.save()
+
+            # delete except files owner by this type
+            efiles = ExceptFile.objects.filter(type = rtype)
+            for efile in efiles:
+                efile.delete()
+
+            rtype.delete()
+        if os.path.exists(cocci.fullpath()):
+            os.unlink(cocci.fullpath())
+        cocci.delete()
+
+    logevent("DELETE: coccinelle report semantic [%s], SUCCEED" % pids, True)
+    return HttpResponse('DELETE SUCCEED: engine ids [%s]' % pids)
+
+@login_required
+@csrf_exempt
+def report_semantic_edit(request, cocci_id):
+    if request.method == "POST":
+        name = get_request_paramter(request, 'name')
+        title = get_request_paramter(request, 'title')
+        desc = get_request_paramter(request, 'desc')
+        content = get_request_paramter(request, 'content')
+        options = get_request_paramter(request, 'options')
+
+        if name is None or len(name) == 0:
+            logevent("EDIT: coccinelle report semantic, ERROR: no name specified")
+            return HttpResponse('EDIT ERROR: no semantic name specified')
+    
+        if title is None or len(title) == 0:
+            logevent("EDIT: coccinelle report semantic, ERROR: no title specified")
+            return HttpResponse('EDIT ERROR: no semantic title specified')
+    
+        if desc is None or len(desc) == 0:
+            logevent("EDIT: coccinelle report semantic, ERROR: no desc specified")
+            return HttpResponse('EDIT ERROR: no semantic desc specified')
+    
+        if content is None or len(content) == 0:
+            logevent("EDIT: coccinelle report semantic, ERROR: no content specified")
+            return HttpResponse('EDIT ERROR: no semantic content specified')
+
+        if options is None:
+            options = ''
+
+        coccis = CocciReport.objects.filter(id = cocci_id)
+        if len(coccis) == 0:
+            logevent("EDIT: coccinelle report semantic, ERROR: id %s does not exists" % cocci_id)
+            return HttpResponse('EDIT ERROR: semantic id %s does not exists' % cocci_id)
+
+        engine = coccis[0]
+        ofname = engine.fullpath()
+        fname = '%s.cocci' % name.strip()
+        engine.file = fname
+        engine.content = content
+        engine.options = options.strip()
+
+        rtype = Type.objects.get(id = engine.id + 10000)
+
+        einfo = []
+        for efile in ExceptFile.objects.filter(type = rtype):
+            einfo.append({'file': efile.file, 'reason': efile.reason})
+
+        spctx = engine.rawformat(title, desc, einfo)
+        try:
+            cocci = open(engine.fullpath(), "w")
+            cocci.write(spctx)
+            cocci.close()
+            if ofname != engine.fullpath() and os.path.exists(ofname):
+                os.unlink(ofname)
+        except:
+            logevent("EDIT: coccinelle report semantic, ERROR: can not write file %s" % engine.fullpath())
+            return HttpResponse('EDIT ERROR: can not write file %s' % engine.fullpath())
+
+        engine.save()
+    
+        rtype.name = name
+        rtype.ptitle = title
+        rtype.pdesc = desc
+        rtype.save()
+
+        logevent("EDIT: coccinelle report semantic, SUCCEED: type id %s" % rtype.id, True)
+        return HttpResponse('EDIT: coccinelle semantic, SUCCEED: type id %s' % cocci_id)
+    else:
+        coccis = CocciReport.objects.filter(id = cocci_id)
+        if len(coccis) == 0:
+            engine = None
+            rtype = None
+        else:
+            engine = coccis[0]
+            rtype = Type.objects.get(id = engine.id + 10000)
+        context = RequestContext(request)
+        context['cocci'] = engine
+        context['type'] = rtype
+        return render_to_response("engine/semanticedit.html", context)
+
+def report_semantic_detail(request, cocci_id):
+    coccis = CocciReport.objects.filter(id = cocci_id)
+    if len(coccis) == 0:
+        return ""
+    cocci = coccis[0]
+    try:
+        cfile = open(cocci.fullpath(), 'r')
+        content = cfile.read()
+        cfile.close()
+    except:
+        content = cocci.content
+    context = RequestContext(request)
+    context['content'] = content
+    return render_to_response("engine/coccidetail.html", context)
+
+def rewrite_report_engine(cocci):
+    rtypes = Type.objects.filter(id = cocci.id + 10000)
+    if len(rtypes) != 0:
+        rtype = rtypes[0]
+
+        einfo = []
+        for efile in ExceptFile.objects.filter(type = rtype):
+            einfo.append({'file': efile.file, 'reason': efile.reason})
+
+        if len(einfo) > 0:
+            spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
+            try:
+                cocci = open(cocci.fullpath(), "w")
+                cocci.write(spctx)
+                cocci.close()
+            except:
+                pass
+
+def report_semantic_export(request):
+    cids = get_request_paramter(request, 'ids')
+    if cids is None:
+        return HttpResponse('EXPORT ERROR: no patch id specified')
+
+    files = []
+    for cid in cids.split(','):
+        cocci = CocciReport.objects.filter(id = cid)
+        if len(cocci) == 0:
+            logevent("EXPORT: coccinelle semantic [%s], ERROR: id %s does not exists" % (cids, cid))
+            return HttpResponse('EXPORT ERROR: id %s does not exists' % cid)
+        rewrite_report_engine(cocci[0])
+        files.append(cocci[0].fullpath())
+
+    response = HttpResponse(mimetype='application/x-gzip')
+    response['Content-Disposition'] = 'attachment; filename=reports.tar.gz'
+    archive = tarfile.open(fileobj=response, mode='w:gz')
+
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
+    archive.close()
+
+    logevent("EXPORT: coccinelle report semantic [%s], SUCCEED" % (cids), True)
+    return response
+
+def report_semantic_export_all(request):
+    files = []
+    for cocci in CocciReport.objects.all():
+        rewrite_report_engine(cocci)
+        files.append(cocci.fullpath())
+
+    response = HttpResponse(mimetype='application/x-gzip')
+    response['Content-Disposition'] = 'attachment; filename=reports-all.tar.gz'
+    archive = tarfile.open(fileobj=response, mode='w:gz')
+
+    for fname in files:
+        if os.path.exists(fname):
+            archive.add(fname, arcname = os.path.basename(fname))
+
+    archive.close()
+
+    logevent("EXPORT: coccinelle report semantic all, SUCCEED", True)
+    return response

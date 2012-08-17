@@ -35,6 +35,13 @@ def patchstatus(request):
     context['tags'] = tags
     return render_to_response("patchstatus.html", context)
 
+def reportstatus(request):
+    #tags = GitTag.objects.filter(rptotal__gt=0).order_by("-id")
+    tags = GitTag.objects.filter(repo__id=1).order_by("-id")
+    context = RequestContext(request)
+    context['tags'] = tags
+    return render_to_response("reportstatus.html", context)
+
 def patchengine(request):
     context = RequestContext(request)
     return render_to_response("patchengine.html", context)

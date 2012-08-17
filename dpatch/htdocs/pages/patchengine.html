@@ -6,12 +6,13 @@
 {% block body %}
 <div id='engines'>
 	<ul>
-		<li><h2>Patch Engine</h2></li>
-		<li><a href="/engine/cocci/semantic/">Coccinelle Engine</a></li>
+		<li><h2>Coccinelle Engine</h2></li>
+		<li><a href="/engine/cocci/semantic/">Patch Engine</a></li>
+		<li><a href="/engine/cocci/report">Report Engine</a></li>
 		<!--li><a href="/engine/checkcocci.html">Coccinelle Engine</a></li-->
-		<li><a href="/engine/checkversion.html">Check Version Engine</a></li>
-		<li><a href="/engine/checkinclude.html">Check Include Engine</a></li>
-		<li><a href="/engine/exceptfile">Engine Special File</a></li>
+		<!-- li><a href="/engine/checkversion.html">Check Version Engine</a></li>
+		<li><a href="/engine/checkinclude.html">Check Include Engine</a></li-->
+		<li><a href="/engine/exceptfile">Special File</a></li>
 	</ul>
 	<div class="ui-list-panel"></div>
 </div>
@@ -19,19 +20,10 @@
 <script type="text/javascript">
 	(function($) {
 		$(document).ready(function () {
-			$('#navs').navigator({ selected: 2 });
+			$('#navs').navigator({ selected: 3 });
 			$("#engines").lists({ removeHeight:85 });
 		});
 	})(jQuery);
 </script>
 
 {% endblock %}
-<!--
-_____________________________________________________________________________
-| CheckVersionDetector |         Description
-| CheckIncludeDetector |     summary for CheckVersionDetector
-| CheckCocciDetector   |
-|    kfree_skb         |
-|    kmem_cache_zalloc |
-------------------------------------------------------------------------------
--->

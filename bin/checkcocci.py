@@ -41,9 +41,9 @@ class CheckCocciDetector(PatchDetector):
 
     def _execute_shell(self, args):
         if isinstance(args, basestring):
-            shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+            shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         else:
-            shelllog = subprocess.Popen(args, stdout=subprocess.PIPE)
+            shelllog = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]
 
         if shelllog.returncode != 0:

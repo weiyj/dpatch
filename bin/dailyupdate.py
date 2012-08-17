@@ -265,6 +265,10 @@ def main(args):
                 repo.save()
                 continue
 
+            # no file change
+            if repo.commit == commit:
+                continue
+
         # file change list from last update
         flists = repo_get_changelist(repo, repo.commit, commit)
 
@@ -283,6 +287,7 @@ def main(args):
         pcount = check_patch(repo, rtag, flists, commit)
 
         rtag.total += pcount
+        rtag.flist = ','.join(flists)
         rtag.running = False
         rtag.save()
 

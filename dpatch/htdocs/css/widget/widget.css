@@ -25,6 +25,7 @@
 	-webkit-border-top-right-radius: 0px/*{cornerRadius}*/;
 	-khtml-border-top-right-radius: 0px/*{cornerRadius}*/;
 	border-top-right-radius: 0px/*{cornerRadius}*/;
+	overflow: auto;
 }
 
 .dash-widget .ui-state-active {

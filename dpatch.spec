@@ -41,8 +41,10 @@ cp -rf dpatch/htdocs $RPM_BUILD_ROOT/usr/dpatch/dpatch/
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/repo
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/repo/PATCH
+%{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/build
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/pattern
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/pattern/cocci
+%{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/pattern/cocci/report
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/database
 #%{__install} -m 644 -D database/*.db $RPM_BUILD_ROOT/var/lib/dpatch/database/
 

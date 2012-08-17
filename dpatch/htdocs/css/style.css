@@ -60,7 +60,7 @@ div.subtoptitle {
     background: url("../images/email.jpg") no-repeat transparent;
 }
 
-.flexigrid a.detail, a.edit, a.send {
+.flexigrid a.detail, a.edit, a.send, a.fix, a.patch {
 	margin: 0px 2px 0px 2px;
 	padding: 0px 6px 0px 6px;
 	color: #000000;

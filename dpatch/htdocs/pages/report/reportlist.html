@@ -1,0 +1,146 @@
+<div id="reportlist"></div>
+<div id="reportdetail" title="Report Detail" style="display:none">
+{% if user.is_authenticated %}
+<div id="reportsend" title="Report Patch Send" style="display:none">
+<div id="reportfix" title="Fix Source File" style="display:none">
+{% endif %}
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.download.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		function onGridLoadSuccess(grid) {			
+			$("#reportlist .detail").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportdetail", "GET", '/report/detail/' + id, {});
+			});
+
+			$("#reportlist .patch").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportdetail", "GET", '/report/patch/' + id, {});
+			});
+
+{% if user.is_authenticated %}
+			$("#reportlist .fix").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportfix", "GET", '/report/fix/' + id, {});
+			});
+
+			$("#reportlist .send").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportsend", "GET", '/report/send/wizard/' + id, {});
+			});
+{% endif %}
+		}
+
+{% if user.is_authenticated %}
+		function getGridSelected() {
+			var ids = [];
+			$('#reportlist tr.trSelected').each( function(){
+				id = $(this).find("td:eq(2)").eq(0).text();
+			   ids.push(id);
+			});
+			return ids;
+		}
+
+		function doReportDelete() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('DELETE ERROR: at least one row must be selected!');
+			} else {
+				showModelDialog("/report/delete/", {'ids': ids.join()}, 'GET', "#reportlist");
+			}
+		}
+
+		function onReportExport() {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("EXPORT ERROR: at least one row must be selected!");
+			} else {
+				$.download('/report/export/', {'ids': ids.join()}, 'GET');
+			}
+		}
+
+		function onReportExportAll() {
+			$.download('/report/export/all/{{ tag }}/?repo={{repo}}', {}, 'GET');
+		}
+
+{% endif %}
+
+		$(document).ready(function () {
+			$('#reportlist').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'Tag {{ tag }}',
+				url: '/report/list/{{ tag }}/data/?repo={{repo}}',
+				method: 'GET',
+				colModel : [ { display: 'ID', name : 'id', width : 30, align: 'center'},
+				             { display: 'TITLE', name : 'title', width : 360, align: 'left'},
+				             { display: 'FILENAME', name : 'file', width : 240, align: 'left'},
+				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
+				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
+				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
+				             { display: 'ACTION', name : 'action', width : 120, align: 'center'}],
+				searchitems : [ {display: 'Title', name : 'title'},
+				            	 {display: 'Filename', name : 'file'},
+				            	 {display: 'Status', name : 'status'},
+				            	 {display: 'Type', name : 'type', isdefault: true}],
+				rp: 15,
+				usepager: true,
+{% if user.is_authenticated %}
+				showCheckbox: true,
+				buttons : [ { name : 'Delete', bclass : 'delete', onpress : doReportDelete },
+				            { separator : true },
+				            { name : 'Export Patch', bclass : 'export', onpress: onReportExport },
+				            { name : 'Export Patch All', bclass : 'export', onpress: onReportExportAll },
+				            { separator : true } ],
+{% else %}
+				showCheckbox: false,
+				singleSelect: true,
+{% endif %}
+				onSuccess: onGridLoadSuccess
+			});
+
+			$('#reportdetail').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 700,
+				height:400
+			});
+
+{% if user.is_authenticated %}
+			$('#reportsend').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 810,
+				height: 536,
+				resizable: false
+			});
+
+			$('#reportfix').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 700,
+				resizable: true,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		id = $(this).find("input[id=id]").eq(0).val();
+				      		src = $(this).find("textarea[id=src]").eq(0).val();
+							$(this).dialog("close");
+				      		showModelDialog('/report/fix/' + id + '/', {'src': src}, 'POST', "#reportlist");
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
+			});
+{% endif %}
+		});
+	})(jQuery);
+</script>

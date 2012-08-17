@@ -80,7 +80,7 @@ def patchlistdata(request, tag_name):
     if (len(rtag) == 0):
         return render_to_response(simplejson.dumps(patchs))
 
-    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
+    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0):
         action = ''
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
@@ -488,14 +488,13 @@ def patch_export(request):
 def patch_export_all(request, tag_name):
     id = int(get_request_paramter(request, 'repo', '1'))
 
-    patchs = {'page': 1, 'total': 0, 'rows': [] }
     repo = GitRepo.objects.filter(id = id)
     if (len(repo) == 0):
-        return render_to_response(simplejson.dumps(patchs))
+        return render_to_response("repo id not specified")
 
     rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
     if (len(rtag) == 0):
-        return render_to_response(simplejson.dumps(patchs))
+        return render_to_response("tag id not specified")
 
     files = []
     idx = 1
