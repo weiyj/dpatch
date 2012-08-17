@@ -122,7 +122,7 @@
 		}
 
 		function onPatchExportAll() {
-			$.download('/patch/export/all/{{ tag }}/?repo={{repo}}', {}, 'GET');
+			$.download('/patch/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
 		}
 
 {% endif %}

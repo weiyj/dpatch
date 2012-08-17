@@ -241,7 +241,9 @@ def report_export(request):
 
 @login_required
 def report_export_all(request, tag_name):
-    repo = GitRepo.objects.filter(id = id)
+    rid = int(get_request_paramter(request, 'repo', '1'))
+
+    repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
         return render_to_response("repo id not specified")
 

@@ -65,7 +65,7 @@
 		}
 
 		function onReportExportAll() {
-			$.download('/report/export/all/{{ tag }}/?repo={{repo}}', {}, 'GET');
+			$.download('/report/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
 		}
 
 {% endif %}
