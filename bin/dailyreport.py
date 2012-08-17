@@ -138,7 +138,7 @@ def checkreport(repo, rtag, cocci, flists, logger):
     return rcount
 
 def main(args):
-    for repo in GitRepo.objects.filter(id = 1):
+    for repo in GitRepo.objects.filter(status = True):
         tags = GitTag.objects.filter(repo = repo).order_by("-id")
         if len(tags) == 0:
             continue
@@ -166,7 +166,7 @@ def main(args):
         rtag.running = False
         rtag.save()
 
-        logs.desc = 'coccinelle engine: %d, total: %d' % (rcount, rcount)
+        logs.desc = 'coccinelle engine report: %d, total: %d' % (rcount, rcount)
         logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         logs.logs = logger.getlog()
         logs.save()
