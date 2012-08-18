@@ -2,7 +2,7 @@
 
 Summary: Automated kernel patch maker system
 Name: dpatch
-Version: 0.1
+Version: 0.2
 Release: 0%{?dist}
 License: GPLv2
 Group: System Environment/Base
