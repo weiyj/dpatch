@@ -90,6 +90,10 @@ def checkreport(repo, rtag, cocci, flists, logger):
     for fn in ExceptFile.objects.filter(type = rtype):
         exceptfiles.append(fn.file)
 
+    # allow full scan the first repo
+    if repo.delta == False and rtype.commit == '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2':
+        flists = repo_get_changelist(repo, rtype.commit, repo.commit)
+
     rcount = 0
     for fname in flists:
         if is_source_file(fname) == False:
@@ -133,6 +137,8 @@ def checkreport(repo, rtag, cocci, flists, logger):
         report.save()
         rcount += 1
 
+    rtype.commit = repo.commit
+    rtype.save()
     info(logger, 'End scan type %d, report %d' % (rtype.id, rcount))
 
     return rcount
