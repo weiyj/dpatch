@@ -196,7 +196,7 @@ def patchsendwizardstep(request, patch_id):
         email = email.replace(',', '')
         emails = email.split("\n")
         if len(emails) == 0:
-            to = ''
+            to = email
         else:
             to = emails[0].strip()
 
@@ -219,7 +219,7 @@ def patchsendwizardstep(request, patch_id):
         email = email.replace(',', '')
         emails = email.split("\n")
         if len(emails) == 0:
-            to = ''
+            to = email
         else:
             to = emails[0].strip()
 

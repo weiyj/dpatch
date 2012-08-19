@@ -426,7 +426,7 @@ def report_sendwizard_step(request, report_id):
         email = email.replace(',', '')
         emails = email.split("\n")
         if len(emails) == 0:
-            to = ''
+            to = email
         else:
             to = emails[0].strip()
 
@@ -449,7 +449,7 @@ def report_sendwizard_step(request, report_id):
         email = email.replace(',', '')
         emails = email.split("\n")
         if len(emails) == 0:
-            to = ''
+            to = email
         else:
             to = emails[0].strip()
 
