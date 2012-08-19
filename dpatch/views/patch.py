@@ -197,7 +197,7 @@ def patchsendwizardstep(request, patch_id):
         emails = email.split("\n")
         to = ''
         for addr in emails:
-            if len(addr.strip()) == 0:
+            if len(addr.strip()) != 0:
                 to = addr.strip()
                 break
 
@@ -221,7 +221,7 @@ def patchsendwizardstep(request, patch_id):
         emails = email.split("\n")
         to = ''
         for addr in emails:
-            if len(addr.strip()) == 0:
+            if len(addr.strip()) != 0:
                 to = addr.strip()
                 break
 
