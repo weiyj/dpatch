@@ -66,6 +66,7 @@ urlpatterns += patterns('dpatch.views.patch',
     url(r'^patch/review/(?P<patch_id>\d+)/$', 'patchreview'),
     url(r'^patch/send/wizard/(?P<patch_id>\d+)/$', 'patchsendwizard'),
     url(r'^patch/send/wizard/(?P<patch_id>\d+)/step/$', 'patchsendwizardstep'),
+    url(r'^patch/build/(?P<patch_id>\d+)/$', 'patch_build'),
 )
 
 urlpatterns += patterns('dpatch.views.report',
@@ -75,8 +76,12 @@ urlpatterns += patterns('dpatch.views.report',
     url(r'^report/detail/(?P<report_id>\d+)/$', 'report_detail'),
     url(r'^report/patch/(?P<report_id>\d+)/$', 'report_patch'),
     url(r'^report/fix/(?P<report_id>\d+)/$', 'report_fix'),
+    url(r'^report/edit/(?P<report_id>\d+)/$', 'report_edit'),
     url(r'^report/export/$', 'report_export'),
     url(r'^report/export/all/(?P<tag_name>[^/]*)/$', 'report_export_all'),
+    url(r'^report/send/wizard/(?P<report_id>\d+)/$', 'report_sendwizard'),
+    url(r'^report/send/wizard/(?P<report_id>\d+)/step/$', 'report_sendwizard_step'),
+    url(r'^report/build/(?P<report_id>\d+)/$', 'report_build'),
 )
 
 urlpatterns += patterns('dpatch.views.engine',

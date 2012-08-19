@@ -15,35 +15,25 @@
 			$('#review').dialog('open');
 		}
 
-				function onGridLoadSuccess(grid) {			
+		function onGridLoadSuccess(grid) {			
 			$("#patchlist .detail").click(function () {
 				id = $(this).attr('id');
-				$('#dialog').load('/patch/' + id);
-				$('#dialog').dialog('open');
+				ajaxShowDialog("#dialog", "GET", '/patch/' + id, {});
 			});
+
+			$("#patchlist .build").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#dialog", "GET", '/patch/build/' + id, {});
+			});
+
 			$("#patchlist .edit").click(function () {
 				id = $(this).attr('id');
-				$.ajax({
-					type: "GET",
-					url: '/patch/edit/' + id,
-					success: function(data){
-						$("#dialogedit").html(data).dialog('open'); 
-					},
-					error: function(xhr, status, throwerr){
-					}
-				});				
+				ajaxShowDialog("#dialogedit", "GET", '/patch/edit/' + id, {});
 			});
+
 			$("#patchlist .send").click(function () {
 				id = $(this).attr('id');
-				$.ajax({
-					type: "GET",
-					url: '/patch/send/wizard/' + id,
-					success: function(data){
-						$("#dialogsend").html(data).dialog('open');
-					},
-					error: function(xhr, status, throwerr){
-					}
-				});	
+				ajaxShowDialog("#dialogsend", "GET", '/patch/send/wizard/' + id, {});
 			});
 		}
 

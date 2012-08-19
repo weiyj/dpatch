@@ -152,6 +152,9 @@ def main(args):
         if len(rtag.flist) == 0:
             continue
 
+        if rtag.running == True:
+            continue
+
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = rtag.name,
                        starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),

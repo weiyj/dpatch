@@ -280,6 +280,9 @@ def main(args):
         else:
             rtag = tags[0]
 
+        if rtag.running == True:
+            continue
+
         rtag.running = True
         rtag.save()
 

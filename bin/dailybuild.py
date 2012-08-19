@@ -20,20 +20,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os
-import re
 import sys
 import subprocess
 
-from time import gmtime, strftime
-
-from dpatch.models import GitRepo, Patch, Type, Report
-from logger import MyLogger
+from dpatch.models import GitRepo, Patch, Report
 
 def execute_shell(args):
     if isinstance(args, basestring):
-        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
     else:
-        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE)
+        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     shellOut = shelllog.communicate()[0]
 
     lines = shellOut.split("\n")
@@ -41,33 +38,31 @@ def execute_shell(args):
 
     return shelllog.returncode, lines
 
-def commit_from_repo(repo):
-    ret, commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.dirname())
-    return commits[-1]
-
 def main(args):
     for repo in GitRepo.objects.filter(status = True):
         # prepare build env
         if not os.path.exists(repo.builddir()):
-            os.system("cd /var/lib/dpatch/build/; git clone file://%s", repo.dirname())
+            os.system("cd /var/lib/dpatch/build/; git clone file://%s" % repo.dirname())
             os.system("cd %s; make allmodconfig" % repo.builddir())
         else:
+            os.system("cd %s; git diff | patch -p1 -R" % repo.builddir())
             os.system("cd %s; git pull" % repo.builddir())
 
         os.system("cd %s; make" % repo.builddir())
-        commit = commit_from_repo(repo)
 
         for patch in Patch.objects.filter(tag__repo = repo, build = 0, status__name = 'New'):
             buildlog = ''
+
+            if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
+                continue
 
             fname = os.path.join(patch.dirname(), patch.filename())
             cocci = open(fname, "w")
             cocci.write(patch.content)
             cocci.close()
 
-            os.system("cd %s; git reset --hard %s" % (repo.builddir(), commit))
-
             ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
+            buildlog += '# git am %s\n' % os.path.basename(fname)
             buildlog += '\n'.join(log)
             if ret != 0:
                 patch.build = 2
@@ -75,6 +70,7 @@ def main(args):
                 patch.save()
                 continue
 
+            buildlog += '\n# make\n'
             ret, log = execute_shell("cd %s; make" % (repo.builddir()))
             buildlog += '\n'.join(log)
             if ret != 0:
@@ -83,10 +79,44 @@ def main(args):
                 patch.save()
                 continue
 
-            os.system("cd %s; git reset --hard %s" % (repo.builddir(), commit))
+            os.system("cd %s; patch -p1 -R < %s" % (repo.builddir(), fname))
             patch.build = 1
             patch.buildlog = buildlog
             patch.save()
+
+        for report in Report.objects.filter(tag__repo = repo, build = 0, status__name = 'Patched'):
+            buildlog = ''
+
+            if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:
+                continue
+
+            fname = os.path.join(report.dirname(), report.filename())
+            cocci = open(fname, "w")
+            cocci.write(report.content)
+            cocci.close()
+
+            ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
+            buildlog += '# git am %s\n' % os.path.basename(fname)
+            buildlog += '\n'.join(log)
+            if ret != 0:
+                report.build = 2
+                report.buildlog = buildlog
+                report.save()
+                continue
+
+            buildlog += '\n# make\n'
+            ret, log = execute_shell("cd %s; make" % (repo.builddir()))
+            buildlog += '\n'.join(log)
+            if ret != 0:
+                report.build = 2
+                report.buildlog = buildlog
+                report.save()
+                continue
+
+            os.system("cd %s; patch -p1 -R < %s" % (repo.builddir(), fname))
+            report.build = 1
+            report.buildlog = buildlog
+            report.save()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

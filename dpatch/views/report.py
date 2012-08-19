@@ -30,6 +30,7 @@ from django.utils import html
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
+from time import gmtime, strftime
 
 from dpatch.models import GitRepo, GitTag, Report, Status, Event
 from dpatch.patchformat import PatchFormat 
@@ -86,6 +87,13 @@ def report_list_data(request, tag_name):
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
                 action += '<a href="#" class="send" id="%s">Send</a>' % report.id
 
+        if report.build == 0:
+            build = '-'
+        elif report.build == 1:
+            build = '<a href="#" class="build" id="%s">PASS</a>'
+        elif report.build == 2:
+            build = '<a href="#" class="build" id="%s">FAIL</a>'
+
         reports['rows'].append({
             'id': report.id,
             'cell': {
@@ -95,6 +103,7 @@ def report_list_data(request, tag_name):
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
                 'status': report.status.name,
+                'build': build,
                 'action': action,
         }}) # comment
 
@@ -150,6 +159,62 @@ def _get_diff_and_revert(repo, fname):
     diffOut = diff.communicate()[0]
     os.system("cd %s ; git diff %s | patch -p1 -R > /dev/null" % (repo, fname))
     return diffOut
+
+def report_format(patch):
+    user = patch.username()
+    email = patch.email()
+
+    ctx = "Content-Type: text/plain; charset=ISO-8859-1\n"
+    ctx += "Content-Transfer-Encoding: 7bit\n"
+    ctx += "From: %s <%s>\n" % (user, email)
+    ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+    ctx += "Subject: [PATCH] %s\n" % patch.title
+    ctx += "%s\n\n" % patch.emails
+    ctx += "From: %s <%s>\n\n" % (user, email)
+    ctx += "%s\n\n" % patch.desc
+    ctx += "Signed-off-by: %s <%s>\n" % (user, email)
+    ctx += "---\n"
+    ctx += "%s" % patch.diff
+
+    return ctx
+
+def report_edit(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    if request.method == "POST":
+        title = get_request_paramter(request, 'title')
+        desc = get_request_paramter(request, 'desc')
+        emails = get_request_paramter(request, 'emails')
+        diff = get_request_paramter(request, 'diff')
+    
+        if title is None or len(title) == 0:
+            logevent("EDIT: report %s, ERROR: no title specified" % report_id)
+            return HttpResponse('EDIT ERROR: no report title specified')
+    
+        if desc is None or len(desc) == 0:
+            logevent("EDIT: report %s, ERROR: no desc specified" % report_id)
+            return HttpResponse('EDIT ERROR: no report desc specified')
+    
+        if emails is None or len(emails) == 0:
+            logevent("EDIT: report %s, ERROR: no emails specified" % report_id)
+            return HttpResponse('EDIT ERROR: no report emails specified')
+    
+        if diff is None or len(diff) == 0:
+            logevent("EDIT: report %s, ERROR: no diff specified" % report_id)
+            return HttpResponse('EDIT ERROR: no report diff specified')
+
+        report.title = title
+        report.desc = desc
+        report.emails = emails
+        report.diff = diff
+        report.content = report_format(report)
+        report.save()
+
+        logevent("EDIT: report %s, SUCCEED" % report_id, True)
+        return HttpResponse('EDIT SUCCEED')
+    else:
+        context = RequestContext(request)
+        context['report'] = report
+        return render_to_response("report/reportedit.html", context)
 
 @login_required
 @csrf_exempt
@@ -288,3 +353,127 @@ def report_export_all(request, tag_name):
             os.unlink(fname)
 
     return response
+
+@login_required
+def report_sendwizard(request, report_id):
+    context = RequestContext(request)
+    context['reportid'] = report_id
+    return render_to_response("report/sendwizard.html", context)
+
+def execute_shell(args):
+    if isinstance(args, basestring):
+        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+    else:
+        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+    shellOut = shelllog.communicate()[0]
+
+    return shelllog.returncode, shellOut
+
+def getgitconfig(name):
+    args = 'git config %s' % name
+    shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+    shellOut = shelllog.communicate()[0]
+
+    lines = shellOut.split("\n")
+
+    return lines[0]
+
+@csrf_exempt
+def report_sendwizard_step(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    
+    step = get_request_paramter(request, 'step_number', 1)
+
+    if step == '1':
+        ctx = '<pre>%s</pre>' % html.escape(report.content)
+    elif step == '2':
+        rdir = report.tag.repo.dirname()
+        cpatch = os.path.join(rdir, 'scripts/checkpatch.pl')
+
+        temp = report.fullpath()
+        cfg = open(temp, "w")
+        cfg.write(report.content)
+        cfg.close()
+
+        #os.system('/usr/bin/dos2unix %s' % patch.fullpath())
+
+        ret1, chkpatch = execute_shell('%s %s' % (cpatch, temp))
+        chkpatch = chkpatch.replace(temp, 'patch')
+        ret2, apatch = execute_shell('cd %s && git apply --check %s' % (rdir, temp))
+        if ret2 == 0:
+            apatch = 'patch can be apply succeed'
+        ctx = '<pre># scripts/checkpatch.pl %s\n\n%s\n# git apply --check %s\n\n%s</pre>' \
+                % (temp, chkpatch, temp, apatch)
+        ctx = ctx.replace(report.dirname(), '')
+        if ret1 != 0 or ret2 != 0:
+            ctx += '<div id="steperrors"><font color=red>Please correct above errors first!</font></div>'
+    elif step == '3':
+        crypt = getgitconfig('sendemail.smtpencryption')
+        server = getgitconfig('sendemail.smtpserver')
+        port = getgitconfig('sendemail.smtpserverport')
+        user = getgitconfig('sendemail.smtpuser')
+        #password = getgitconfig('sendemail.smtppass')
+        mfrom = getgitconfig('sendemail.from')
+
+        if len(crypt) == 0 or len(server) == 0 or len(port) == 0 or len(user) == 0 or len(mfrom) == 0:
+            ctx = '<div id="steperrors"><font color=red>Your SMTP setting is not correctly!</font></div>'
+            return HttpResponse(ctx)
+            
+        email = report.emails.replace('To:', '')
+        email = email.replace('Cc:', '')
+        email = email.replace(',', '')
+        emails = email.split("\n")
+        if len(emails) == 0:
+            to = ''
+        else:
+            to = emails[0].strip()
+
+        ret, drun = execute_shell('/usr/bin/git send-email --dry-run --no-thread --to=\'%s\' %s' \
+                                % (to, report.fullpath()))
+        drun = drun.replace(report.dirname(), '')
+        if ret != 0:
+            ctx = '<pre>%s</pre>' % (html.escape(drun))
+            ctx += '<div id="steperrors"><font color=red>Your SMTP setting is not correctly!</font></div>'
+            return HttpResponse(ctx)
+
+        context = RequestContext(request)
+        context['emails'] = emails
+        context['to'] = to
+        return render_to_response("patch/sendwarnning.html", context)
+    elif step == '4':
+        email = report.emails
+        email = email.replace('To:', '')
+        email = email.replace('Cc:', '')
+        email = email.replace(',', '')
+        emails = email.split("\n")
+        if len(emails) == 0:
+            to = ''
+        else:
+            to = emails[0].strip()
+
+        ret, drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to=\'%s\' %s' \
+                                % (to, report.fullpath()))
+        drun = drun.replace(report.dirname(), '')
+        if ret != 0:
+            ctx = '<pre>%s</pre>' % (html.escape(drun))
+            ctx += '<div id="steperrors"><font color=red>Your SMTP setting is not correctly!</font></div>'
+            return HttpResponse(ctx)
+
+        sent = Status.objects.filter(name = 'Sent')[0]
+        report.status = sent
+        report.save()
+
+        ctx = '<pre>Patch has been sent succeed!</pre>'
+
+        #if os.path.exists(patch.fullpath()):
+        #    os.unlink(patch.fullpath())
+    else:
+        ctx = '<pre>UNKNOW step</pre>'
+
+    return HttpResponse(ctx)
+
+def report_build(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    return render_to_response("report/reportbuild.html", {'buildlog': report.buildlog})

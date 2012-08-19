@@ -3,6 +3,7 @@
 {% if user.is_authenticated %}
 <div id="reportsend" title="Report Patch Send" style="display:none">
 <div id="reportfix" title="Fix Source File" style="display:none">
+<div id="reportedit" title="Edit Patch" style="display:none">
 {% endif %}
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
@@ -21,10 +22,20 @@
 				ajaxShowDialog("#reportdetail", "GET", '/report/patch/' + id, {});
 			});
 
+			$("#reportlist .build").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportdetail", "GET", '/patch/build/' + id, {});
+			});
+
 {% if user.is_authenticated %}
 			$("#reportlist .fix").click(function () {
 				id = $(this).attr('id');
 				ajaxShowDialog("#reportfix", "GET", '/report/fix/' + id, {});
+			});
+
+			$("#reportlist .edit").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#reportedit", "GET", '/report/edit/' + id, {});
 			});
 
 			$("#reportlist .send").click(function () {
@@ -79,10 +90,11 @@
 				method: 'GET',
 				colModel : [ { display: 'ID', name : 'id', width : 30, align: 'center'},
 				             { display: 'TITLE', name : 'title', width : 320, align: 'left'},
-				             { display: 'FILENAME', name : 'file', width : 220, align: 'left'},
+				             { display: 'FILENAME', name : 'file', width : 180, align: 'left'},
 				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
 				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
 				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
+				             { display: 'BUILD', name : 'build', width : 50, align: 'center'},
 				             { display: 'ACTION', name : 'action', width : 160, align: 'center'}],
 				searchitems : [ {display: 'Title', name : 'title'},
 				            	 {display: 'Filename', name : 'file'},
@@ -118,6 +130,30 @@
 				width: 810,
 				height: 536,
 				resizable: false
+			});
+
+			$('#reportedit').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 700,
+				resizable: true,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		id = $(this).find("input[id=id]").eq(0).val();
+				      		title = $(this).find("input[id=title]").eq(0).val();
+				      		desc = $(this).find("textarea[id=desc]").eq(0).val();
+				      		emails = $(this).find("textarea[id=emails]").eq(0).val();
+				      		diff = $(this).find("textarea[id=diff]").eq(0).val();
+							$(this).dialog("close");
+				      		showModelDialog('/report/edit/' + id + '/', {'src': src}, 'POST', "#reportlist");
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
 			});
 
 			$('#reportfix').dialog({

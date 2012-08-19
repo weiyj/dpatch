@@ -96,9 +96,9 @@ def patchlistdata(request, tag_name):
         if patch.build == 0:
             build = '-'
         elif patch.build == 1:
-            build = '<a href="#" class="build" id="%s">PASS</a>'
+            build = '<a href="#" class="build" id="%s">PASS</a>' % patch.id
         elif patch.build == 2:
-            build = '<a href="#" class="build" id="%s">FAIL</a>'
+            build = '<a href="#" class="build" id="%s">FAIL</a>' % patch.id
 
         patchs['rows'].append({
             'id': patch.id,
@@ -304,6 +304,10 @@ def patcheditsave(request, patch_id):
 def showpatch(request, patch_id):
     patch = Patch.objects.filter(id = patch_id)
     return render_to_response("patch/patch.html", {'patchctx': patch[0].content})
+
+def patch_build(request, patch_id):
+    patch = Patch.objects.filter(id = patch_id)
+    return render_to_response("patch/patchbuild.html", {'buildlog': patch[0].buildlog})
 
 def patch_raw(request, patch_id):
     patch = Patch.objects.filter(id = patch_id)
