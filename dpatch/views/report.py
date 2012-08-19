@@ -425,10 +425,11 @@ def report_sendwizard_step(request, report_id):
         email = email.replace('Cc:', '')
         email = email.replace(',', '')
         emails = email.split("\n")
-        if len(emails) == 0:
-            to = email
-        else:
-            to = emails[0].strip()
+        to = ''
+        for addr in emails:
+            if len(addr.strip()) == 0:
+                to = addr.strip()
+                break
 
         ret, drun = execute_shell('/usr/bin/git send-email --dry-run --no-thread --to=\'%s\' %s' \
                                 % (to, report.fullpath()))
@@ -448,10 +449,11 @@ def report_sendwizard_step(request, report_id):
         email = email.replace('Cc:', '')
         email = email.replace(',', '')
         emails = email.split("\n")
-        if len(emails) == 0:
-            to = email
-        else:
-            to = emails[0].strip()
+        to = ''
+        for addr in emails:
+            if len(addr.strip()) == 0:
+                to = addr.strip()
+                break
 
         ret, drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to=\'%s\' %s' \
                                 % (to, report.fullpath()))
