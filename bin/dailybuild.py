@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/python
 #
 # Dailypatch - automated kernel patch create engine
 # Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
@@ -49,8 +49,10 @@ def main(args):
     for repo in GitRepo.objects.filter(status = True):
         # prepare build env
         if not os.path.exists(repo.builddir()):
-            os.system("/usr/bin/cp -rf %s /var/lib/dpatch/build/", repo.dirname())
+            os.system("cd /var/lib/dpatch/build/; git clone file://%s", repo.dirname())
             os.system("cd %s; make allmodconfig" % repo.builddir())
+        else:
+            os.system("cd %s; git pull" % repo.builddir())
 
         os.system("cd %s; make" % repo.builddir())
         commit = commit_from_repo(repo)

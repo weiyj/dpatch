@@ -60,6 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 /etc/httpd/conf.d/dpatch.conf
 /usr/dpatch
 /var/lib/dpatch/repo
+/var/lib/dpatch/build
 /var/lib/dpatch/pattern
 /var/lib/dpatch/database
 
