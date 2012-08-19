@@ -52,6 +52,10 @@ class GitRepo(models.Model):
         dname = os.path.basename(self.url).replace('.git', '')
         return '/var/lib/dpatch/repo/' + dname
 
+    def builddir(self):
+        dname = os.path.basename(self.url).replace('.git', '')
+        return '/var/lib/dpatch/build/' + dname
+
 class GitTag(models.Model):
     id = models.AutoField(primary_key = True)
     repo = models.ForeignKey(GitRepo)
@@ -180,6 +184,8 @@ class Patch(models.Model):
     desc = models.TextField(max_length = 256, blank = True)
     emails = models.CharField(max_length = 256, blank = True)
     content = models.TextField(blank = True)
+    build = models.IntegerField(default = 0)
+    buildlog = models.TextField(blank = True)
 
     def __unicode__(self):
         return u'%s %s' %(self.tag, self.file)
@@ -225,6 +231,8 @@ class Report(models.Model):
     desc = models.TextField(max_length = 256, blank = True)
     emails = models.CharField(max_length = 256, blank = True)
     content = models.TextField(blank = True)
+    build = models.IntegerField(default = 0)
+    buildlog = models.TextField(blank = True)
 
     def __unicode__(self):
         return u'%s %s' %(self.tag, self.file)

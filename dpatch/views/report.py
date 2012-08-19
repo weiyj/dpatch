@@ -45,6 +45,12 @@ def logevent(event, status = False):
     evt = Event(event = event, status = status)
     evt.save()
 
+def fixstrip(string, length):
+    if len(string) > length:
+        return string[:length - 3] + '...'
+    else:
+        return string
+
 def report_list(request, tag_name):
     context = RequestContext(request)
     context['tag'] = tag_name
@@ -77,14 +83,15 @@ def report_list_data(request, tag_name):
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
+                action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
                 action += '<a href="#" class="send" id="%s">Send</a>' % report.id
 
         reports['rows'].append({
             'id': report.id,
             'cell': {
                 'id': report.id,
-                'file': report.file,
-                'title': html.escape(report.title),
+                'file': fixstrip(report.file, 40),
+                'title': html.escape(fixstrip(report.title, 60)),
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
                 'status': report.status.name,

@@ -59,6 +59,12 @@ def execute_shell(args):
     #if shelllog.returncode != 0:
     return shelllog.returncode, shellOut
 
+def fixstrip(string, length):
+    if len(string) > length:
+        return string[:length - 3] + '...'
+    else:
+        return string
+
 def patchlist(request, tag_name):
     context = RequestContext(request)
     context['tag'] = tag_name
@@ -87,15 +93,23 @@ def patchlistdata(request, tag_name):
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
             action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
 
+        if patch.build == 0:
+            build = '-'
+        elif patch.build == 1:
+            build = '<a href="#" class="build" id="%s">PASS</a>'
+        elif patch.build == 2:
+            build = '<a href="#" class="build" id="%s">FAIL</a>'
+
         patchs['rows'].append({
             'id': patch.id,
             'cell': {
                 'id': patch.id,
-                'file': patch.file,
-                'title': html.escape(patch.title),
+                'file': fixstrip(patch.file, 40),
+                'title': html.escape(fixstrip(patch.title, 60)),
                 'date': patch.date.strftime("%Y-%m-%d"),
                 'type': patch.type.name,
                 'status': patch.status.name,
+                'build': build,
                 'action': action,
         }}) # comment
 
