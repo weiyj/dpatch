@@ -139,7 +139,7 @@ def main(args):
             print "build for report patch %s...\n" % os.path.basename(fname)
             logger.logger.info("build for report patch %s..." % os.path.basename(fname))
 
-            os.system("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit), logger)
+            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit), logger)
             if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                 execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
 
