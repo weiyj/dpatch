@@ -67,6 +67,7 @@ def main(args):
             buildlog += '# git am %s\n' % os.path.basename(fname)
             buildlog += '\n'.join(log)
             if ret != 0:
+                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
                 patch.build = 2
                 patch.buildlog = buildlog
                 patch.save()
