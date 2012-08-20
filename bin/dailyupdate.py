@@ -211,7 +211,7 @@ def check_patch(repo, rtag, flists, commit):
                         p.status = fixed
                         p.save()
 
-                if len(opatchs) == 0 and should_patch == True:
+                if should_patch == True and ((p.tag.repo.id == 1 and len(opatchs) == 0) or (p.tag.repo.id != 1 and len(rpatchs) == 0)):
                     text = test.format_patch()
                     patch = Patch(tag = rtag, file = sfile, type = rtype, 
                                   status = new, diff = text)
