@@ -28,6 +28,11 @@ def main(args):
                    status = True, delta = False)
     repo.save()
 
+    repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git',
+                   name = 'linux-next.git', user = 'Wei Yongjun', email = 'weiyj.lk@gmail.com',
+                   status = True, delta = True)
+    repo.save()
+
     for s in ['New', 'Sent', 'Mergered', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched']:
         status = Status(name = s)
         status.save()

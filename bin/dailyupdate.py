@@ -46,13 +46,34 @@ def execute_shell(args):
 
     return lines
 
+def get_linux_next_commit(repo):
+    os.system('wget -O /tmp/linux-next-git-stable http://www.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/refs/heads/stable')
+    commits = execute_shell('cat /tmp/linux-next-git-stable')
+    return commits[0]
+    
+def is_linux_next_update(repo):
+    commit = get_linux_next_commit(repo)
+    if commit == repo.commit:
+        return False
+    os.system('cd %s ; git reset --hard' % repo.commit)
+    repo.commit = commit
+    repo.delta = True
+    repo.save()
+    return True
+
 def check_repo_update(repo):
     dpath = repo.dirname()
     if not os.path.exists(dpath):
         rpath = os.path.dirname(dpath)
         execute_shell('cd %s ; git clone %s' % (rpath, repo.url))
+        if repo.name == 'linux-next.git':
+            commit = get_linux_next_commit(repo)
+            repo.commit = commit
+            repo.save()
     else:
         #execute_shell('cd %s ; git pull' % dpath)
+        if repo.name == 'linux-next.git' and not is_linux_next_update(repo):
+            return False
         os.system('cd %s ; git pull' % dpath)
 
     return True
@@ -135,7 +156,7 @@ def check_patch(repo, rtag, flists, commit):
                 else:
                     cmt = cmts[0]
                     oldcommit = cmt.commit
-    
+
                 if oldcommit != repo.commit:
                     rflists = repo_get_changelist(repo, oldcommit, commit)
                 else:
@@ -207,7 +228,10 @@ def check_patch(repo, rtag, flists, commit):
 
             if cmt != None:
                 # save last scan commit to type
-                cmt.commit = commit
+                if repo.name == 'linux-next.git':
+                    cmt.commit = repo.commit
+                else:
+                    cmt.commit = commit
                 cmt.save()
 
             # we only save the first repo's commit to rtype
@@ -221,6 +245,8 @@ def check_patch(repo, rtag, flists, commit):
         count += scount
         if test.__class__.__name__ == 'CheckVersionDetector':
             scanname = "check version engine"
+        elif test.__class__.__name__ == 'CheckReleaseDetector':
+            scanname = "check release engine"
         elif test.__class__.__name__ == 'CheckIncludeDetector':
             scanname = "check dup include engine"
         elif test.__class__.__name__ == 'CheckCocciDetector':
@@ -243,7 +269,8 @@ def main(args):
 
         # the last tag name
         otag = tag_from_repo(repo)
-        check_repo_update(repo)
+        if check_repo_update(repo) == False:
+            continue
         # the tag name after git pull
         ntag = tag_from_repo(repo)
         if otag is None:
@@ -295,8 +322,10 @@ def main(args):
         rtag.running = False
         rtag.save()
 
-        repo.commit = commit
-        repo.save()
+        # linux-next.git 's commit is update before git pull
+        if repo.name != 'linux-next.git':
+            repo.commit = commit
+            repo.save()
         print "Total patch %d" % pcount
 
     return 0
