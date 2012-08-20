@@ -39,7 +39,7 @@ def execute_shell(args):
     return shelllog.returncode, lines
 
 def main(args):
-    for repo in GitRepo.objects.filter(status = True):
+    for repo in GitRepo.objects.filter(status = True, build = True):
         # prepare build env
         if not os.path.exists(repo.builddir()):
             os.system("cd /var/lib/dpatch/build/; git clone file://%s" % repo.dirname())
