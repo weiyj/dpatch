@@ -63,7 +63,7 @@ def main(args):
 
             print "build for patch %s...\n" % os.path.basename(fname)
 
-            os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
+            os.system("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit))
             if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                 execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
 
@@ -115,7 +115,7 @@ def main(args):
 
             print "build for report patch %s...\n" % os.path.basename(fname)
 
-            os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
+            os.system("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit))
             if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                 execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
 
@@ -154,7 +154,7 @@ def main(args):
             report.buildlog = buildlog
             report.save()
 
-        os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
+        os.system("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
