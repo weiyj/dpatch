@@ -54,3 +54,7 @@ def patchevent(request):
 def administration(request):
     context = RequestContext(request)
     return render_to_response("administration.html", context)
+
+def helppage(request):
+    context = RequestContext(request)
+    return render_to_response("help.html", context)

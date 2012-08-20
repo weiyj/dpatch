@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block headers %}
+{% endblock %}
+
+{% block body %}
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+{% if user.is_authenticated %}
+	$('#navs').navigator({ selected: 5 });
+{% else %}
+	$('#navs').navigator({ selected: 4 });
+{% endif %}
+		});
+	})(jQuery);
+</script>
+
+{% endblock %}
