@@ -63,11 +63,14 @@ def main(args):
 
             print "build for patch %s...\n" % os.path.basename(fname)
 
+            os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
+            if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
+                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
+
             ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
             buildlog += '# git am %s\n' % os.path.basename(fname)
             buildlog += '\n'.join(log)
             if ret != 0:
-                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
                 patch.build = 2
                 patch.buildlog = buildlog
                 patch.save()
@@ -100,6 +103,10 @@ def main(args):
 
             print "build for report patch %s...\n" % os.path.basename(fname)
 
+            os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
+            if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
+                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
+
             ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
             buildlog += '# git am %s\n' % os.path.basename(fname)
             buildlog += '\n'.join(log)
@@ -110,7 +117,7 @@ def main(args):
                 continue
 
             if report.file.find('include/') != 0:
-                dname = os.path.dirname(patch.file)
+                dname = os.path.dirname(report.file)
                 buildlog += '\n# make M=%s\n' % dname
                 ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname))
                 buildlog += '\n'.join(log)
@@ -135,6 +142,8 @@ def main(args):
             report.build = 1
             report.buildlog = buildlog
             report.save()
+
+        os.system("cd %s; git reset --hard %s", repo.builddir(), repo.commit)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
