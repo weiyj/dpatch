@@ -711,6 +711,33 @@ def report_semantic_detail(request, cocci_id):
     context['content'] = content
     return render_to_response("engine/coccidetail.html", context)
 
+@login_required
+@csrf_exempt
+def report_semantic_import(request):
+    fp = request.FILES['file']
+    if fp != None:
+        if os.path.splitext(fp.name)[1] == ".cocci":
+            fname = os.path.join('/tmp', fp.name)
+        else:
+            fname = tempfile.mktemp()
+
+        with open(fname, 'w+') as destination:
+            for chunk in fp.chunks():
+                destination.write(chunk)
+
+        args = '/usr/dpatch/bin/importreport.sh %s' % fname
+        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+        shellOut = shelllog.communicate()[0]
+
+        if os.path.exists(fname):
+            os.unlink(fname)
+
+        logevent("IMPORT: coccinelle semantic report, SUCCEED", True)
+        return HttpResponse(shellOut)
+    else:
+        return HttpResponse('IMPORT ERROR: no file found')
+
 def rewrite_report_engine(cocci):
     rtypes = Type.objects.filter(id = cocci.id + 10000)
     if len(rtypes) != 0:
