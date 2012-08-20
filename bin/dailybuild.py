@@ -66,6 +66,8 @@ def main(args):
             buildlog = ''
 
             if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
+                patch.build = 3
+                patch.save()
                 continue
 
             pcount['total'] += 1
@@ -124,6 +126,8 @@ def main(args):
             buildlog = ''
 
             if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:
+                report.build = 3
+                report.save()
                 continue
 
             rcount['total'] += 1

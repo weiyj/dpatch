@@ -94,6 +94,8 @@ def report_list_data(request, tag_name):
             build = '<a href="#" class="build" id="%s">PASS</a>' % report.id
         elif report.build == 2:
             build = '<a href="#" class="build" id="%s">FAIL</a>' % report.id
+        elif report.build == 3:
+            build = 'SKIP'
 
         reports['rows'].append({
             'id': report.id,
@@ -175,7 +177,7 @@ def report_format(patch):
     ctx += "%s\n\n" % patch.desc
     ctx += "Signed-off-by: %s <%s>\n" % (user, email)
     ctx += "---\n"
-    ctx += "%s" % patch.diff
+    ctx += "%s\n" % patch.diff
 
     return ctx
 

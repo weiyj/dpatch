@@ -99,6 +99,8 @@ def patchlistdata(request, tag_name):
             build = '<a href="#" class="build" id="%s">PASS</a>' % patch.id
         elif patch.build == 2:
             build = '<a href="#" class="build" id="%s">FAIL</a>' % patch.id
+        elif patch.build == 3:
+            build = 'SKIP'
 
         patchs['rows'].append({
             'id': patch.id,
@@ -260,7 +262,7 @@ def patch_format(patch):
     ctx += "%s\n\n" % patch.desc
     ctx += "Signed-off-by: %s <%s>\n" % (user, email)
     ctx += "---\n"
-    ctx += "%s" % patch.diff
+    ctx += "%s\n" % patch.diff
 
     return ctx
 
