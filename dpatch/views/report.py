@@ -179,6 +179,8 @@ def report_format(patch):
 
     return ctx
 
+@login_required
+@csrf_exempt
 def report_edit(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     if request.method == "POST":

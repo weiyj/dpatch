@@ -147,7 +147,7 @@
 				      		emails = $(this).find("textarea[id=emails]").eq(0).val();
 				      		diff = $(this).find("textarea[id=diff]").eq(0).val();
 							$(this).dialog("close");
-				      		showModelDialog('/report/edit/' + id + '/', {'src': src}, 'POST', "#reportlist");
+				      		showModelDialog('/report/edit/' + id + '/', {'title': title, 'desc': desc, 'emails': emails, 'diff': diff}, 'POST', "#reportlist");
 						}
 					},
 					{
