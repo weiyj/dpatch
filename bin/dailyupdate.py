@@ -29,6 +29,7 @@ from time import gmtime, strftime
 from dpatch.models import GitRepo, GitTag, Status, Type, Patch, ScanLog, ExceptFile, GitCommit
 from dpatch.patchformat import PatchFormat 
 from checkversion import CheckVersionDetector
+from checkrelease import CheckReleaseDetector
 from checkinclude import CheckIncludeDetector
 from checkcocci import CheckCocciDetector
 from logger import MyLogger
@@ -106,7 +107,7 @@ def check_patch(repo, rtag, flists, commit):
     logger.logger.info('=' * 40)
     logger.logger.info('%s' % '\n'.join(flists))
     logger.logger.info('=' * 40)
-    for dot in [CheckVersionDetector, CheckIncludeDetector, CheckCocciDetector]:
+    for dot in [CheckVersionDetector, CheckReleaseDetector, CheckIncludeDetector, CheckCocciDetector]:
         scount = 0
         test = dot(repo.dirname(), logger.logger)
         for i in range(test.tokens()):
