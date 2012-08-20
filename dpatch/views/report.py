@@ -90,9 +90,9 @@ def report_list_data(request, tag_name):
         if report.build == 0:
             build = '-'
         elif report.build == 1:
-            build = '<a href="#" class="build" id="%s">PASS</a>'
+            build = '<a href="#" class="build" id="%s">PASS</a>' % report.id
         elif report.build == 2:
-            build = '<a href="#" class="build" id="%s">FAIL</a>'
+            build = '<a href="#" class="build" id="%s">FAIL</a>' % report.id
 
         reports['rows'].append({
             'id': report.id,
