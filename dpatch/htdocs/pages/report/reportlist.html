@@ -24,7 +24,7 @@
 
 			$("#reportlist .build").click(function () {
 				id = $(this).attr('id');
-				ajaxShowDialog("#reportdetail", "GET", '/patch/build/' + id, {});
+				ajaxShowDialog("#reportdetail", "GET", '/report/build/' + id, {});
 			});
 
 {% if user.is_authenticated %}
