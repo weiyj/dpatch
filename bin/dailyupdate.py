@@ -55,7 +55,11 @@ def is_linux_next_update(repo):
     commit = get_linux_next_commit(repo)
     if commit == repo.commit:
         return False
-    os.system('cd %s ; git reset --hard' % repo.commit)
+    if repo.commit is None or len(repo.commit) == 0:
+        tar = tag_from_repo(repo)
+        os.system('cd %s ; git reset --hard' % tar)
+    else:
+        os.system('cd %s ; git reset --hard' % repo.commit)
     repo.commit = commit
     repo.delta = True
     repo.save()
