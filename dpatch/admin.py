@@ -21,7 +21,7 @@
 
 from django.contrib import admin
 
-from models import GitRepo, GitTag, Status, Type, CocciEngine, Patch, ScanLog, Event, GitCommit
+from models import GitRepo, GitTag, Status, Type, CocciEngine, CocciReport, Patch, Report, ScanLog, Event, GitCommit
 
 class GitRepoAdmin(admin.ModelAdmin):
     list_display = ('url', 'user', 'email', 'commit')
@@ -55,4 +55,6 @@ admin.site.register(CocciEngine, CocciEngineAdmin)
 admin.site.register(Patch, PatchAdmin)
 admin.site.register(ScanLog, ScanLogAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(CocciReport)
+admin.site.register(Report)
 admin.site.register(GitCommit)
