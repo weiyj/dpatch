@@ -24,12 +24,12 @@ from dpatch.models import GitRepo, Status, Type
 
 def main(args):
     repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
-                   name = 'linux.git', user = 'Wei Yongjun', email = 'weiyj.lk@gmail.com',
+                   name = 'linux.git', user = 'Wei Yongjun', email = 'yongjun_wei@trendmicro.com.cn',
                    status = True, delta = False, build = True)
     repo.save()
 
     repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git',
-                   name = 'linux-next.git', user = 'Wei Yongjun', email = 'weiyj.lk@gmail.com',
+                   name = 'linux-next.git', user = 'Wei Yongjun', email = 'yongjun_wei@trendmicro.com.cn',
                    status = True)
     repo.save()
 
