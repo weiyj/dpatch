@@ -56,10 +56,10 @@ def is_linux_next_update(repo):
     if commit == repo.commit:
         return False
     if repo.commit is None or len(repo.commit) == 0:
-        tar = tag_from_repo(repo)
-        os.system('cd %s ; git reset --hard' % tar)
+        tag = tag_from_repo(repo)
+        os.system('cd %s ; git reset --hard %s' % (repo.dirname(), tag))
     else:
-        os.system('cd %s ; git reset --hard' % repo.commit)
+        os.system('cd %s ; git reset --hard' % (repo.dirname(), repo.commit))
     repo.commit = commit
     repo.delta = True
     repo.save()
@@ -211,7 +211,7 @@ def check_patch(repo, rtag, flists, commit):
                         p.status = fixed
                         p.save()
 
-                if should_patch == True and ((p.tag.repo.id == 1 and len(opatchs) == 0) or (p.tag.repo.id != 1 and len(rpatchs) == 0)):
+                if should_patch == True and ((repo.id == 1 and len(opatchs) == 0) or (repo.id != 1 and len(rpatchs) == 0)):
                     text = test.format_patch()
                     patch = Patch(tag = rtag, file = sfile, type = rtype, 
                                   status = new, diff = text)
