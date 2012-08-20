@@ -76,16 +76,28 @@ def main(args):
                 patch.save()
                 continue
 
-            buildlog += '\n# make\n'
-            ret, log = execute_shell("cd %s; make" % (repo.builddir()))
-            buildlog += '\n'.join(log)
-            if ret != 0:
-                patch.build = 2
-                patch.buildlog = buildlog
-                patch.save()
-                continue
+            if patch.file.find('include/') != 0:
+                dname = os.path.dirname(patch.file)
+                buildlog += '\n# make M=%s\n' % dname
+                ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname))
+                buildlog += '\n'.join(log)
+                if ret != 0:
+                    patch.build = 2
+                    patch.buildlog = buildlog
+                    patch.save()
+                    continue
 
-            os.system("cd %s; patch -p1 -R < %s" % (repo.builddir(), fname))
+            output = '\n'.join(log)
+            if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                buildlog += '\n# make vmlinux\n'
+                ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()))
+                buildlog += '\n'.join(log)
+                if ret != 0:
+                    patch.build = 2
+                    patch.buildlog = buildlog
+                    patch.save()
+                    continue
+
             patch.build = 1
             patch.buildlog = buildlog
             patch.save()
@@ -129,8 +141,8 @@ def main(args):
 
             output = '\n'.join(log)
             if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
-                buildlog += '\n# make\n'
-                ret, log = execute_shell("cd %s; make" % (repo.builddir()))
+                buildlog += '\n# make vmlinux\n'
+                ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()))
                 buildlog += '\n'.join(log)
                 if ret != 0:
                     report.build = 2
@@ -138,7 +150,6 @@ def main(args):
                     report.save()
                     continue
 
-            os.system("cd %s; patch -p1 -R < %s" % (repo.builddir(), fname))
             report.build = 1
             report.buildlog = buildlog
             report.save()
