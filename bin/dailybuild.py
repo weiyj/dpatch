@@ -179,7 +179,7 @@ def main(args):
             report.save()
 
         logs.desc = 'build patch: %d, pass: %d fail:%d, build report: %s, pass: %d, fail: %s' \
-                    % (rcount, rcount)
+                    % (pcount['total'], pcount['pass'], pcount['fail'], rcount['total'], rcount['pass'], rcount['fail'])
         logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         logs.logs = logger.getlog()
         logs.save()

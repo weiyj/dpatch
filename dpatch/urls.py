@@ -49,6 +49,7 @@ urlpatterns += patterns('dpatch.views.base',
     url(r'^patchengine/$', 'patchengine'),
     url(r'^event/$', 'patchevent'),
     url(r'^administration/$', 'administration'),
+    url(r'^help/$', 'helppage'),
 )
 
 urlpatterns += patterns('dpatch.views.patch',
@@ -102,6 +103,7 @@ urlpatterns += patterns('dpatch.views.engine',
     url(r'^engine/cocci/report/delete/$', 'report_semantic_delete'),
     url(r'^engine/cocci/report/edit/(?P<cocci_id>\d+)/$', 'report_semantic_edit'),
     url(r'^engine/cocci/report/detail/(?P<cocci_id>\d+)/$', 'report_semantic_detail'),
+    url(r'^engine/cocci/report/import/$', 'report_semantic_import'),
     url(r'^engine/cocci/report/export/$', 'report_semantic_export'),
     url(r'^engine/cocci/report/export/all/$', 'report_semantic_export_all'),
 
