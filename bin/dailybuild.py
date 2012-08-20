@@ -50,7 +50,7 @@ def main(args):
 
         os.system("cd %s; make" % repo.builddir())
 
-        for patch in Patch.objects.filter(tag__repo = repo, build = 0, status__name = 'New'):
+        for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
             buildlog = ''
 
             if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
@@ -60,6 +60,8 @@ def main(args):
             cocci = open(fname, "w")
             cocci.write(patch.content)
             cocci.close()
+
+            print "build for patch %s...\n" % os.path.basename(fname)
 
             ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
             buildlog += '# git am %s\n' % os.path.basename(fname)
@@ -84,7 +86,7 @@ def main(args):
             patch.buildlog = buildlog
             patch.save()
 
-        for report in Report.objects.filter(tag__repo = repo, build = 0, status__name = 'Patched'):
+        for report in Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched'):
             buildlog = ''
 
             if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:
@@ -95,6 +97,8 @@ def main(args):
             cocci.write(report.content)
             cocci.close()
 
+            print "build for report patch %s...\n" % os.path.basename(fname)
+
             ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname))
             buildlog += '# git am %s\n' % os.path.basename(fname)
             buildlog += '\n'.join(log)
@@ -104,14 +108,27 @@ def main(args):
                 report.save()
                 continue
 
-            buildlog += '\n# make\n'
-            ret, log = execute_shell("cd %s; make" % (repo.builddir()))
-            buildlog += '\n'.join(log)
-            if ret != 0:
-                report.build = 2
-                report.buildlog = buildlog
-                report.save()
-                continue
+            if report.file.find('include/') != 0:
+                dname = os.path.dirname(patch.file)
+                buildlog += '\n# make M=%s\n' % dname
+                ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname))
+                buildlog += '\n'.join(log)
+                if ret != 0:
+                    report.build = 2
+                    report.buildlog = buildlog
+                    report.save()
+                    continue
+
+            output = '\n'.join(log)
+            if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                buildlog += '\n# make\n'
+                ret, log = execute_shell("cd %s; make" % (repo.builddir()))
+                buildlog += '\n'.join(log)
+                if ret != 0:
+                    report.build = 2
+                    report.buildlog = buildlog
+                    report.save()
+                    continue
 
             os.system("cd %s; patch -p1 -R < %s" % (repo.builddir(), fname))
             report.build = 1
