@@ -94,7 +94,7 @@ def patchlistdata(request, tag_name):
             action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
 
         if patch.build == 0:
-            build = '-'
+            build = 'TBD'
         elif patch.build == 1:
             build = '<a href="#" class="build" id="%s">PASS</a>' % patch.id
         elif patch.build == 2:

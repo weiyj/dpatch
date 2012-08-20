@@ -88,7 +88,7 @@ def report_list_data(request, tag_name):
                 action += '<a href="#" class="send" id="%s">Send</a>' % report.id
 
         if report.build == 0:
-            build = '-'
+            build = 'TBD'
         elif report.build == 1:
             build = '<a href="#" class="build" id="%s">PASS</a>' % report.id
         elif report.build == 2:
