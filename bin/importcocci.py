@@ -98,11 +98,7 @@ def importcoccifile(fname, lines):
             descline = lines[i]
             if descline.find('///') != -1:
                 descline = descline.replace('///', '').strip()
-                if len(descline) == 0:
-                    isdesc = False
-                    isctx = True
-                else:
-                    desc.append(descline)
+                desc.append(descline)
                 continue
             else:
                 isdesc = False
@@ -116,6 +112,9 @@ def importcoccifile(fname, lines):
 
     if len(title) == 0 or len(desc) == 0 or len(content) == 0:
         return False
+
+    if len(desc[-1]) == 0:
+        desc = desc[:-1]
 
     importsemantic(fname, title, fixed, options, '\n'.join(desc), '\n'.join(content), exceptfiles)
     
