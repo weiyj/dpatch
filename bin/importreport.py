@@ -102,9 +102,7 @@ def importcoccifile(fname, lines):
 
         if isctx == False:
             continue
-        line = lines[i]
-        line = line.replace('///', '').strip()
-        content.append(line)
+        content.append(lines[i])
 
     if len(title) == 0 or len(desc) == 0 or len(content) == 0:
         return False
