@@ -114,7 +114,7 @@ def importcoccifile(fname, lines):
     if len(desc[-1]) == 0:
         desc = desc[:-1]
 
-    importsemantic(fname, title, fixed, options, '\n'.join(desc), '\n'.join(content), exceptfiles)
+    importsemantic(fname, title, fixed, options, '\n'.join(desc), ''.join(content), exceptfiles)
     
     return True
 
