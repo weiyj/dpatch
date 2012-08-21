@@ -192,8 +192,8 @@ class Patch(models.Model):
         return u'%s %s' %(self.tag, self.file)
 
     def filename(self, prefix = 1):
-        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', self.title)
-        fname = re.sub(r'[\(\)]+', '', fname)
+        fname = re.sub(r'\[[^\]]*\]', '', self.title)
+        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', fname.strip())
         if len(fname) > 52:
             fname = fname[:52]
         return "%04d-%s.patch" % (prefix, fname)
@@ -239,8 +239,8 @@ class Report(models.Model):
         return u'%s %s' %(self.tag, self.file)
 
     def filename(self, prefix = 1):
-        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', self.title)
-        fname = re.sub(r'[\(\)]+', '', fname)
+        fname = re.sub(r'\[[^\]]*\]', '', self.title)
+        fname = re.sub(r'[ .:/\\<>\(\)]+', '-', fname.strip())
         if len(fname) > 52:
             fname = fname[:52]
         return "%04d-%s.patch" % (prefix, fname)
