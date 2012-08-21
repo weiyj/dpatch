@@ -190,7 +190,7 @@ def patchsendwizardstep(request, patch_id):
                 % (temp, chkpatch, temp, apatch)
 
         if apatch3 != '':
-            ctx += '\n#cd ../linux-next\n# git apply --check %s\n\n%s' % (temp, apatch3)
+            ctx += '\n\n# cd ../linux-next\n# git apply --check %s\n\n%s' % (temp, apatch3)
 
         ctx += '</pre>'
         ctx = ctx.replace(patch.dirname(), '')
