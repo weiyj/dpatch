@@ -124,7 +124,7 @@ def checkreport(repo, rtag, cocci, flists, logger):
 
         count = 0
         for r in reports:
-            if r.status.name == 'New' or r.status.name == 'Patched':
+            if r.status.name in ['New', 'Patched', 'Sent']:
                 count += 1
 
         if count > 0:
