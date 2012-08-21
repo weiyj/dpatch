@@ -59,7 +59,7 @@ def is_linux_next_update(repo):
         tag = tag_from_repo(repo)
         os.system('cd %s ; git reset --hard %s' % (repo.dirname(), tag))
     else:
-        os.system('cd %s ; git reset --hard' % (repo.dirname(), repo.commit))
+        os.system('cd %s ; git reset --hard %s' % (repo.dirname(), repo.commit))
     repo.commit = commit
     repo.delta = True
     repo.save()
