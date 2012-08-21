@@ -180,8 +180,11 @@ def patchsendwizardstep(request, patch_id):
             apatch = 'patch can be apply succeed'
 
         apatch3 = ''
-        if patch.tag.repo.name == 'linux.git' and os.path.exists("%s/../linux-next" % rdir):
-            ret3, apatch3 = execute_shell('cd %s/../linux-next && git apply --check %s' % (rdir, temp))
+        ndir = os.path.join(os.path.dirname(rdir), 'linux-next')
+        if patch.tag.repo.name == 'linux.git' and os.path.exists(ndir):
+            ret3, apatch3 = execute_shell('cd %s && git apply --check %s' % (ndir, temp))
+            if ret3 == 0:
+                apatch3 = 'patch can be apply succeed'
             
         ctx = '<pre># scripts/checkpatch.pl %s\n\n%s\n# git apply --check %s\n\n%s' \
                 % (temp, chkpatch, temp, apatch)
