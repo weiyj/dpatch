@@ -80,13 +80,19 @@ def report_list_data(request, tag_name):
             action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
-        if report.status.name == 'Patched':
+        elif report.status.name == 'Patched':
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
                 action += '<a href="#" class="send" id="%s">Send</a>' % report.id
+        elif report.status.name == 'Sent':
+            if request.user.is_authenticated():
+                action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
+            action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
+            if request.user.is_authenticated():
+                action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
 
         if report.build == 0:
             build = 'TBD'
@@ -171,7 +177,7 @@ def report_format(patch):
     ctx += "Content-Transfer-Encoding: 7bit\n"
     ctx += "From: %s <%s>\n" % (user, email)
     ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    ctx += "Subject: [PATCH] %s\n" % patch.title
+    ctx += "Subject: %s\n" % patch.title
     ctx += "%s\n" % patch.emails
     #ctx += "From: %s <%s>\n\n" % (user, email)
     ctx += "%s\n\n" % patch.desc
@@ -210,7 +216,11 @@ def report_edit(request, report_id):
         report.title = title
         report.desc = desc
         report.emails = emails
-        report.diff = diff
+        if report.diff != diff:
+            report.build = 0
+            report.diff = diff
+            report.status = Status.objects.get(name = 'Patched')
+
         report.content = report_format(report)
         report.save()
 
@@ -245,15 +255,17 @@ def report_fix(request, report_id):
             srcfile.close()
             diff = _get_diff_and_revert(repo.dirname(), report.file)
 
-            patched = Status.objects.filter(name = 'Patched')[0]
+            patched = Status.objects.get(name = 'Patched')
 
             user = report.username()
             email = report.email()
             formater = PatchFormat(repo.dirname(), report.file, user, email,
                                    rtype.ptitle, rtype.pdesc, diff)
             report.content = formater.format_patch()
-            report.title = formater.format_title()
-            report.desc = rtype.pdesc
+            if report.title is None or len(report.title) == 0:
+                report.title = formater.format_title()
+            if report.desc is None or len(report.desc) == 0:
+                report.desc = rtype.pdesc
             report.emails = formater.get_mail_list()
             report.diff = diff
             report.status = patched

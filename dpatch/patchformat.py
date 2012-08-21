@@ -170,7 +170,7 @@ class PatchFormat:
         else:
             title = re.sub(r'{{\s*file\s*}}', self._basename(), title)
 
-        return '%s: %s' % (self._module, title)
+        return '[PATCH] %s: %s' % (self._module, title)
 
     def format_patch(self):
         self._guest_module_name()
@@ -179,7 +179,7 @@ class PatchFormat:
         patch += "Content-Transfer-Encoding: 7bit\n"
         patch += "From: %s <%s>\n" % (self._user, self._email)
         patch += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-        patch += "Subject: [PATCH] %s\n" % self.format_title()
+        patch += "Subject: %s\n" % self.format_title()
         try:
             patch += self._guest_email_list()
         except:

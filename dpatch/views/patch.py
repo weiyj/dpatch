@@ -92,6 +92,8 @@ def patchlistdata(request, tag_name):
         if request.user.is_authenticated() and patch.status.name == 'New':
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
             action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
+        elif request.user.is_authenticated() and patch.status.name == 'Sent':
+            action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
 
         if patch.build == 0:
             build = 'TBD'
@@ -256,7 +258,7 @@ def patch_format(patch):
     ctx += "Content-Transfer-Encoding: 7bit\n"
     ctx += "From: %s <%s>\n" % (user, email)
     ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    ctx += "Subject: [PATCH] %s\n" % patch.title
+    ctx += "Subject: %s\n" % patch.title
     ctx += "%s\n" % patch.emails
     #ctx += "From: %s <%s>\n\n" % (user, email)
     ctx += "%s\n\n" % patch.desc
@@ -298,7 +300,10 @@ def patcheditsave(request, patch_id):
     patch[0].title = title
     patch[0].desc = desc
     patch[0].emails = emails
-    patch[0].diff = diff
+    if patch[0].diff != diff:
+        patch[0].diff = diff
+        patch[0].build = 0
+        patch[0].status = Status.objects.get(name = 'New')
     patch[0].content = patch_format(patch[0])
     patch[0].save()
 
