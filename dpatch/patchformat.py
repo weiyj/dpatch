@@ -184,8 +184,8 @@ class PatchFormat:
             patch += self._guest_email_list()
         except:
             patch += self._weak_email_list()
-        patch += "\nFrom: %s <%s>\n\n" % (self._user, self._email)
-        patch += "%s\n\n" % self._desc
+        #patch += "\nFrom: %s <%s>\n\n" % (self._user, self._email)
+        patch += "\n%s\n\n" % self._desc
         patch += "Signed-off-by: %s <%s>\n" % (self._user, self._email)
         patch += "---\n"
         patch += "%s" % self._content

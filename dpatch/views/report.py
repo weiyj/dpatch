@@ -173,7 +173,7 @@ def report_format(patch):
     ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
     ctx += "Subject: [PATCH] %s\n" % patch.title
     ctx += "%s\n\n" % patch.emails
-    ctx += "From: %s <%s>\n\n" % (user, email)
+    #ctx += "From: %s <%s>\n\n" % (user, email)
     ctx += "%s\n\n" % patch.desc
     ctx += "Signed-off-by: %s <%s>\n" % (user, email)
     ctx += "---\n"
