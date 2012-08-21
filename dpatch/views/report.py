@@ -249,7 +249,7 @@ def report_fix(request, report_id):
 
             user = report.username()
             email = report.email()
-            formater = PatchFormat(repo.dirname(), sfile, user, email,
+            formater = PatchFormat(repo.dirname(), report.file, user, email,
                                    rtype.ptitle, rtype.pdesc, diff)
             report.content = formater.format_patch()
             report.title = formater.format_title()
