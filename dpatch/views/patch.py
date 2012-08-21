@@ -178,8 +178,18 @@ def patchsendwizardstep(request, patch_id):
         ret2, apatch = execute_shell('cd %s && git apply --check %s' % (rdir, temp))
         if ret2 == 0:
             apatch = 'patch can be apply succeed'
-        ctx = '<pre># scripts/checkpatch.pl %s\n\n%s\n# git apply --check %s\n\n%s</pre>' \
+
+        apatch3 = ''
+        if patch.tag.repo.name == 'linux.git' and os.path.exists("%s/../linux-next" % rdir):
+            ret3, apatch3 = execute_shell('cd %s/../linux-next && git apply --check %s' % (rdir, temp))
+            
+        ctx = '<pre># scripts/checkpatch.pl %s\n\n%s\n# git apply --check %s\n\n%s' \
                 % (temp, chkpatch, temp, apatch)
+
+        if apatch3 != '':
+            ctx += '\n#cd ../linux-next\n# git apply --check %s\n\n%s' % (temp, apatch3)
+
+        ctx += '</pre>'
         ctx = ctx.replace(patch.dirname(), '')
         if ret1 != 0 or ret2 != 0:
             ctx += '<div id="steperrors"><font color=red>Please correct above errors first!</font></div>'
