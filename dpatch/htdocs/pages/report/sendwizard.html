@@ -56,11 +56,11 @@
 	  			contentURL: '/report/send/wizard/{{ reportid }}/step/',
 	  			contentCache: false,
 	  			transitionEffect:'slideleft',
-	  			onLeaveStep: leaveAStepCallback,
+	  			onValidateStep: validateStepCallback,
 	  			onFinish:onFinishCallback
 	  		});
 
-			function leaveAStepCallback(obj){
+			function validateStepCallback(obj) {
 				var step_num= obj.attr('rel');
 				return validateSteps(step_num);
 			}

@@ -256,6 +256,12 @@
                 
                 function doForwardProgress(){
                   var nextStepIdx = curStepIdx + 1;
+                  var curStep = steps.eq(curStepIdx);
+                  if($.isFunction(options.onValidateStep)) {
+                      if(!options.onValidateStep.call(this, $(curStep))){
+                        return false;
+                      }
+                  }
                   if(steps.length <= nextStepIdx){
                     if(!options.cycleSteps){
                       return false;
@@ -325,7 +331,8 @@
           errorSteps:[],    // Array Steps with errors
           labelNext:'Next',
           labelPrevious:'Previous',
-          labelFinish:'Finish',          
+          labelFinish:'Finish',
+          onValidateStep: null, // triggers before leaving a step
           onLeaveStep: null, // triggers when leaving a step
           onShowStep: null,  // triggers when showing a step
           onFinish: null  // triggers when Finish button is clicked
