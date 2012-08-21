@@ -53,14 +53,16 @@ def main(args):
         pcount = {'total': 0, 'pass': 0, 'fail': 0}
         rcount = {'total': 0, 'pass': 0, 'fail': 0}
         # prepare build env
+        log = ''
         if not os.path.exists(repo.builddir()):
             os.system("cd /var/lib/dpatch/build/; git clone file://%s" % repo.dirname())
             os.system("cd %s; make allmodconfig" % repo.builddir())
         else:
             os.system("cd %s; git diff | patch -p1 -R" % repo.builddir())
-            os.system("cd %s; git pull" % repo.builddir())
+            ret, log = execute_shell("cd %s; git pull" % repo.builddir(), logger)
 
-        execute_shell("cd %s; make" % repo.builddir(), logger)
+        if log.find('Already up-to-date.') == -1:
+            execute_shell("cd %s; make" % repo.builddir(), logger)
 
         for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
             buildlog = ''
