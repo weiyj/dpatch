@@ -43,7 +43,7 @@ def execute_shell(args, logger = None):
     return shelllog.returncode, lines
 
 def commit_from_repo(repo):
-    commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.builddir())
+    ret, commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.builddir())
     return commits[-1]
 
 def main(args):
