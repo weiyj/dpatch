@@ -1,6 +1,6 @@
 %define debug_package %{nil}
 
-Summary: Automated kernel patch maker system
+Summary: Automated kernel patch generate engine
 Name: dpatch
 Version: 0.2
 Release: 0%{?dist}
@@ -13,11 +13,12 @@ Requires: httpd mod_wsgi
 Requires: git git-email
 Requires: Django
 Requires: coccinelle
+Requires: gcc make
 BuildArch: noarch
 ExcludeArch: ppc64 s390 s390x
 
 %description
-Automated kernel patch maker system
+Automated kernel patch generate engine
 
 %prep
 %setup -q
