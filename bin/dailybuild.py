@@ -42,6 +42,10 @@ def execute_shell(args, logger = None):
 
     return shelllog.returncode, lines
 
+def commit_from_repo(repo):
+    commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.builddir())
+    return commits[-1]
+
 def main(args):
     for repo in GitRepo.objects.filter(status = True, build = True):
         logger = MyLogger()
@@ -65,6 +69,8 @@ def main(args):
         if gitlog.find('Already up-to-date.') == -1:
             execute_shell("cd %s; make" % repo.builddir(), logger)
 
+        commit = commit_from_repo(repo)
+
         for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
             buildlog = ''
 
@@ -82,7 +88,7 @@ def main(args):
             print "build for patch %s...\n" % os.path.basename(fname)
             logger.logger.info("build for patch %s..." % os.path.basename(fname))
 
-            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit), logger)
+            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
             if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                 execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
 
@@ -147,7 +153,7 @@ def main(args):
             print "build for report patch %s...\n" % os.path.basename(fname)
             logger.logger.info("build for report patch %s..." % os.path.basename(fname))
 
-            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit), logger)
+            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
             if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                 execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
 
@@ -201,7 +207,7 @@ def main(args):
         logs.logs = logger.getlog()
         logs.save()
 
-        os.system("cd %s; git reset --hard %s" % (repo.builddir(), repo.commit))
+        os.system("cd %s; git reset --hard %s" % (repo.builddir(), commit))
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
