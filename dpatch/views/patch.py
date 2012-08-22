@@ -102,7 +102,7 @@ def patchlistdata(request, tag_name):
         elif patch.build == 2:
             build = '<a href="#" class="build" id="%s">FAIL</a>' % patch.id
         elif patch.build == 4:
-            build = '<a href="#" class="build" id="%s">WARNING</a>' % patch.id
+            build = '<a href="#" class="build" id="%s">WARN</a>' % patch.id
         elif patch.build == 3:
             build = 'SKIP'
 
