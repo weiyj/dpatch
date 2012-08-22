@@ -102,7 +102,7 @@ def main(args):
                     dname = os.path.dirname(dname)
                 buildlog += '\n# make M=%s\n' % dname
                 ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
-            	buildlog += unicode('\n'.join(log), errors='ignore')
+                buildlog += unicode('\n'.join(log), errors='ignore')
                 if ret != 0:
                     pcount['fail'] += 1
                     patch.build = 2
@@ -114,7 +114,7 @@ def main(args):
             if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
                 buildlog += '\n# make vmlinux\n'
                 ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
-            	buildlog += unicode('\n'.join(log), errors='ignore')
+                buildlog += unicode('\n'.join(log), errors='ignore')
                 if ret != 0:
                     pcount['fail'] += 1
                     patch.build = 2
@@ -123,7 +123,10 @@ def main(args):
                     continue
 
             pcount['pass'] += 1
-            patch.build = 1
+            if buildlog.find(': warning: ') != -1:
+                patch.build = 4
+            else:
+                patch.build = 1
             patch.buildlog = buildlog
             patch.save()
 
@@ -164,7 +167,7 @@ def main(args):
                     dname = os.path.dirname(dname)
                 buildlog += '\n# make M=%s\n' % dname
                 ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
-            	buildlog += unicode('\n'.join(log), errors='ignore')
+                buildlog += unicode('\n'.join(log), errors='ignore')
                 if ret != 0:
                     rcount['fail'] += 1
                     report.build = 2
@@ -176,7 +179,7 @@ def main(args):
             if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
                 buildlog += '\n# make vmlinux\n'
                 ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
-            	buildlog += unicode('\n'.join(log), errors='ignore')
+                buildlog += unicode('\n'.join(log), errors='ignore')
                 if ret != 0:
                     rcount['fail'] += 1
                     report.build = 2
@@ -185,7 +188,10 @@ def main(args):
                     continue
 
             rcount['pass'] += 1
-            report.build = 1
+            if buildlog.find(': warning: ') != -1:
+                report.build = 4
+            else:
+                report.build = 1
             report.buildlog = buildlog
             report.save()
 

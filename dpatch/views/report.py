@@ -99,6 +99,8 @@ def report_list_data(request, tag_name):
             build = '<a href="#" class="build" id="%s">PASS</a>' % report.id
         elif report.build == 2:
             build = '<a href="#" class="build" id="%s">FAIL</a>' % report.id
+        elif report.build == 4:
+            build = '<a href="#" class="build" id="%s">WARNING</a>' % report.id
         elif report.build == 3:
             build = 'SKIP'
 
