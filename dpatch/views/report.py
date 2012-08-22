@@ -96,13 +96,13 @@ def report_list_data(request, tag_name):
         if report.build == 0:
             build = 'TBD'
         elif report.build == 1:
-            build = '<a href="#" class="build" id="%s">PASS</a>' % report.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#0000FF">PASS</FONT></a>' % report.id
         elif report.build == 2:
-            build = '<a href="#" class="build" id="%s">FAIL</a>' % report.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#FF0000">FAIL</FONT></a>' % report.id
         elif report.build == 4:
-            build = '<a href="#" class="build" id="%s">WARN</a>' % report.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#00FF00">WARN</FONT></a>' % report.id
         elif report.build == 3:
-            build = 'SKIP'
+            build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
 
         reports['rows'].append({
             'id': report.id,

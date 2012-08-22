@@ -98,13 +98,13 @@ def patchlistdata(request, tag_name):
         if patch.build == 0:
             build = 'TBD'
         elif patch.build == 1:
-            build = '<a href="#" class="build" id="%s">PASS</a>' % patch.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#0000FF">PASS</FONT></a>' % patch.id
         elif patch.build == 2:
-            build = '<a href="#" class="build" id="%s">FAIL</a>' % patch.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#FF0000">FAIL</FONT></a>' % patch.id
         elif patch.build == 4:
-            build = '<a href="#" class="build" id="%s">WARN</a>' % patch.id
+            build = '<a href="#" class="build" id="%s"><FONT COLOR="#00FF00">WARN</FONT></a>' % patch.id
         elif patch.build == 3:
-            build = 'SKIP'
+            build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
 
         patchs['rows'].append({
             'id': patch.id,
