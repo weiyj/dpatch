@@ -75,10 +75,10 @@ def patchlistdata(request, tag_name):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
-    id = int(get_request_paramter(request, 'repo', '1'))
+    rid = int(get_request_paramter(request, 'repo', '1'))
 
     patchs = {'page': 1, 'total': 0, 'rows': [] }
-    repo = GitRepo.objects.filter(id = id)
+    repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
         return render_to_response(simplejson.dumps(patchs))
 
@@ -508,7 +508,7 @@ def patch_export(request):
             pass
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=patchset.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=patchset-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
@@ -526,9 +526,9 @@ def patch_export(request):
 
 @login_required
 def patch_export_all(request, tag_name):
-    id = int(get_request_paramter(request, 'repo', '1'))
+    rid = int(get_request_paramter(request, 'repo', '1'))
 
-    repo = GitRepo.objects.filter(id = id)
+    repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
         return render_to_response("repo id not specified")
 
@@ -550,7 +550,7 @@ def patch_export_all(request, tag_name):
             pass
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=patchset.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=patchset-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:

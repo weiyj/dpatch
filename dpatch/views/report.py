@@ -21,7 +21,6 @@
 
 import os
 import tarfile
-import tempfile
 import subprocess
 
 from django.shortcuts import render_to_response, get_object_or_404
@@ -313,7 +312,7 @@ def report_export(request):
             pass
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=rpatchset.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=rpatchset-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
@@ -356,7 +355,7 @@ def report_export_all(request, tag_name):
             pass
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=rpatchset.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=rpatchset-all-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:

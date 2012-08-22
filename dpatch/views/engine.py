@@ -30,6 +30,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
+from time import gmtime, strftime
 
 from dpatch.models import CocciEngine, CocciReport, Type, Event, Patch, Report, ExceptFile
 from dpatch.forms import ExceptFileForm
@@ -359,7 +360,7 @@ def semantic_export(request):
         files.append(cocci[0].fullpath())
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=cocci-semantics.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=cocci-semantics-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
@@ -378,7 +379,7 @@ def semantic_export_all(request):
         files.append(cocci.fullpath())
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=cocci-semantics.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=cocci-semantics-all-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
@@ -771,7 +772,7 @@ def report_semantic_export(request):
         files.append(cocci[0].fullpath())
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=reports.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=cocci-reports-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
@@ -790,7 +791,7 @@ def report_semantic_export_all(request):
         files.append(cocci.fullpath())
 
     response = HttpResponse(mimetype='application/x-gzip')
-    response['Content-Disposition'] = 'attachment; filename=reports-all.tar.gz'
+    response['Content-Disposition'] = 'attachment; filename=cocci-reports-all-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
     for fname in files:
