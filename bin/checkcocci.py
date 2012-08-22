@@ -100,7 +100,7 @@ class CheckCocciDetector(PatchDetector):
             self.warning('sp_file %s does not exists' % spfile)
             return False
 
-        args = '/usr/bin/spatch %s -I %s -timeout 1 -very_quiet -sp_file %s %s' % (cocci.options,
+        args = '/usr/bin/spatch %s -I %s -timeout 60 -very_quiet -sp_file %s %s' % (cocci.options,
                         os.path.join(self._repo, 'include'), spfile,
                         self._get_file_path())
         #args = ['/usr/bin/spatch', '-I', os.path.join(self._repo, 'include'), 
