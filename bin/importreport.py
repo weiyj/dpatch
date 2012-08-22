@@ -62,9 +62,6 @@ def importcoccifile(fname, lines):
     isdesc = False
     isctx = False
     for i in range(len(lines)):
-        if i == 1 or i == 3:
-            continue
-
         if i == 0:
             title = lines[i]
             title = title.replace('///', '').strip()
