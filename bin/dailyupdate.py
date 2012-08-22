@@ -137,7 +137,11 @@ def check_patch(repo, rtag, flists, commit):
         test = dot(repo.dirname(), logger.logger)
         for i in range(test.tokens()):
             logger.logger.info('Starting scan type %d' % test.get_type())
-            rtype = Type.objects.filter(id = test.get_type())[0]
+            rtype = None
+            try:
+                rtype = Type.objects.filter(id = test.get_type())[0]
+            except:
+                continue
             if rtype.status == False:
                 test.next_token()
                 continue
