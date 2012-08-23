@@ -21,6 +21,7 @@
 
 import os
 import re
+import tempfile
 import tarfile
 import subprocess
 
@@ -673,6 +674,28 @@ def patch_fix(request, patch_id):
             srcfile = open(sfile, "r")
             src = srcfile.read()
             srcfile.close()
+
+            try:
+                tmpsrcfname = tempfile.mktemp()
+                tmpsrcfile = open(tmpsrcfname, "w")
+                tmpsrcfile.write(src)
+                tmpsrcfile.close()
+    
+                tmpdiffname = tempfile.mktemp()
+                tmpdiffile = open(tmpdiffname, "w")
+                tmpdiffile.write(patch.diff)
+                tmpdiffile.close()
+    
+                os.system('patch %s -i %s' % (tmpsrcfname, tmpdiffname))
+                srcfile = open(tmpsrcfname, "r")
+                src = srcfile.read()
+                srcfile.close()
+    
+                os.unlink(tmpsrcfname)
+                os.unlink(tmpdiffname)
+            except:
+                pass
+
         context['patch'] = patch
         context['src'] = src
         return render_to_response("patch/patchfix.html", context)
