@@ -119,6 +119,7 @@ def check_patch(repo, rtag, flists, commit):
     sent = Status.objects.filter(name = 'Sent')[0]
     fixed = Status.objects.filter(name = 'Fixed')[0]
     removed = Status.objects.filter(name = 'Removed')[0]
+    applied = Status.objects.filter(name = 'Accepted')[0]
     count = 0
 
     logger = MyLogger()
@@ -191,7 +192,7 @@ def check_patch(repo, rtag, flists, commit):
                 for p in patchs:
                     if p.status != new and p.status != sent:
                         continue
-                    
+
                     # repo id == 1 is the main kernel tree, so only
                     # allow other tree update main kernel tree's patch
                     if repo == p.tag.repo or p.tag.repo.id == 1:
@@ -212,7 +213,10 @@ def check_patch(repo, rtag, flists, commit):
                 should_patch = test.should_patch()
                 if len(rpatchs) != 0 and should_patch == False:
                     for p in rpatchs:
-                        p.status = fixed
+                        if p.status == sent:
+                            p.status = applied
+                        else:
+                            p.status = fixed
                         p.save()
 
                 if should_patch == True and ((repo.id == 1 and len(opatchs) == 0) or (repo.id != 1 and len(rpatchs) == 0)):

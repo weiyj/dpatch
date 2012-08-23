@@ -85,6 +85,7 @@ def checkreport(repo, rtag, cocci, flists, logger):
     new = Status.objects.filter(name = 'New')[0]
     fixed = Status.objects.filter(name = 'Fixed')[0]
     removed = Status.objects.filter(name = 'Removed')[0]
+    applied = Status.objects.filter(name = 'Accepted')[0]
 
     exceptfiles = []
     for fn in ExceptFile.objects.filter(type = rtype):
@@ -119,6 +120,9 @@ def checkreport(repo, rtag, cocci, flists, logger):
             for r in reports:
                 if r.status.name == 'New' or r.status.name == 'Patched':
                     r.status = fixed
+                    r.save()
+                elif r.status.name == 'Sent':
+                    r.status = applied
                     r.save()
             continue
 

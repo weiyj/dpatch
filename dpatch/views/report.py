@@ -60,9 +60,13 @@ def html_report_status(name):
     elif name == 'Removed':
         return '<FONT COLOR="#AAAAAA">REMOVED</FONT>'
     elif name == 'Patched':
-        return '<FONT COLOR="#0000FF">PATCHED</FONT>'
+        return '<FONT COLOR="#0000AA">PATCHED</FONT>'
     elif name == 'Sent':
-        return '<FONT COLOR="#00FF00">SENT</FONT>'
+        return '<FONT COLOR="#0000FF">SENT</FONT>'
+    elif name == 'Merged':
+        return '<FONT COLOR="#AAAAAA">MERGED</FONT>'
+    elif name == 'Accepted':
+        return '<FONT COLOR="#00FF00">APPLIED</FONT>'
     else:
         return name
 
