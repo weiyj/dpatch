@@ -87,7 +87,7 @@ def commit_from_repo(repo):
     return commits[-1]
 
 def tag_to_commit(repo, tag):
-    commits = execute_shell('cd %s; git log -n 1 %s --pretty=format:%%H%%n' % (tag, repo.dirname()))
+    commits = execute_shell('cd %s; git log -n 1 %s --pretty=format:%%H%%n' % (repo.dirname(), tag))
     return commits[-1]
 
 def tag_from_repo(repo):
