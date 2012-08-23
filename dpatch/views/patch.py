@@ -99,8 +99,10 @@ def patchlistdata(request, tag_name):
         if request.user.is_authenticated() and patch.status.name == 'New':
             action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
-            action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
+            if patch.build in [1, 3, 4]:
+                action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
         elif request.user.is_authenticated() and patch.status.name == 'Sent':
+            action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
 
         if patch.build == 0:

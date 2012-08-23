@@ -93,7 +93,8 @@ def report_list_data(request, tag_name):
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
-                action += '<a href="#" class="send" id="%s">Send</a>' % report.id
+                if report.build in [1, 3, 4]:
+                    action += '<a href="#" class="send" id="%s">Send</a>' % report.id
         elif report.status.name == 'Sent':
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
