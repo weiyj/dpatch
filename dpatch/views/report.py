@@ -52,6 +52,20 @@ def report_list(request, tag_name):
     context['repo'] = get_request_paramter(request, 'repo', '1')
     return render_to_response("report/reportlist.html", context)
 
+def html_report_status(name):
+    if name == 'New':
+        return '<FONT COLOR="#000000">NEW</FONT>'
+    elif name == 'Fixed':
+        return '<FONT COLOR="#AAAAAA">FIXED</FONT>'
+    elif name == 'Removed':
+        return '<FONT COLOR="#AAAAAA">REMOVED</FONT>'
+    elif name == 'Patched':
+        return '<FONT COLOR="#0000FF">PATCHED</FONT>'
+    elif name == 'Sent':
+        return '<FONT COLOR="#00FF00">SENT</FONT>'
+    else:
+        return name
+
 def report_list_data(request, tag_name):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
@@ -106,7 +120,7 @@ def report_list_data(request, tag_name):
                 'title': html.escape(report.title),
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
-                'status': report.status.name,
+                'status': html_report_status(report.status.name),
                 'build': build,
                 'action': action,
         }}) # comment
