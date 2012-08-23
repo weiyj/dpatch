@@ -123,6 +123,9 @@ class PatchFormat:
         if nolkml == True and skiplkml == True:
             mailcc.append('linux-kernel@vger.kernel.org')
 
+        if len(mailto) == 0 and mailcc.count('netdev@vger.kernel.org') != 0:
+            mailto.append('David S. Miller <davem@davemloft.net>')
+
         elist = ""
         if len(mailto) != 0:
             elist += "To: %s" % mailto[0].strip()
