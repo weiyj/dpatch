@@ -648,6 +648,7 @@ def patch_fix(request, patch_id):
                 patch.desc = rtype.pdesc
             patch.emails = formater.get_mail_list()
             patch.diff = diff
+            patch.build = 0
             patch.save()
             return HttpResponse('FIX: patch %d, SUCCEED' % patch.id, True)
         except:

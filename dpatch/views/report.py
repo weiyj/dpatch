@@ -263,6 +263,7 @@ def report_fix(request, report_id):
                 report.desc = rtype.pdesc
             report.emails = formater.get_mail_list()
             report.diff = diff
+            report.build = 0
             report.status = patched
             report.save()
             return HttpResponse('FIX: report %d, SUCCEED' % report.id, True)
