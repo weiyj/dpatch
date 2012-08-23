@@ -46,12 +46,6 @@ def logevent(event, status = False):
     evt = Event(event = event, status = status)
     evt.save()
 
-def fixstrip(string, length):
-    if len(string) > length:
-        return string[:length - 3] + '...'
-    else:
-        return string
-
 def report_list(request, tag_name):
     context = RequestContext(request)
     context['tag'] = tag_name
@@ -108,8 +102,8 @@ def report_list_data(request, tag_name):
             'id': report.id,
             'cell': {
                 'id': report.id,
-                'file': fixstrip(report.file, 40),
-                'title': html.escape(fixstrip(report.title, 60)),
+                'file': report.file,
+                'title': html.escape(report.title),
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
                 'status': report.status.name,

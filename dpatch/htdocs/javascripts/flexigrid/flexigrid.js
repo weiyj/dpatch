@@ -611,6 +611,8 @@
 					}
 					if (p.nowrap == false) {
 						$(tdDiv).css('white-space', 'normal');
+					} else {
+						$(tdDiv).css('white-space', 'nowrap');
 					}
 					if (this.innerHTML == '') {
 						this.innerHTML = '&nbsp;';

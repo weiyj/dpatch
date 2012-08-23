@@ -1,0 +1,28 @@
+<input id="id" type="hidden" value="{{ patch.id }}">
+
+<div>
+    <div>Source File: {{ patch.file }} <div id="difftip" style="float:right;"><U>DIFF&gt;&gt;</U></div></div>
+    <div id="diff" style="border: solid 1px #CBCBCB;height: 100px;display:none;overflow-y:auto;">
+        <pre>{{ patch.diff }}</pre>
+    </div>
+
+    <textarea id="src" rows="25" cols="80" name="src">{{ src }}</textarea>
+</div>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+			$('#difftip').click(function () {
+				if ($(this).data("show") == true) {
+					$('#diff').css("display", "none");
+					$('#difftip').html("<U>DIFF&gt;&gt;</U>")
+					$(this).data("show", false);
+				} else {
+					$('#diff').css("display", "block");
+					$('#difftip').html("<U>DIFF&lt;&lt;</U>")
+					$(this).data("show", true);
+				}
+			});
+		});
+	})(jQuery);
+</script>

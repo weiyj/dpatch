@@ -68,6 +68,7 @@ urlpatterns += patterns('dpatch.views.patch',
     url(r'^patch/send/wizard/(?P<patch_id>\d+)/$', 'patchsendwizard'),
     url(r'^patch/send/wizard/(?P<patch_id>\d+)/step/$', 'patchsendwizardstep'),
     url(r'^patch/build/(?P<patch_id>\d+)/$', 'patch_build'),
+    url(r'^patch/fix/(?P<patch_id>\d+)/$', 'patch_fix'),
 )
 
 urlpatterns += patterns('dpatch.views.report',

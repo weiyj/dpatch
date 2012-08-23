@@ -213,6 +213,9 @@ class Patch(models.Model):
         else:
             return self.type.email
 
+    def sourcefile(self):
+        return os.path.join(self.tag.repo.dirname(), self.file)
+
     def fullpath(self):
         return '/var/lib/dpatch/repo/PATCH/%s' % self.filename()
 

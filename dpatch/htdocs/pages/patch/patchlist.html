@@ -2,6 +2,7 @@
 <div id="dialog" title="Patch" style="display:none">
 <div id="dialogsend" title="Patch Send" style="display:none">
 <div id="dialogedit" title="Edit Patch" style="display:none">
+<div id="patchfix" title="Fix Source File" style="display:none">
 <div id="review" title="Review Patch" style="display:none" height="100%">
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
@@ -26,6 +27,12 @@
 				ajaxShowDialog("#dialog", "GET", '/patch/build/' + id, {});
 			});
 
+{% if user.is_authenticated %}
+			$("#patchlist .fix").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#patchfix", "GET", '/patch/fix/' + id, {});
+			});
+
 			$("#patchlist .edit").click(function () {
 				id = $(this).attr('id');
 				ajaxShowDialog("#dialogedit", "GET", '/patch/edit/' + id, {});
@@ -35,6 +42,7 @@
 				id = $(this).attr('id');
 				ajaxShowDialog("#dialogsend", "GET", '/patch/send/wizard/' + id, {});
 			});
+{% endif %}
 		}
 
 {% if user.is_authenticated %}
@@ -47,37 +55,13 @@
 			return ids;
 		}
 
-		function showModelDialog(url, args, type) {
-			$.blockUI(); 
-			$.ajax({
-				type: type,
-				url: url,
-				data: args,
-				success: function(data){
-					$.blockUI({ message: "<h1>" + data + "</h1>" });
-					setTimeout($.unblockUI, 1000);
-					$('#patchlist').flexReload();
-				},
-				error: function(xhr, status, throwerr){
-					$.blockUI({ message: "<h1>ERROR: " + url + "</h1>" });
-					setTimeout($.unblockUI, 1000);
-				}
-			});
-		}
-
-		function alertBox(msg) {
-			$.blockUI({ message: "<h1>" + msg + "</h1>" });
-			//$('.blockOverlay').click($.unblockUI);
-			setTimeout($.unblockUI, 1000);			
-		}
-
 		function doPatchMerge() {
 			var ids = getGridSelected();
 
 			if (ids.length < 2) {
 				alertBox("MERGER ERROR: at least two rows must be selected!");
 			} else {
-				showModelDialog("/patch/merge/", {'ids': ids.join()}, 'GET')
+				showModelDialog("/patch/merge/", {'ids': ids.join()}, 'GET', '#patchlist')
 			}
 		}
 
@@ -87,7 +71,7 @@
 			if (ids.length < 1) {
 				alertBox('UNMERGER ERROR: at least one row must be selected!');
 			} else {
-				showModelDialog("/patch/unmerge/", {'ids': ids.join()}, 'GET');
+				showModelDialog("/patch/unmerge/", {'ids': ids.join()}, 'GET', '#patchlist');
 			}
 		}
 
@@ -97,7 +81,7 @@
 			if (ids.length < 1) {
 				alertBox('DELETE ERROR: at least one row must be selected!');
 			} else {
-				showModelDialog("/patch/delete/", {'ids': ids.join()}, 'GET');
+				showModelDialog("/patch/delete/", {'ids': ids.join()}, 'GET', '#patchlist');
 			}
 		}
 
@@ -126,12 +110,12 @@
 				method: 'GET',
 				colModel : [ { display: 'ID', name : 'id', width : 30, align: 'center'},
 				             { display: 'TITLE', name : 'title', width : 320, align: 'left'},
-				             { display: 'FILENAME', name : 'file', width : 220, align: 'left'},
+				             { display: 'FILENAME', name : 'file', width : 180, align: 'left'},
 				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
 				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
 				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
 				             { display: 'BUILD', name : 'build', width : 50, align: 'center'},
-				             { display: 'ACTION', name : 'action', width : 120, align: 'center'}],
+				             { display: 'ACTION', name : 'action', width : 160, align: 'center'}],
 				searchitems : [ {display: 'Title', name : 'title'},
 				            	 {display: 'Filename', name : 'file'},
 				            	 {display: 'Status', name : 'status'},
@@ -193,7 +177,28 @@
 				      		emails = $(this).find("textarea[id=emails]").eq(0).val();
 				      		diff = $(this).find("textarea[id=diff]").eq(0).val();
 							$(this).dialog("close");
-				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails, 'diff': diff}, 'POST');
+				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails, 'diff': diff}, 'POST', '#patchlist');
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
+			});
+
+			$('#patchfix').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 700,
+				resizable: true,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		id = $(this).find("input[id=id]").eq(0).val();
+				      		src = $(this).find("textarea[id=src]").eq(0).val();
+							$(this).dialog("close");
+				      		showModelDialog('/patch/fix/' + id + '/', {'src': src}, 'POST', "#reportlist");
 						}
 					},
 					{

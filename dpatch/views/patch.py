@@ -24,7 +24,7 @@ import re
 import tarfile
 import subprocess
 
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse
 from django.utils import simplejson
 from django.utils import html
@@ -59,12 +59,6 @@ def execute_shell(args):
     #if shelllog.returncode != 0:
     return shelllog.returncode, shellOut
 
-def fixstrip(string, length):
-    if len(string) > length:
-        return string[:length - 3] + '...'
-    else:
-        return string
-
 def patchlist(request, tag_name):
     context = RequestContext(request)
     context['tag'] = tag_name
@@ -90,6 +84,7 @@ def patchlistdata(request, tag_name):
         action = ''
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
+            action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
             action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
         elif request.user.is_authenticated() and patch.status.name == 'Sent':
@@ -110,8 +105,8 @@ def patchlistdata(request, tag_name):
             'id': patch.id,
             'cell': {
                 'id': patch.id,
-                'file': fixstrip(patch.file, 40),
-                'title': html.escape(fixstrip(patch.title, 60)),
+                'file': patch.file,
+                'title': html.escape(patch.title),
                 'date': patch.date.strftime("%Y-%m-%d"),
                 'type': patch.type.name,
                 'status': patch.status.name,
@@ -610,3 +605,61 @@ def patchreview(request, patch_id):
     context['src'] = ''.join(lines)
 
     return render_to_response("patch/review.html", context)
+
+def _get_diff_and_revert(repo, fname):
+    diff = subprocess.Popen("cd %s ; LC_ALL=en_US git diff --patch-with-stat %s" % (repo, fname),
+                            shell=True, stdout=subprocess.PIPE)
+    diffOut = diff.communicate()[0]
+    os.system("cd %s ; git diff %s | patch -p1 -R > /dev/null" % (repo, fname))
+    return diffOut
+
+@login_required
+@csrf_exempt
+def patch_fix(request, patch_id):
+    patch = get_object_or_404(Patch, id=patch_id)
+
+    if request.method == "POST":
+        src = get_request_paramter(request, 'src', '')
+
+        if len(src) == 0:
+            return HttpResponse('FIX: report, ERROR: no source specified')
+
+        sfile = patch.sourcefile()
+        if not os.path.exists(sfile) or not os.path.isfile(sfile):
+            return HttpResponse('FIX: report, ERROR: %s does not exists' % sfile)
+
+        try:
+            rtype = patch.type
+            repo = patch.tag.repo
+
+            srcfile = open(sfile, "w")
+            src = srcfile.write(src)
+            srcfile.close()
+            diff = _get_diff_and_revert(repo.dirname(), patch.file)
+
+            user = patch.username()
+            email = patch.email()
+            formater = PatchFormat(repo.dirname(), patch.file, user, email,
+                                   rtype.ptitle, rtype.pdesc, diff)
+            patch.content = formater.format_patch()
+            if patch.title is None or len(patch.title) == 0:
+                patch.title = formater.format_title()
+            if patch.desc is None or len(patch.desc) == 0:
+                patch.desc = rtype.pdesc
+            patch.emails = formater.get_mail_list()
+            patch.diff = diff
+            patch.save()
+            return HttpResponse('FIX: patch %d, SUCCEED' % patch.id, True)
+        except:
+            return HttpResponse('FIX: patch, ERROR: write file error')
+    else:
+        context = RequestContext(request)
+        sfile = patch.sourcefile()
+        src = ''
+        if os.path.exists(sfile) and os.path.isfile(sfile):
+            srcfile = open(sfile, "r")
+            src = srcfile.read()
+            srcfile.close()
+        context['patch'] = patch
+        context['src'] = src
+        return render_to_response("patch/patchfix.html", context)
