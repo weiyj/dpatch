@@ -75,6 +75,8 @@ def html_patch_status(name):
         return '<FONT COLOR="#AAAAAA">REMOVED</FONT>'
     elif name == 'Sent':
         return '<FONT COLOR="#00FF00">SENT</FONT>'
+    elif name == 'Merged':
+        return '<FONT COLOR="#AAAAAA">MERGED</FONT>'
     else:
         return name
 
