@@ -265,7 +265,10 @@ def report_fix(request, report_id):
             repo = report.tag.repo
 
             srcfile = open(sfile, "w")
-            src = srcfile.write(src)
+            try:
+                src = srcfile.write(src)
+            except:
+                src = srcfile.write(unicode.encode(src, 'utf-8'))
             srcfile.close()
             diff = _get_diff_and_revert(repo.dirname(), report.file)
 
@@ -273,8 +276,16 @@ def report_fix(request, report_id):
 
             user = report.username()
             email = report.email()
+            if report.title is None or len(report.title) == 0:
+                title = rtype.ptitle
+            else:
+                title = report.title
+            if report.desc is None or len(report.desc) == 0:
+                desc = rtype.pdesc
+            else:
+                desc = report.desc
             formater = PatchFormat(repo.dirname(), report.file, user, email,
-                                   rtype.ptitle, rtype.pdesc, diff)
+                                   title, desc, diff)
             report.content = formater.format_patch()
             if report.title is None or len(report.title) == 0:
                 report.title = formater.format_title()

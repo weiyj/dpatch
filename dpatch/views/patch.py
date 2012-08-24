@@ -652,22 +652,35 @@ def patch_fix(request, patch_id):
             repo = patch.tag.repo
 
             srcfile = open(sfile, "w")
-            src = srcfile.write(src)
+            try:
+                src = srcfile.write(src)
+            except:
+                src = srcfile.write(unicode.encode(src, 'utf-8'))
             srcfile.close()
             diff = _get_diff_and_revert(repo.dirname(), patch.file)
 
             user = patch.username()
             email = patch.email()
+            if patch.title is None or len(patch.title) == 0:
+                title = rtype.ptitle
+            else:
+                title = patch.title
+            if patch.desc is None or len(patch.desc) == 0:
+                desc = rtype.pdesc
+            else:
+                desc = patch.desc
             formater = PatchFormat(repo.dirname(), patch.file, user, email,
-                                   rtype.ptitle, rtype.pdesc, diff)
+                                   title, desc, diff)
             patch.content = formater.format_patch()
             if patch.title is None or len(patch.title) == 0:
                 patch.title = formater.format_title()
             if patch.desc is None or len(patch.desc) == 0:
                 patch.desc = rtype.pdesc
             patch.emails = formater.get_mail_list()
-            patch.diff = diff
-            patch.build = 0
+            if patch.diff != diff:
+                patch.diff = diff
+                patch.status = Status.objects.get(name = 'New')
+                patch.build = 0
             patch.save()
             return HttpResponse('FIX: patch %d, SUCCEED' % patch.id, True)
         except:
@@ -696,7 +709,7 @@ def patch_fix(request, patch_id):
                 srcfile = open(tmpsrcfname, "r")
                 src = srcfile.read()
                 srcfile.close()
-    
+
                 os.unlink(tmpsrcfname)
                 os.unlink(tmpdiffname)
             except:
