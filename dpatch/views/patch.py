@@ -34,8 +34,9 @@ from time import gmtime, strftime
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
-from dpatch.models import GitRepo, GitTag, Patch, Status, Event
+from dpatch.models import GitRepo, GitTag, Patch, Status, Event, Type
 from dpatch.patchformat import PatchFormat 
+from dpatch.forms import PatchNewForm
 
 def get_request_paramter(request, key, default=None):
     if request.GET.has_key(key):
@@ -718,3 +719,35 @@ def patch_fix(request, patch_id):
         context['patch'] = patch
         context['src'] = src
         return render_to_response("patch/patchfix.html", context)
+
+@login_required
+@csrf_exempt
+def patch_new(request):
+    if request.method == "POST":
+        tagid = get_request_paramter(request, 'type')
+        typeid = get_request_paramter(request, 'file')
+        file = get_request_paramter(request, 'reason')
+
+        rtags = GitTag.objects.filter(id = tagid)
+        if len(rtags) == 0:
+            logevent("NEW: patch , ERROR: tag id %s does not exists" % tagid)
+            return HttpResponse('NEW: patch, ERROR: tag id %s does not exists' % tagid)
+
+        rtypes = Type.objects.filter(id = typeid)
+        if len(rtypes) == 0:
+            logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
+            return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
+
+        new = Status.objects.get(name = 'New')
+        patch = Patch(tag = rtags[0], type = rtypes[0], file = file, status = new, diff = '')
+        if not os.path.exists(patch.sourcefile()):
+            logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
+            return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
+        patch.save()
+
+        logevent("NEW: patch for %s, SUCCEED: new id %s" % (file, patch.id))
+        return HttpResponse('NEW: patch for file, SUCCEED')
+    else:
+        context = RequestContext(request)
+        context['form'] = PatchNewForm()
+        return render_to_response("patch/patchnew.html", context)

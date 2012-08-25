@@ -1,5 +1,6 @@
 <div id="patchlist"></div>
 <div id="dialog" title="Patch" style="display:none">
+<div id="patchnew" title="New Patch" style="display:none">
 <div id="dialogsend" title="Patch Send" style="display:none">
 <div id="dialogedit" title="Edit Patch" style="display:none">
 <div id="patchfix" title="Fix Source File" style="display:none">
@@ -53,6 +54,10 @@
 			   ids.push(id);
 			});
 			return ids;
+		}
+
+		function doPatchNew() {
+			ajaxShowDialog('#patchnew', 'GET', "/patch/new/", {})
 		}
 
 		function doPatchMerge() {
@@ -124,7 +129,9 @@
 				usepager: true,
 {% if user.is_authenticated %}
 				showCheckbox: true,
-				buttons : [ { name : 'Merge', bclass : 'merge', onpress : doPatchMerge },
+				buttons : [ { name : 'New', bclass : 'add', onpress : doPatchNew },
+				            { separator : true },
+				            { name : 'Merge', bclass : 'merge', onpress : doPatchMerge },
 				            { name : 'Unmerge', bclass : 'unmerge', onpress : doPatchUnMerge },
 				            { separator : true },
 				            { name : 'Delete', bclass : 'delete', onpress : doPatchDelete },
@@ -178,6 +185,40 @@
 				      		diff = $(this).find("textarea[id=diff]").eq(0).val();
 							$(this).dialog("close");
 				      		showModelDialog('/patch/edit/' + id + '/save/', {'title': title, 'desc': desc, 'emails': emails, 'diff': diff}, 'POST', '#patchlist');
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
+			});
+
+			$('#patchnew').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 400,
+				resizable: false,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		tag = $(this).find("select[name=tag]").eq(0).val();
+				      		type = $(this).find("select[name=type]").eq(0).val();
+				      		file = $(this).find("input[name=file]").eq(0).val();
+				      		if (tag.length == 0) {
+				      			alert('please select tag!');
+				      			return;
+				      		} //a
+				      		if (type.length == 0) {
+				      			alert('please select type!');
+				      			return;
+				      		} //a
+				      		if (file.length == 0) {
+				      			alert('The file field is required.')
+				      			return;
+				      		} //a
+							$(this).dialog("close");
+				      		showModelDialog('/patch/new/', {'tag': tag, 'type': type, 'file': file}, 'POST', '#patchlist');
 						}
 					},
 					{

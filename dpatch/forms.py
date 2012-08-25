@@ -1,6 +1,6 @@
 from django import forms
 
-from dpatch.models import ExceptFile
+from dpatch.models import ExceptFile, Patch
 
 class GitRepoForm(forms.Form):
     name = forms.CharField(max_length = 30)
@@ -12,3 +12,8 @@ class ExceptFileForm(forms.ModelForm):
     class Meta:
         model = ExceptFile
         fields = ['type', 'file', 'reason']
+
+class PatchNewForm(forms.ModelForm):
+    class Meta:
+        model = Patch
+        fields = ['tag', 'type', 'file']

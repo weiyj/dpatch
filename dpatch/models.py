@@ -67,7 +67,7 @@ class GitTag(models.Model):
     running = models.BooleanField(default = False)
 
     def __unicode__(self):
-        return u'%s %s' %(self.name, self.total)
+        return u'%s - %s' %(self.name, self.repo.name)
 
 class Status(models.Model):
     id = models.AutoField(primary_key = True)
