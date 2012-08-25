@@ -745,6 +745,9 @@ def patch_new(request):
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
         patch.save()
 
+        rtags[0].total += 1
+        rtags[0].save()
+
         logevent("NEW: patch for %s, SUCCEED: new id %s" % (file, patch.id))
         return HttpResponse('NEW: patch for file, SUCCEED')
     else:
