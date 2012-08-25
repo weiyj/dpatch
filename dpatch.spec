@@ -2,7 +2,7 @@
 
 Summary: Automated kernel patch generate engine
 Name: dpatch
-Version: 0.2
+Version: 0.3
 Release: 0%{?dist}
 License: GPLv2
 Group: System Environment/Base
