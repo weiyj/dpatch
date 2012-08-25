@@ -724,9 +724,9 @@ def patch_fix(request, patch_id):
 @csrf_exempt
 def patch_new(request):
     if request.method == "POST":
-        tagid = get_request_paramter(request, 'type')
-        typeid = get_request_paramter(request, 'file')
-        file = get_request_paramter(request, 'reason')
+        tagid = get_request_paramter(request, 'tag')
+        typeid = get_request_paramter(request, 'type')
+        file = get_request_paramter(request, 'file')
 
         rtags = GitTag.objects.filter(id = tagid)
         if len(rtags) == 0:
