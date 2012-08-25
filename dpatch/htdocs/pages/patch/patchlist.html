@@ -1,9 +1,11 @@
 <div id="patchlist"></div>
 <div id="dialog" title="Patch" style="display:none">
+{% if user.is_authenticated %}
 <div id="patchnew" title="New Patch" style="display:none">
 <div id="dialogsend" title="Patch Send" style="display:none">
 <div id="dialogedit" title="Edit Patch" style="display:none">
 <div id="patchfix" title="Fix Source File" style="display:none">
+{% endif %}
 <div id="review" title="Review Patch" style="display:none" height="100%">
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
@@ -13,8 +15,7 @@
 	(function($) {
 		function onGridDoubleClick(e, row) {
 			var id = row.find("td:eq(2)").eq(0).text();
-			$('#review').load('/patch/review/' + id);
-			$('#review').dialog('open');
+			ajaxShowDialog("#review", "GET", '/patch/review/' + id, {});
 		}
 
 		function onGridLoadSuccess(grid) {			
@@ -130,11 +131,10 @@
 {% if user.is_authenticated %}
 				showCheckbox: true,
 				buttons : [ { name : 'New', bclass : 'add', onpress : doPatchNew },
+				            { name : 'Delete', bclass : 'delete', onpress : doPatchDelete },
 				            { separator : true },
 				            { name : 'Merge', bclass : 'merge', onpress : doPatchMerge },
 				            { name : 'Unmerge', bclass : 'unmerge', onpress : doPatchUnMerge },
-				            { separator : true },
-				            { name : 'Delete', bclass : 'delete', onpress : doPatchDelete },
 				            { separator : true },
 				            { name : 'Export', bclass : 'export', onpress: onPatchExport },
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
