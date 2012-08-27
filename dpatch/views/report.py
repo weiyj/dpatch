@@ -474,7 +474,8 @@ def report_sendwizard_step(request, report_id):
                 to = addr.strip()
                 break
 
-        ret, drun = execute_shell('/usr/bin/git send-email --dry-run --no-thread --to=\'%s\' %s' \
+        to = to.replace('"', '')
+        ret, drun = execute_shell('/usr/bin/git send-email --dry-run --no-thread --to="%s" %s' \
                                 % (to, report.fullpath()))
         drun = drun.replace(report.dirname(), '')
         if ret != 0:
@@ -498,6 +499,7 @@ def report_sendwizard_step(request, report_id):
                 to = addr.strip()
                 break
 
+        to = to.replace('"', '')
         ret, drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to="%s" %s' \
                                 % (to, report.fullpath()))
         drun = drun.replace(report.dirname(), '')
