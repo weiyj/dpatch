@@ -25,6 +25,8 @@ $.widget( "ui.lists", {
 			return $( "a", this )[ 0 ];
 		});
 		this.panel = this.element.find(".ui-list-panel").eq(0);
+		this.splitter = $('<div></div>').addClass("ui-list-splitter")
+													.appendTo(this.element);
 
 		if (this.panel.length == 0) {
 			this.panel = $('<div></div>').addClass("ui-list-panel")
@@ -84,14 +86,33 @@ $.widget( "ui.lists", {
 		});
 
 		this.btnclose.bind('click', function () {
-			//elem.find(".ui-list-nav").width(10)
-			//elem.find(".ui-list-panel").width($(window).width() - 30);
+			elem.find(".ui-list-nav").css('display', 'none');
+			elem.find(".ui-list-splitter").css('display', 'block');
+			elem.find(".ui-list-panel").width($(window).width() - 20);
+			elem.data("closed", true)
+		});
+
+		this.splitter.bind('mouseover', function(e) {
+			$(this).addClass('hover');
+		})
+		.bind('mouseout', function(e) {										
+			$(this).removeClass('hover');
+		})
+		.bind('click', function(e) {
+			elem.find(".ui-list-nav").css('display', 'block');
+			elem.find(".ui-list-splitter").css('display', 'none');
+			elem.find(".ui-list-panel").width($(window).width() - o.navWidth - 20);
+			elem.data("closed", false)
 		});
 
       // resize  event handlers;
 		$(window).resize(function() {
 			elem.height($(window).height() - o.removeHeight);
-			elem.find(".ui-list-panel").width($(window).width() - o.navWidth - 20);
+			if (elem.data("closed") == true) {
+				elem.find(".ui-list-panel").width($(window).width() - 20);
+			} else {
+				elem.find(".ui-list-panel").width($(window).width() - o.navWidth - 20);
+			}
 		});
 	},
 

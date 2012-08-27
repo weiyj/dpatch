@@ -12,6 +12,19 @@
 	background:url(images/nav_bg.gif) repeat;
 }
 
+.ui-list-splitter {
+	display: none;
+	float: left;
+	width: 9px;
+	height: 100%;
+	border-left: solid 1px #CBCBCB;
+	background: transparent url('images/open.png') no-repeat scroll 0 0;
+}
+
+.ui-list-splitter.hover {
+	background-color: #FFFFFF;
+}
+
 .ui-lists .ui-list-panel {
 	float: right;
 	margin-right: 7px;
