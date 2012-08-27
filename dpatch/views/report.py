@@ -85,7 +85,7 @@ def report_list_data(request, tag_name):
     if (len(rtag) == 0):
         return render_to_response(simplejson.dumps(reports))
 
-    for report in Report.objects.filter(tag = rtag[0], mergered = 0):
+    for report in Report.objects.filter(tag = rtag[0], mergered = 0).order_by("-id"):
         action = ''
         if report.status.name == 'New':
             action += '<a href="#" class="detail" id="%s">Log</a>' % report.id

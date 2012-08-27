@@ -98,7 +98,7 @@ def patchlistdata(request, tag_name):
     if (len(rtag) == 0):
         return render_to_response(simplejson.dumps(patchs))
 
-    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0):
+    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0).order_by("-id"):
         action = ''
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
