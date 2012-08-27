@@ -259,7 +259,7 @@ def patchsendwizardstep(request, patch_id):
                 to = addr.strip()
                 break
 
-        ret, drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to=\'%s\' %s' \
+        ret, drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to="%s" %s' \
                                 % (to, patch.fullpath()))
         drun = drun.replace(patch.dirname(), '')
         if ret != 0:
