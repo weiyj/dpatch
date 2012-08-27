@@ -19,6 +19,7 @@
 	height: 100%;
 	border-left: solid 1px #CBCBCB;
 	background: transparent url('images/open.png') no-repeat scroll 0 0;
+	cursor: pointer;
 }
 
 .ui-list-splitter.hover {
