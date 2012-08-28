@@ -499,6 +499,9 @@
 				}, {
 					name: 'query',
 					value: p.query
+				}, {
+					name: 'filter',
+					value: p.filter
 				}];
 				if (p.params) {
 					for (var pi = 0; pi < p.params.length; pi++) {
@@ -543,6 +546,22 @@
 						qname = qname.replace("&", "").replace("=", "");
 						qvalue = qvalue.replace("&", "").replace("=", "");
 						p.query += qname + "=" + qvalue;
+					}
+				});
+				p.newp = 1;
+				this.populate();
+			},
+			doFilter: function () {
+				p.filter = "";
+				$('select[name^=f], input[name^=f]', g.fDiv).each(function() {
+					var that = $(this);
+					var fname = that.attr("name").substring(1);
+					var fvalue = that.val();
+					if (p.filter != "") p.filter += "&";
+					if (fvalue != "" && fname != "" ) {
+						fname = fname.replace("&", "").replace("=", "");
+						fvalue = fvalue.replace("&", "").replace("=", "");
+						p.filter += fname + "=" + fvalue;
 					}
 				});
 				p.newp = 1;
@@ -751,6 +770,7 @@
 		g.iDiv = document.createElement('div'); //create editable layer
 		g.tDiv = document.createElement('div'); //create toolbar
 		g.sDiv = document.createElement('div');
+		g.fDiv = document.createElement('div');
 		g.pDiv = document.createElement('div'); //create pager container
 		if (!p.usepager) {
 			g.pDiv.style.display = 'none';
@@ -1108,8 +1128,67 @@
 				$(g.sDiv).append( sDivRow(sDivId, p.searchitems) );
 				$(g.bDiv).after(g.sDiv);
 			}
+
+			//add filter button
+			if (p.filteritems) {
+				$('.pDiv2', g.pDiv).prepend("<div class='pGroup'> <div class='pFilter pButton'><span></span></div> </div>  <div class='btnseparator'></div>");
+				$('.pFilter', g.pDiv).click(function () {
+					$(g.fDiv).slideToggle('fast', function () {
+						$('.fDiv:visible input:first', g.gDiv).trigger('focus');
+					});
+				});
+				//add filter box
+				function fDivRow(fDivId, fitems) {
+					var sopt = '';
+					var items = "<div class='pGroup'><span>Filters:&nbsp;&nbsp;</span></div><div class='btnseparator'></div>";
+					for (var s = 0; s < fitems.length; s++) {
+						item = "";
+						if (fitems[s].values) {
+							svalues = fitems[s].values.split('|');
+							sopt = "<option value=''>------</option>";
+							for (var i = 0; i < svalues.length; i++) {
+								params = svalues[i].split('=');
+								if (params.length == 1)
+									sopt += "<option value='" + params[0] + "'>" + params[0] + "</option>";
+								else
+									sopt += "<option value='" + params[1] + "'>" + params[0] + "</option>";
+							}
+							item += "<select name='f" + fitems[s].name + "'>" + sopt + "</select>"
+						} else {
+							item += "<input type='text' value='' size='20' name='f"+fitems[s].name+"' class='qsbox' />";
+						}
+						items += "<div class='pGroup'>" + fitems[s].display + ":&nbsp;&nbsp;" + item + "</div><div class='btnseparator'></div>";
+					}
+
+					var fDiv = $("<div class='fDiv2'>" + items + "</div>");
+
+					fDiv.append(
+						$("<input type='button' value='Apply' class='searchButton' />").click(function (e) {
+							g.doFilter();
+						})
+					);
+					fDiv.append(
+						$("<input type='button' value='Clear' class='searchButton' />").click(function () {
+							$('input[type=text]', g.fDiv).val('');
+							$('select', g.fDiv).val('');
+							p.filter = '';
+							g.doFilter();
+						})
+					);
+					return fDiv;
+				}
+
+				g.fDiv.className = 'fDiv';
+				var fDivId = 0;
+				p.filter = '';
+				$(g.fDiv).append( fDivRow(fDivId, p.filteritems) );
+				$(g.hDiv).before(g.fDiv);
+			}
 		}
+
 		$(g.pDiv, g.sDiv).append("<div style='clear:both'></div>");
+		$(g.pDiv, g.fDiv).append("<div style='clear:both'></div>");
+
 		// add title
 		if (p.title) {
 			g.mDiv.className = 'mDiv';
