@@ -101,6 +101,8 @@ def html_patch_status(name):
         return '<FONT COLOR="#AAAAAA">MERGED</FONT>'
     elif name == 'Accepted':
         return '<FONT COLOR="#00FF00">APPLIED</FONT>'
+    elif name == 'Rejected':
+        return '<FONT COLOR="#FF0000">REJECTED</FONT>'
     else:
         return name
 
