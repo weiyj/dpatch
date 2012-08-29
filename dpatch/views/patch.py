@@ -85,7 +85,7 @@ def patchlist(request, tag_name):
     context['repo'] = get_request_paramter(request, 'repo', '1')
     context['types'] = '|'.join(rtypes)
     context['status'] = '|'.join(rstatus)
-    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=1'
+    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
     return render_to_response("patch/patchlist.html", context)
 
 def html_patch_status(name):
@@ -802,3 +802,49 @@ def patch_new(request):
         context = RequestContext(request)
         context['form'] = PatchNewForm()
         return render_to_response("patch/patchnew.html", context)
+
+@login_required
+def patch_accept(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('MARK ACCEPTED ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("MARK: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('MARK ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    applied = Status.objects.get(name = 'Accepted')
+    for patch in patchs:
+        patch.status = applied
+        patch.save()
+
+    logevent("MARK: patch [%s] accepted, SUCCEED" % pids, True)
+    return HttpResponse('MARK SUCCEED: patch ids [%s] to accepted' % pids)
+
+@login_required
+def patch_reject(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('MARK REJECTED ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("MARK: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('MARK ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    applied = Status.objects.get(name = 'Rejected')
+    for patch in patchs:
+        patch.status = applied
+        patch.save()
+
+    logevent("MARK: patch [%s] rejected, SUCCEED" % pids, True)
+    return HttpResponse('MARK SUCCEED: patch ids [%s] to rejected' % pids)

@@ -105,6 +105,25 @@
 			$.download('/patch/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
 		}
 
+		function onPatchAccepted() {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("Status change ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/patch/accept/", {'ids': ids.join()}, 'GET', '#patchlist');
+			}
+		}
+
+		function onPatchRejected() {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("Status change ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/patch/reject/", {'ids': ids.join()}, 'GET', '#patchlist');
+			}
+		}
 {% endif %}
 
 		$(document).ready(function () {
@@ -139,6 +158,9 @@
 				            { separator : true },
 				            { name : 'Export', bclass : 'export', onpress: onPatchExport },
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
+				            { separator : true },
+				            { name : 'Accepted', bclass : 'export', onpress: onPatchAccepted },
+				            { name : 'Rejected', bclass : 'export', onpress: onPatchRejected },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,
