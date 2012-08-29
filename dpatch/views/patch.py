@@ -841,10 +841,21 @@ def patch_reject(request):
             return HttpResponse('MARK ERROR: patch %s does not exists' % i)
         patchs.append(patch[0])
 
-    applied = Status.objects.get(name = 'Rejected')
+    reject = Status.objects.get(name = 'Rejected')
     for patch in patchs:
-        patch.status = applied
+        patch.status = reject
         patch.save()
+        
+        if patch.mglist is None or len(patch.mglist) == 0:
+            continue
+
+        for pid in patch.mglist.split(','):
+            p = Patch.objects.filter(id = pid)
+            if len(p) == 0:
+                continue
+
+            p[0].status = reject
+            p[0].save()
 
     logevent("MARK: patch [%s] rejected, SUCCEED" % pids, True)
     return HttpResponse('MARK SUCCEED: patch ids [%s] to rejected' % pids)

@@ -186,6 +186,10 @@ def check_patch(repo, rtag, flists, commit):
                     logger.logger.info('skip except file %s, type %d' % (sfile, rtype.id))
                     continue
 
+                # treat patch marked with Rejected as except file
+                if Patch.objects.filter(file = sfile, type = rtype, status__name = 'Rejected').count() > 0:
+                    continue
+
                 patchs = Patch.objects.filter(file = sfile, type = rtype)
                 rpatchs = []
                 opatchs = []
