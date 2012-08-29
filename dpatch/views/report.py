@@ -22,6 +22,8 @@
 import os
 import tarfile
 import subprocess
+import urllib
+import urlparse
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse
@@ -32,7 +34,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from time import gmtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Report, Status, Event
+from dpatch.models import GitRepo, GitTag, Report, Status, Event, Type
 from dpatch.patchformat import PatchFormat 
 
 def get_request_paramter(request, key, default=None):
@@ -46,10 +48,29 @@ def logevent(event, status = False):
     evt = Event(event = event, status = status)
     evt.save()
 
+def status_name(name):
+    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched']:
+        return name.upper()
+    elif name == 'Accepted':
+        return 'APPLIED'
+    else:
+        return name
+
 def report_list(request, tag_name):
+    rtypes = []
+    for rtype in Type.objects.filter(id__gte = 10000):
+        rtypes.append("%s=%s" % (rtype.name, rtype.id))
+
+    rstatus = []
+    for rt in Status.objects.all():
+        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
+
     context = RequestContext(request)
     context['tag'] = tag_name
     context['repo'] = get_request_paramter(request, 'repo', '1')
+    context['types'] = '|'.join(rtypes)
+    context['status'] = '|'.join(rstatus)
+    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
     return render_to_response("report/reportlist.html", context)
 
 def html_report_status(name):
@@ -72,11 +93,33 @@ def html_report_status(name):
     else:
         return name
 
+def reportfilter(pfilter):
+    kwargs = {}
+
+    if pfilter is None or len(pfilter) == 0:
+        return kwargs
+
+    params = urlparse.parse_qs(urllib.unquote(pfilter))
+    for key in params:
+        if len(params[key]) == 0:
+            continue
+        value = params[key][0]
+        if key == 'type':
+            kwargs.update({'type__id': value})
+        elif key == 'status':
+            kwargs.update({'status__id': value})
+        elif key == 'file':
+            kwargs.update({'file__icontains': value})
+        elif key == 'build':
+            kwargs.update({'build': value})
+    return kwargs
+
 def report_list_data(request, tag_name):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
     rid = int(get_request_paramter(request, 'repo', '1'))
+    rfilter = get_request_paramter(request, 'filter')
 
     reports = {'page': 1, 'total': 0, 'rows': [] }
     repo = GitRepo.objects.filter(id = rid)
@@ -87,7 +130,8 @@ def report_list_data(request, tag_name):
     if (len(rtag) == 0):
         return render_to_response(simplejson.dumps(reports))
 
-    for report in Report.objects.filter(tag = rtag[0], mergered = 0).order_by("-id"):
+    kwargs = reportfilter(rfilter)
+    for report in Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id"):
         action = ''
         if report.status.name == 'New':
             action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
