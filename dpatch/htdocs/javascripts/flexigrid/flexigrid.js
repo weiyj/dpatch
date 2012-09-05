@@ -798,7 +798,44 @@
 			for (var i = 0; i < p.buttons.length; i++) {
 				var btn = p.buttons[i];
 				if (btn) {
-					if (!btn.separator) {
+					if (btn.values) {
+						svalues = btn.values.split('|');
+						sopt = "<option value=''>------</option>";
+						for (var j = 0; j < svalues.length; j++) {
+							params = svalues[j].split('=');
+							if (params.length == 1)
+								sopt += "<option value='" + params[0] + "'>" + params[0] + "</option>";
+							else
+								sopt += "<option value='" + params[1] + "'>" + params[0] + "</option>";
+						}
+						item = "<select name='f" + btn.name + "'>" + sopt + "</select>"
+						var selDiv = document.createElement('div');
+						selDiv.className = 'fselect';
+						selDiv.innerHTML = "<div><span>" + btn.name.replace(/ /g, "") + "</span>" + item + "</div>";
+						$(tDiv2).append(selDiv);
+						var btnDiv = document.createElement('div');
+						btnDiv.className = 'fbutton';
+						btnDiv.innerHTML = "<div><span>Go</span></div>";
+						$(selDiv).append(btnDiv);
+						if ($.browser.msie && $.browser.version < 7.0) {
+							$(btnDiv).hover(function () {
+								$(this).addClass('fbOver');
+							}, function () {
+								$(this).removeClass('fbOver');
+							});
+						}
+						btnDiv.onpress = btn.onpress;
+						btnDiv.name = btn.name;
+						if (btn.onpress) {
+							var bname = btn.name.replace(/ /g, "");
+							$(btnDiv).click(function () {
+								val = $("select[name=f]" + bname + "] option:selected").val();
+								if (val.length == 0)
+									return;
+								this.onpress(this.name, g.gDiv, val);
+							});
+						}
+					} else if (!btn.separator) {
 						var btnDiv = document.createElement('div');
 						btnDiv.className = 'fbutton';
 						btnDiv.innerHTML = "<div><span>" + btn.name + "</span></div>";

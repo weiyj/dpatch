@@ -287,6 +287,54 @@
 	border-bottom: 1px solid #eee;
 }
 
+.flexigrid div.fselect {
+	float: left;
+	background: none;
+	height: 24px;
+	padding-top: 2px;
+	margin: 0px 5px;
+}
+
+.flexigrid div.fselect div {
+	float: left;
+	background: none;
+	height: 24px;
+}
+
+.flexigrid div.fselect span {
+	float: left;
+	display: block;
+	margin: 3px;
+ 	padding: 0 0 0 0px;
+}
+
+.flexigrid div.fselect div.fbutton {
+	float: left;
+	display: block;
+	cursor: pointer;
+	height: 22px;
+}
+
+.flexigrid div.fselect div.fbutton span {
+	float: left;
+	display: block;
+    margin: 1px;
+    padding: 0 0 0 0px;
+}
+
+.flexigrid div.fselect div.fbutton:hover, .flexigrid div.fselect div.fbutton.fbOver {
+	padding: 0px;
+	border: 1px solid #ccc;
+}
+
+.flexigrid div.fselect div.fbutton:hover div, .flexigrid div.fselect div.fbutton.fbOver div {
+	padding: 0px 2px;
+	border-left: 1px solid #fff;
+	border-top: 1px solid #fff;
+	border-right: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}
+
 /* end toolbar*/
 .flexigrid div.hDiv {
 	background: #fafafa url(images/fhbg.gif) repeat-x bottom;
