@@ -774,7 +774,7 @@ def patch_new(request):
     if request.method == "POST":
         tagid = get_request_paramter(request, 'tag')
         typeid = get_request_paramter(request, 'type')
-        file = get_request_paramter(request, 'file')
+        rfile = get_request_paramter(request, 'file')
 
         rtags = GitTag.objects.filter(id = tagid)
         if len(rtags) == 0:
@@ -787,7 +787,7 @@ def patch_new(request):
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
 
         new = Status.objects.get(name = 'New')
-        patch = Patch(tag = rtags[0], type = rtypes[0], file = file, status = new, diff = '')
+        patch = Patch(tag = rtags[0], type = rtypes[0], file = rfile, status = new, diff = '')
         if not os.path.exists(patch.sourcefile()):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
@@ -796,7 +796,7 @@ def patch_new(request):
         rtags[0].total += 1
         rtags[0].save()
 
-        logevent("NEW: patch for %s, SUCCEED: new id %s" % (file, patch.id))
+        logevent("NEW: patch for %s, SUCCEED: new id %s" % (rfile, patch.id))
         return HttpResponse('NEW: patch for file, SUCCEED')
     else:
         context = RequestContext(request)
@@ -804,58 +804,43 @@ def patch_new(request):
         return render_to_response("patch/patchnew.html", context)
 
 @login_required
-def patch_accept(request):
+def patch_status(request):
+    statusid = get_request_paramter(request, 'status')
     pids = get_request_paramter(request, 'ids')
+
     if pids is None:
-        return HttpResponse('MARK ACCEPTED ERROR: no patch id specified')
+        return HttpResponse('MARK STATUS ERROR: no patch id specified')
+
+    if statusid is None:
+        return HttpResponse('MARK STATUS ERROR: no status id specified')
 
     ids = pids.split(',')
     patchs = []
     for i in ids:
         patch = Patch.objects.filter(id = i)
         if len(patch) == 0:
-            logevent("MARK: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            logevent("MARK: status [%s], ERROR: patch %s does not exists" % (pids, i))
             return HttpResponse('MARK ERROR: patch %s does not exists' % i)
         patchs.append(patch[0])
 
-    applied = Status.objects.get(name = 'Accepted')
+    rstatus = get_object_or_404(Status, id=statusid)
+
     for patch in patchs:
-        patch.status = applied
-        patch.save()
-
-    logevent("MARK: patch [%s] accepted, SUCCEED" % pids, True)
-    return HttpResponse('MARK SUCCEED: patch ids [%s] to accepted' % pids)
-
-@login_required
-def patch_reject(request):
-    pids = get_request_paramter(request, 'ids')
-    if pids is None:
-        return HttpResponse('MARK REJECTED ERROR: no patch id specified')
-
-    ids = pids.split(',')
-    patchs = []
-    for i in ids:
-        patch = Patch.objects.filter(id = i)
-        if len(patch) == 0:
-            logevent("MARK: patch [%s], ERROR: patch %s does not exists" % (pids, i))
-            return HttpResponse('MARK ERROR: patch %s does not exists' % i)
-        patchs.append(patch[0])
-
-    reject = Status.objects.get(name = 'Rejected')
-    for patch in patchs:
-        patch.status = reject
+        patch.status = rstatus
         patch.save()
         
         if patch.mglist is None or len(patch.mglist) == 0:
             continue
 
+        #if rstatus.name != 'Rejected' and rstatus.name != 'Accepted':
+        #    continue
         for pid in patch.mglist.split(','):
             p = Patch.objects.filter(id = pid)
             if len(p) == 0:
                 continue
 
-            p[0].status = reject
+            p[0].status = rstatus
             p[0].save()
 
-    logevent("MARK: patch [%s] rejected, SUCCEED" % pids, True)
-    return HttpResponse('MARK SUCCEED: patch ids [%s] to rejected' % pids)
+    logevent("MARK: patch status [%s] %s, SUCCEED" % (pids, rstatus.name), True)
+    return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, rstatus.name))

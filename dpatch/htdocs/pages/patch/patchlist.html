@@ -105,23 +105,18 @@
 			$.download('/patch/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
 		}
 
-		function onPatchAccepted() {
-			var ids = getGridSelected();
-
-			if (ids.length < 1) {
-				alertBox("Status change ERROR: at least one row must be selected!");
-			} else {
-				showModelDialog("/patch/accept/", {'ids': ids.join()}, 'GET', '#patchlist');
-			}
+		function onPatchBuild() {
+			
 		}
 
-		function onPatchRejected() {
+		function onPatchMarkStatus(name, div, value) {
 			var ids = getGridSelected();
 
 			if (ids.length < 1) {
 				alertBox("Status change ERROR: at least one row must be selected!");
 			} else {
-				showModelDialog("/patch/reject/", {'ids': ids.join()}, 'GET', '#patchlist');
+				alert(value);
+				showModelDialog("/patch/status/", {'ids': ids.join(), 'status': value}, 'GET', '#patchlist');
 			}
 		}
 {% endif %}
@@ -159,8 +154,9 @@
 				            { name : 'Export', bclass : 'export', onpress: onPatchExport },
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true },
-				            { name : 'Accepted', bclass : 'export', onpress: onPatchAccepted },
-				            { name : 'Rejected', bclass : 'export', onpress: onPatchRejected },
+				            { name : 'Build Test', bclass : 'export', onpress: onPatchBuild },
+				            { separator : true },
+				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onPatchMarkStatus },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,

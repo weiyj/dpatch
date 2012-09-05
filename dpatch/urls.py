@@ -70,8 +70,7 @@ urlpatterns += patterns('dpatch.views.patch',
     url(r'^patch/build/(?P<patch_id>\d+)/$', 'patch_build'),
     url(r'^patch/fix/(?P<patch_id>\d+)/$', 'patch_fix'),
     url(r'^patch/new/$', 'patch_new'),
-    url(r'^patch/accept/$', 'patch_accept'),
-    url(r'^patch/reject/$', 'patch_reject'),
+    url(r'^patch/status/$', 'patch_status'),
 )
 
 urlpatterns += patterns('dpatch.views.report',
