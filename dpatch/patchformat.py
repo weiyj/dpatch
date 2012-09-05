@@ -167,6 +167,9 @@ class PatchFormat:
 
     def format_title(self):
         title = self._title
+        if title.find('[PATCH') != -1:
+            return title
+
         if os.path.isdir(self._fullpath()):
             title = re.sub(r'\s+from\s*{{\s*file\s*}}', '', title)
             title = re.sub(r'{{\s*file\s*}}', '', title)
