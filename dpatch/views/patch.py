@@ -796,7 +796,7 @@ def patch_new(request):
         rtags[0].total += 1
         rtags[0].save()
 
-        logevent("NEW: patch for %s, SUCCEED: new id %s" % (rfile, patch.id))
+        logevent("NEW: patch for %s, SUCCEED: new id %s" % (rfile, patch.id), True)
         return HttpResponse('NEW: patch for file, SUCCEED')
     else:
         context = RequestContext(request)
