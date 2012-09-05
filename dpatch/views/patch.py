@@ -844,3 +844,13 @@ def patch_status(request):
 
     logevent("MARK: patch status [%s] %s, SUCCEED" % (pids, rstatus.name), True)
     return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, rstatus.name))
+
+@login_required
+def patch_build_all(request):
+    buildlog = subprocess.Popen('/usr/dpatch/bin/dailybuild.sh', shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    buildOut = buildlog.communicate()[0]
+    if buildlog.returncode == 0:
+        return HttpResponse('BUILD SUCCEED: %s' % buildOut)
+    else:
+        return HttpResponse('BUILD FAIL: %s' % buildOut)

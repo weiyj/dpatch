@@ -106,7 +106,7 @@
 		}
 
 		function onPatchBuild() {
-			
+			showModelDialog("/patch/build/all/", {}, 'GET', '#patchlist');
 		}
 
 		function onPatchMarkStatus(name, div, value) {
@@ -115,7 +115,6 @@
 			if (ids.length < 1) {
 				alertBox("Status change ERROR: at least one row must be selected!");
 			} else {
-				alert(value);
 				showModelDialog("/patch/status/", {'ids': ids.join(), 'status': value}, 'GET', '#patchlist');
 			}
 		}
@@ -154,7 +153,7 @@
 				            { name : 'Export', bclass : 'export', onpress: onPatchExport },
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true },
-				            { name : 'Build Test', bclass : 'export', onpress: onPatchBuild },
+				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onPatchMarkStatus },
 				            { separator : true } ],
