@@ -101,11 +101,14 @@ class PatchFormat:
         mailcc = []
         nolkml = True
         skiplkml = False
+        commit_signer = ''
 
         lists = self._execute_shell("cd %s ; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --nogit" % (self._repo, self._fname))
         for m in lists:
             # skip User <mail> (commit_signer:1/15=7%)
             if re.search('\(commit_signer:', m) != None:
+                if len(commit_signer) == 0:
+                    commit_signer = re.sub('\(.*\)', '', m)
                 continue
             m = re.sub('\(.*\)', '', m)
             if re.search(r'<.*>', m) != None:
@@ -125,6 +128,9 @@ class PatchFormat:
 
         if len(mailto) == 0 and mailcc.count('netdev@vger.kernel.org') != 0:
             mailto.append('David S. Miller <davem@davemloft.net>')
+
+        if len(mailto) == 0 and len(commit_signer) != 0:
+            mailto.append(commit_signer)
 
         elist = ""
         if len(mailto) != 0:
