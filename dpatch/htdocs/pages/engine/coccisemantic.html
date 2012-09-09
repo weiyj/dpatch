@@ -75,6 +75,8 @@
 				            { name : 'Import', bclass : 'import'},
 				            { name : 'Export', bclass : 'export', onpress: onSemanticExport },
 				            { name : 'Export All', bclass : 'export', onpress: onSemanticExportAll },
+				            { separator : true },
+				            { name : 'Move To Report', bclass : 'export', onpress: onSemanticMove },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,
@@ -126,6 +128,16 @@
 
 			function onSemanticExportAll() {
 				$.download('/engine/cocci/export/all/', {}, 'GET');
+			}
+
+			function onSemanticMove() {
+				var ids = getGridSelected();
+
+				if (ids.length < 1) {
+					alertBox("DELETE ERROR: at least one row must be selected!");
+				} else {
+					showModelDialog("/engine/cocci/move/", {'ids': ids.join()}, 'POST', '#semantics')
+				}
 			}
 
 			function doSemanticNewSave() {

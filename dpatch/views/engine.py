@@ -391,6 +391,65 @@ def semantic_export_all(request):
     logevent("EXPORT: coccinelle semantic all, SUCCEED", True)
     return response
 
+@login_required
+@csrf_exempt
+def semantic_move_to_report(request):
+    sids = get_request_paramter(request, 'ids')
+    if sids is None:
+        return HttpResponse('MOVE ERROR: no semantic id specified')
+
+    ids = sids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciEngine.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("MOVE: coccinelle semantic [%s], ERROR: id %s does not exists" % (sids, i))
+            return HttpResponse('MOVE ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 3000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+
+            patchs = Patch.objects.filter(type = rtype)
+            efiles = ExceptFile.objects.filter(type = rtype)
+
+            ncocci = CocciReport(file = cocci.file, options = cocci.options, content = cocci.content)
+            ncocci.save()
+            rewrite_report_engine(ncocci)
+
+            rtype.id = ncocci.id + 10000
+            rtype.save()
+                
+            # move patchs owner by this type
+            for patch in patchs:
+                report = Report(tag = patch.tag, type = rtype, status = patch.status,
+                                file = patch.file, date = patch.date, mergered = 0,
+                                mglist = '', commit = patch.commit, reportlog = patch.diff,
+                                diff = patch.diff, title = patch.title, desc = patch.desc,
+                                emails = patch.emails, content = patch.content,
+                                build = patch.build, buildlog = patch.buildlog)
+                report.save()
+                tag = patch.tag
+                patch.delete()
+                tag.total -= 1
+                tag.rptotal += 1
+                tag.save()
+
+            # delete except files owner by this type
+            for efile in efiles:
+                efile.type = rtype
+                efile.save()
+
+        if os.path.exists(cocci.fullpath()):
+            os.unlink(cocci.fullpath())
+        cocci.delete()
+
+    logevent("MOVE: coccinelle semantic [%s], SUCCEED" % sids, True)
+    return HttpResponse('MOVE SUCCEED: engine ids [%s]' % sids)
+
+
 def exceptfile(request):
     context = RequestContext(request)
     return render_to_response("engine/exceptfiles.html", context)
