@@ -20,6 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os
+import re
 import tarfile
 import subprocess
 import urllib
@@ -151,6 +152,8 @@ def report_list_data(request, tag_name):
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
+        else:
+            action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
 
         if report.build == 0:
             build = 'TBD'
@@ -612,3 +615,153 @@ def report_status(request):
 
     logevent("MARK: report status [%s] %s, SUCCEED" % (rids, rstatus.name), True)
     return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, rstatus.name))
+
+@login_required
+def report_merge(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('MERGE ERROR: no report id specified')
+
+    ids = pids.split(',')
+
+    if len(ids) < 2:
+        return HttpResponse('MERGE ERROR: at least two report ids need')
+
+    reports = []
+    rtype = None
+    tag = None
+    rdir = None
+    fstats = []
+    fstatlen = 0
+    stats = [0, 0, 0]
+    diffs = ''
+    for i in ids:
+        report = Report.objects.get(id = i)
+        if not report:
+            logevent("MERGE: report [%s], ERROR: report %s does not exists" % (pids, i), False)
+            return HttpResponse('MERGE ERROR: report %s does not exists' % i)
+            
+        if report.mergered != 0:
+            logevent("MERGE: report [%s], ERROR: report %s already merged" % (pids, i), False)
+            return HttpResponse('MERGE ERROR: report %s already merged' % i)
+            
+        if rtype is None:
+            rtype = report.type
+        elif rtype != report.type:
+            logevent("MERGE: report [%s], ERROR: report %s type different" % (pids, i))
+            return HttpResponse('MERGE ERROR: report %s type different' % i)
+        if tag is None:
+            tag = report.tag
+        elif tag != report.tag:
+            logevent("MERGE: report [%s], ERROR: report %s tag different" % (pids, i))
+            return HttpResponse('MERGE ERROR:, report %s tag different' % i)
+        if rdir is None:
+            rdir = os.path.dirname(report.file)
+        elif rdir != os.path.dirname(report.file):
+            logevent("MERGE: report [%s], ERROR: report %s dirname different" % (pids, i))
+            return HttpResponse('MERGE ERROR: report %s dirname different' % i)
+
+        if report.diff is None or len(report.diff) == 0:
+            logevent("MERGE: report [%s], ERROR: report %s has no patch" % (pids, i))
+            return HttpResponse('MERGE ERROR: report %s has no patch' % i)
+            
+        reports.append(report)
+
+        lines = report.diff.split('\n')
+        for i in range(len(lines)):
+            if re.search(r" \S+\s+\|\s+\d+\s+[+-]+", lines[i]) != None:
+                fstats.append(lines[i])
+                if fstatlen < lines[i].find('|'):
+                    fstatlen = lines[i].find('|')
+            elif re.search(r"\d+ file[s]* changed", lines[i]) != None:
+                astat = lines[i].split(',')
+                for stat in astat:
+                    if re.search(r"\d+ file[s]* changed", stat) != None:
+                        num = stat.strip().split(' ')[0]
+                        stats[0] += int(num)
+                    elif stat.find('insertion') != -1:
+                        num = stat.strip().split(' ')[0]
+                        stats[1] += int(num)
+                    elif stat.find('deletion') != -1:
+                        num = stat.strip().split(' ')[0]
+                        stats[2] += int(num)
+            else:
+                diffs += '\n'.join(lines[i:])
+                break
+
+        for i in range(len(fstats)):
+            append = fstatlen - fstats[i].find('|')
+            fstats[i] = fstats[i].replace('|', ' ' * append + '|')
+
+        statline = " %d files changed" % stats[0]
+        if stats[1] == 1:
+            statline += ", %d insertion(+)" % stats[1]
+        elif stats[1] != 0:
+            statline += ", %d insertions(+)" % stats[1]
+        if stats[2] == 1:
+            statline += ", %d deletion(-)" % stats[2]
+        elif stats[2] != 0:
+            statline += ", %d deletions(-)" % stats[2]
+
+    diffs = "%s\n%s\n%s" % ('\n'.join(fstats), statline, diffs)
+    status = Status.objects.filter(name = 'New')[0]
+    report = Report(tag = tag, file = rdir + '/', diff = diffs,
+                  type = rtype, status = status, mglist = ','.join(ids))
+    report.save()
+
+    user = report.username()
+    email = report.email()
+
+    formater = PatchFormat(tag.repo.dirname(), rdir, user, email,
+                           rtype.ptitle, rtype.pdesc, diffs)
+    report.content = formater.format_patch()
+    report.title = formater.format_title()
+    report.desc = rtype.pdesc
+    report.emails = formater.get_mail_list()
+    report.save()
+
+    for p in reports:
+        p.mergered = report.id
+        p.save()
+    tag.total -= len(reports) - 1
+    tag.save()
+
+    logevent("MERGE: report [%s], SUCCEED: new report id %s" % (pids, report.id), True)
+    return HttpResponse('MERGE SUCCEED: new report id %s' % report.id)
+
+@login_required
+def report_unmerge(request):
+    idsarg = get_request_paramter(request, 'ids')
+    if idsarg is None:
+        return HttpResponse('UNMERGE ERROR: no report id specified')
+
+    ids = idsarg.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("UNMERGE: report [%s], ERROR: report %s does not exists" % (idsarg, i))
+            return HttpResponse('UNMERGE ERROR: report %s does not exists' % i)
+
+        if len(report[0].mglist) == 0:
+            logevent("UNMERGE: report [%s], ERROR: report %s is not merged" % (idsarg, i))
+            return HttpResponse('UNMERGE ERROR: report %s is not merged' % i)
+
+        reports.append(report[0])
+
+    for report in reports:
+        tag = report.tag
+        mglist = report.mglist.split(',')
+        for pid in mglist:
+            r = Report.objects.filter(id = pid)
+            if len(r) == 0:
+                continue
+            r[0].mergered = 0
+            r[0].save()
+        report.delete()
+
+        tag.total += len(mglist) - 1
+        tag.save()
+
+    logevent("UNMERGE: report [%s], SUCCEED" % (idsarg), True)
+    return HttpResponse('UNMERGE SUCCEED: report ids [%s]' % idsarg)

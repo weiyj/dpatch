@@ -55,6 +55,26 @@
 			return ids;
 		}
 
+		function doReportMerge() {
+			var ids = getGridSelected();
+
+			if (ids.length < 2) {
+				alertBox("MERGER ERROR: at least two rows must be selected!");
+			} else {
+				showModelDialog("/report/merge/", {'ids': ids.join()}, 'GET', '#reportlist')
+			}
+		}
+
+		function doReportUnMerge() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('UNMERGER ERROR: at least one row must be selected!');
+			} else {
+				showModelDialog("/report/unmerge/", {'ids': ids.join()}, 'GET', '#reportlist');
+			}
+		}
+
 		function doReportDelete() {
 			var ids = getGridSelected();
 			
@@ -114,6 +134,9 @@
 {% if user.is_authenticated %}
 				showCheckbox: true,
 				buttons : [ { name : 'Delete', bclass : 'delete', onpress : doReportDelete },
+				            { separator : true },
+				            { name : 'Merge', bclass : 'merge', onpress : doReportMerge },
+				            { name : 'Unmerge', bclass : 'unmerge', onpress : doReportUnMerge },
 				            { separator : true },
 				            { name : 'Export Patch', bclass : 'export', onpress: onReportExport },
 				            { name : 'Export Patch All', bclass : 'export', onpress: onReportExportAll },
