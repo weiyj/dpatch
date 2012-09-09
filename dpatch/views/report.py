@@ -570,3 +570,45 @@ def report_sendwizard_step(request, report_id):
 def report_build(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     return render_to_response("report/reportbuild.html", {'buildlog': report.buildlog})
+
+@login_required
+def report_status(request):
+    statusid = get_request_paramter(request, 'status')
+    rids = get_request_paramter(request, 'ids')
+
+    if rids is None:
+        return HttpResponse('MARK STATUS ERROR: no patch id specified')
+
+    if statusid is None:
+        return HttpResponse('MARK STATUS ERROR: no status id specified')
+
+    ids = rids.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("MARK: status [%s], ERROR: report %s does not exists" % (rids, i))
+            return HttpResponse('MARK ERROR: report %s does not exists' % i)
+        reports.append(report[0])
+
+    rstatus = get_object_or_404(Status, id=statusid)
+
+    for report in reports:
+        report.status = rstatus
+        report.save()
+        
+        if report.mglist is None or len(report.mglist) == 0:
+            continue
+
+        #if rstatus.name != 'Rejected' and rstatus.name != 'Accepted':
+        #    continue
+        for rid in report.mglist.split(','):
+            r = Report.objects.filter(id = rid)
+            if len(r) == 0:
+                continue
+
+            r[0].status = rstatus
+            r[0].save()
+
+    logevent("MARK: report status [%s] %s, SUCCEED" % (rids, rstatus.name), True)
+    return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, rstatus.name))
