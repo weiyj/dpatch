@@ -64,7 +64,7 @@ def execute_shell(args):
     return shelllog.returncode, shellOut
 
 def status_name(name):
-    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched']:
+    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored']:
         return name.upper()
     elif name == 'Accepted':
         return 'APPLIED'
@@ -103,6 +103,8 @@ def html_patch_status(name):
         return '<FONT COLOR="#00FF00">APPLIED</FONT>'
     elif name == 'Rejected':
         return '<FONT COLOR="#FF0000">REJECTED</FONT>'
+    elif name == 'Ignored':
+        return '<FONT COLOR="#AAAAAA">IGNORED</FONT>'
     else:
         return name
 
