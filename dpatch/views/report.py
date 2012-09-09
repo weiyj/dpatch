@@ -336,7 +336,7 @@ def report_fix(request, report_id):
             formater = PatchFormat(repo.dirname(), report.file, user, email,
                                    title, desc, diff)
             report.content = formater.format_patch()
-            if report.title is None or len(report.title) == 0:
+            if report.title is None or len(report.title) == 0 or report.title.find('[PATCH') == -1:
                 report.title = formater.format_title()
             if report.desc is None or len(report.desc) == 0:
                 report.desc = rtype.pdesc
