@@ -706,7 +706,7 @@ def report_merge(request):
             statline += ", %d deletions(-)" % stats[2]
 
     diffs = "%s\n%s\n%s" % ('\n'.join(fstats), statline, diffs)
-    status = Status.objects.filter(name = 'New')[0]
+    status = Status.objects.filter(name = 'Patched')[0]
     report = Report(tag = tag, file = rdir + '/', diff = diffs,
                   type = rtype, status = status, mglist = ','.join(ids))
     report.save()
