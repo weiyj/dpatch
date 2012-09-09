@@ -33,7 +33,7 @@ def main(args):
                    status = True)
     repo.save()
 
-    for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched']:
+    for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored']:
         status = Status(name = s)
         status.save()
 

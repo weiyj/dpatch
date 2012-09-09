@@ -136,8 +136,8 @@ def report_list_data(request, tag_name):
     kwargs = reportfilter(rfilter)
     for report in Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id"):
         action = ''
+        action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
         if report.status.name == 'New':
-            action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
         elif report.status.name == 'Patched':
