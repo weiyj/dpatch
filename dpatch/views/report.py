@@ -637,6 +637,7 @@ def report_merge(request):
     fstatlen = 0
     stats = [0, 0, 0]
     diffs = ''
+    logs = ''
     for i in ids:
         report = Report.objects.get(id = i)
         if not report:
@@ -668,6 +669,7 @@ def report_merge(request):
             return HttpResponse('MERGE ERROR: report %s has no patch' % i)
             
         reports.append(report)
+        logs += '\n' + report.reportlog
 
         lines = report.diff.split('\n')
         for i in range(len(lines)):
@@ -707,7 +709,7 @@ def report_merge(request):
 
     diffs = "%s\n%s\n%s" % ('\n'.join(fstats), statline, diffs)
     status = Status.objects.filter(name = 'Patched')[0]
-    report = Report(tag = tag, file = rdir + '/', diff = diffs,
+    report = Report(tag = tag, file = rdir + '/', diff = diffs, reportlog = logs,
                   type = rtype, status = status, mglist = ','.join(ids))
     report.save()
 
