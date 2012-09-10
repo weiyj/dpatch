@@ -141,6 +141,7 @@ def report_list_data(request, tag_name):
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
         elif report.status.name == 'Patched':
+            action = ''
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
