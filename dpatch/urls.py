@@ -90,6 +90,7 @@ urlpatterns += patterns('dpatch.views.report',
     url(r'^report/send/wizard/(?P<report_id>\d+)/step/$', 'report_sendwizard_step'),
     url(r'^report/build/(?P<report_id>\d+)/$', 'report_build'),
     url(r'^report/status/$', 'report_status'),
+    url(r'^report/build/all/$', 'report_build_all'),
 )
 
 urlpatterns += patterns('dpatch.views.engine',

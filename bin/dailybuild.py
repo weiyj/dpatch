@@ -47,6 +47,18 @@ def commit_from_repo(repo):
     return commits[-1]
 
 def main(args):
+    buildpatch = True
+    buildreport = True
+    rebuildrepo = True
+    if len(args) > 1:
+        arg = args[1]
+        if arg == 'patch':
+            buildreport = False
+            rebuildrepo = False
+        elif arg == 'report':
+            buildpatch = False
+            rebuildrepo = False
+
     for repo in GitRepo.objects.filter(status = True, build = True):
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
@@ -61,145 +73,148 @@ def main(args):
         if not os.path.exists(repo.builddir()):
             os.system("cd /var/lib/dpatch/build/; git clone file://%s" % repo.dirname())
             os.system("cd %s; make allmodconfig" % repo.builddir())
-        else:
+            rebuildrepo = True
+        elif rebuildrepo == True:
             os.system("cd %s; git diff | patch -p1 -R" % repo.builddir())
             ret, tmplog = execute_shell("cd %s; git pull" % repo.builddir(), logger)
             gitlog = '\n'.join(tmplog)
 
-        if gitlog.find('Already up-to-date.') == -1:
+        if rebuildrepo == True and gitlog.find('Already up-to-date.') == -1:
             execute_shell("cd %s; make" % repo.builddir(), logger)
 
         commit = commit_from_repo(repo)
 
-        for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
-            buildlog = ''
-
-            if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
-                patch.build = 3
-                patch.save()
-                continue
-
-            pcount['total'] += 1
-            fname = os.path.join(patch.dirname(), patch.filename())
-            cocci = open(fname, "w")
-            cocci.write(patch.content)
-            cocci.close()
-
-            print "build for patch %s...\n" % os.path.basename(fname)
-            logger.logger.info("build for patch %s..." % os.path.basename(fname))
-
-            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
-            if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
-                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
-
-            ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname), logger)
-            buildlog += '# git am %s\n' % os.path.basename(fname)
-            buildlog += unicode('\n'.join(log), errors='ignore')
-            if ret != 0:
-                pcount['fail'] += 1
-                patch.build = 2
+        if buildpatch == True:
+            for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
+                buildlog = ''
+    
+                if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
+                    patch.build = 3
+                    patch.save()
+                    continue
+    
+                pcount['total'] += 1
+                fname = os.path.join(patch.dirname(), patch.filename())
+                cocci = open(fname, "w")
+                cocci.write(patch.content)
+                cocci.close()
+    
+                print "build for patch %s...\n" % os.path.basename(fname)
+                logger.logger.info("build for patch %s..." % os.path.basename(fname))
+    
+                execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
+                if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
+                    execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
+    
+                ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname), logger)
+                buildlog += '# git am %s\n' % os.path.basename(fname)
+                buildlog += unicode('\n'.join(log), errors='ignore')
+                if ret != 0:
+                    pcount['fail'] += 1
+                    patch.build = 2
+                    patch.buildlog = buildlog
+                    patch.save()
+                    continue
+    
+                if patch.file.find('include/') != 0:
+                    dname = os.path.dirname(patch.file)
+                    if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                        dname = os.path.dirname(dname)
+                    buildlog += '\n# make M=%s\n' % dname
+                    ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        pcount['fail'] += 1
+                        patch.build = 2
+                        patch.buildlog = buildlog
+                        patch.save()
+                        continue
+    
+                output = '\n'.join(log)
+                if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                    buildlog += '\n# make vmlinux\n'
+                    ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        pcount['fail'] += 1
+                        patch.build = 2
+                        patch.buildlog = buildlog
+                        patch.save()
+                        continue
+    
+                pcount['pass'] += 1
+                if buildlog.find(': warning: ') != -1:
+                    patch.build = 4
+                else:
+                    patch.build = 1
                 patch.buildlog = buildlog
                 patch.save()
-                continue
 
-            if patch.file.find('include/') != 0:
-                dname = os.path.dirname(patch.file)
-                if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
-                    dname = os.path.dirname(dname)
-                buildlog += '\n# make M=%s\n' % dname
-                ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
+        if buildreport == True:
+            for report in Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched'):
+                buildlog = ''
+    
+                if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:
+                    report.build = 3
+                    report.save()
+                    continue
+    
+                rcount['total'] += 1
+                fname = os.path.join(report.dirname(), report.filename())
+                cocci = open(fname, "w")
+                cocci.write(report.content)
+                cocci.close()
+    
+                print "build for report patch %s...\n" % os.path.basename(fname)
+                logger.logger.info("build for report patch %s..." % os.path.basename(fname))
+    
+                execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
+                if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
+                    execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
+    
+                ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname), logger)
+                buildlog += '# git am %s\n' % os.path.basename(fname)
                 buildlog += unicode('\n'.join(log), errors='ignore')
                 if ret != 0:
-                    pcount['fail'] += 1
-                    patch.build = 2
-                    patch.buildlog = buildlog
-                    patch.save()
+                    rcount['fail'] += 1
+                    report.build = 2
+                    report.buildlog = buildlog
+                    report.save()
                     continue
-
-            output = '\n'.join(log)
-            if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
-                buildlog += '\n# make vmlinux\n'
-                ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
-                buildlog += unicode('\n'.join(log), errors='ignore')
-                if ret != 0:
-                    pcount['fail'] += 1
-                    patch.build = 2
-                    patch.buildlog = buildlog
-                    patch.save()
-                    continue
-
-            pcount['pass'] += 1
-            if buildlog.find(': warning: ') != -1:
-                patch.build = 4
-            else:
-                patch.build = 1
-            patch.buildlog = buildlog
-            patch.save()
-
-        for report in Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched'):
-            buildlog = ''
-
-            if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:
-                report.build = 3
-                report.save()
-                continue
-
-            rcount['total'] += 1
-            fname = os.path.join(report.dirname(), report.filename())
-            cocci = open(fname, "w")
-            cocci.write(report.content)
-            cocci.close()
-
-            print "build for report patch %s...\n" % os.path.basename(fname)
-            logger.logger.info("build for report patch %s..." % os.path.basename(fname))
-
-            execute_shell("cd %s; git reset --hard %s" % (repo.builddir(), commit), logger)
-            if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
-                execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
-
-            ret, log = execute_shell("cd %s; git am %s" % (repo.builddir(), fname), logger)
-            buildlog += '# git am %s\n' % os.path.basename(fname)
-            buildlog += unicode('\n'.join(log), errors='ignore')
-            if ret != 0:
-                rcount['fail'] += 1
-                report.build = 2
+    
+                if report.file.find('include/') != 0:
+                    dname = os.path.dirname(report.file)
+                    if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                        dname = os.path.dirname(dname)
+                    buildlog += '\n# make M=%s\n' % dname
+                    ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        rcount['fail'] += 1
+                        report.build = 2
+                        report.buildlog = buildlog
+                        report.save()
+                        continue
+    
+                output = '\n'.join(log)
+                if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                    buildlog += '\n# make vmlinux\n'
+                    ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        rcount['fail'] += 1
+                        report.build = 2
+                        report.buildlog = buildlog
+                        report.save()
+                        continue
+    
+                rcount['pass'] += 1
+                if buildlog.find(': warning: ') != -1:
+                    report.build = 4
+                else:
+                    report.build = 1
                 report.buildlog = buildlog
                 report.save()
-                continue
-
-            if report.file.find('include/') != 0:
-                dname = os.path.dirname(report.file)
-                if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
-                    dname = os.path.dirname(dname)
-                buildlog += '\n# make M=%s\n' % dname
-                ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
-                buildlog += unicode('\n'.join(log), errors='ignore')
-                if ret != 0:
-                    rcount['fail'] += 1
-                    report.build = 2
-                    report.buildlog = buildlog
-                    report.save()
-                    continue
-
-            output = '\n'.join(log)
-            if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
-                buildlog += '\n# make vmlinux\n'
-                ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
-                buildlog += unicode('\n'.join(log), errors='ignore')
-                if ret != 0:
-                    rcount['fail'] += 1
-                    report.build = 2
-                    report.buildlog = buildlog
-                    report.save()
-                    continue
-
-            rcount['pass'] += 1
-            if buildlog.find(': warning: ') != -1:
-                report.build = 4
-            else:
-                report.build = 1
-            report.buildlog = buildlog
-            report.save()
 
         logs.desc = 'build patch: %d, pass: %d fail:%d, build report: %s, pass: %d, fail: %s' \
                     % (pcount['total'], pcount['pass'], pcount['fail'], rcount['total'], rcount['pass'], rcount['fail'])

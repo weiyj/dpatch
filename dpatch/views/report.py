@@ -767,3 +767,13 @@ def report_unmerge(request):
 
     logevent("UNMERGE: report [%s], SUCCEED" % (idsarg), True)
     return HttpResponse('UNMERGE SUCCEED: report ids [%s]' % idsarg)
+
+@login_required
+def report_build_all(request):
+    buildlog = subprocess.Popen('/usr/dpatch/bin/dailybuild.sh report', shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    buildOut = buildlog.communicate()[0]
+    if buildlog.returncode == 0:
+        return HttpResponse('BUILD SUCCEED: %s' % buildOut)
+    else:
+        return HttpResponse('BUILD FAIL: %s' % buildOut)

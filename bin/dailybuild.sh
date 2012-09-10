@@ -24,6 +24,6 @@ DAILYPATCH_BASE=`readlink -e $BIN_DIR/../`
 
 PYTHONPATH="$DAILYPATCH_BASE/" \
         DJANGO_SETTINGS_MODULE=dpatch.settings \
-        "$DAILYPATCH_BASE/bin/dailybuild.py"
+        "$DAILYPATCH_BASE/bin/dailybuild.py" $@
 
 exit 0

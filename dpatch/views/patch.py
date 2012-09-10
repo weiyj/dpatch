@@ -849,7 +849,7 @@ def patch_status(request):
 
 @login_required
 def patch_build_all(request):
-    buildlog = subprocess.Popen('/usr/dpatch/bin/dailybuild.sh', shell=True,
+    buildlog = subprocess.Popen('/usr/dpatch/bin/dailybuild.sh patch', shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     buildOut = buildlog.communicate()[0]
     if buildlog.returncode == 0:

@@ -99,6 +99,10 @@
 			$.download('/report/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
 		}
 
+		function onReportBuild() {
+			showModelDialog("/report/build/all/", {}, 'GET', '#reportlist');
+		}
+
 		function onReportMarkStatus(name, div, value) {
 			var ids = getGridSelected();
 
@@ -140,6 +144,8 @@
 				            { separator : true },
 				            { name : 'Export Patch', bclass : 'export', onpress: onReportExport },
 				            { name : 'Export Patch All', bclass : 'export', onpress: onReportExportAll },
+				            { separator : true },
+				            { name : 'Build All', bclass : 'export', onpress: onReportBuild },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onReportMarkStatus },
 				            { separator : true } ],
