@@ -808,7 +808,7 @@
 							else
 								sopt += "<option value='" + params[1] + "'>" + params[0] + "</option>";
 						}
-						item = "<select name='f" + btn.name + "'>" + sopt + "</select>"
+						item = "<select name='fb" + btn.name + "'>" + sopt + "</select>"
 						var selDiv = document.createElement('div');
 						selDiv.className = 'fselect';
 						selDiv.innerHTML = "<div><span>" + btn.name.replace(/ /g, "") + "</span>" + item + "</div>";
@@ -827,9 +827,9 @@
 						btnDiv.onpress = btn.onpress;
 						btnDiv.name = btn.name;
 						if (btn.onpress) {
-							var bname = btn.name.replace(/ /g, "");
 							$(btnDiv).click(function () {
-								val = $("select[name=f]" + bname + "] option:selected").val();
+								var bname = this.name.replace(/ /g, "");
+								val = $("select[name=fb" + bname + "] option:selected").val();
 								if (val.length == 0)
 									return;
 								this.onpress(this.name, g.gDiv, val);
