@@ -219,6 +219,18 @@ def check_patch(repo, rtag, flists, commit):
                     for p in rpatchs:
                         if p.status == sent:
                             p.status = applied
+                        elif p.mergered != 0:
+                            mpatch = Patch.objects.filter(id = p.mergered)
+                            if len(mpatch) != 0:
+                                if mpatch[0].status == sent:
+                                    mpatch[0].status = applied
+                                    p.status = applied
+                                else:
+                                    mpatch[0].status = fixed
+                                    p.status = fixed
+                                mpatch[0].save()
+                            else:
+                                p.status = fixed
                         else:
                             p.status = fixed
                         p.save()

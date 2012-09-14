@@ -119,8 +119,22 @@ def checkreport(repo, rtag, cocci, flists, logger):
         if len(reportlog) == 0:
             for r in reports:
                 if r.status.name == 'New' or r.status.name == 'Patched':
-                    r.status = fixed
-                    r.save()
+                    if r.mergered == 0:
+                        r.status = fixed
+                        r.save()
+                    else:
+                        mreport = Report.objects.filter(id = r.mergered)
+                        if len(mreport) != 0:
+                            if mreport[0].status.name == 'Sent':
+                                mreport[0].status = applied
+                                r.status = applied
+                            else:
+                                mreport[0].status = fixed
+                                r.status = fixed
+                            mreport[0].save()
+                        else:
+                            r.status = fixed
+                        r.save()
                 elif r.status.name == 'Sent':
                     r.status = applied
                     r.save()
