@@ -118,6 +118,16 @@
 				showModelDialog("/patch/status/", {'ids': ids.join(), 'status': value}, 'GET', '#patchlist');
 			}
 		}
+
+		function onPatchMarkBuild(name, div, value) {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("Build change ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/patch/build/status/", {'ids': ids.join(), 'build': value}, 'GET', '#patchlist');
+			}
+		}
 {% endif %}
 
 		$(document).ready(function () {
@@ -156,6 +166,8 @@
 				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onPatchMarkStatus },
+				            { separator : true },
+				            { name : 'Build', bclass : 'export', values: "SKIP=3|TBD=0", onpress: onPatchMarkBuild },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,

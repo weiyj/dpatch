@@ -856,3 +856,30 @@ def patch_build_all(request):
         return HttpResponse('BUILD SUCCEED: %s' % buildOut)
     else:
         return HttpResponse('BUILD FAIL: %s' % buildOut)
+
+@login_required
+def patch_build_status(request):
+    buildid = get_request_paramter(request, 'build')
+    pids = get_request_paramter(request, 'ids')
+
+    if pids is None:
+        return HttpResponse('MARK BUILD ERROR: no patch id specified')
+
+    if buildid is None:
+        return HttpResponse('MARK BUILD ERROR: no status id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("MARK: build [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('MARK ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    for patch in patchs:
+        patch.build = buildid
+        patch.save()
+
+    logevent("MARK: patch build [%s] %s, SUCCEED" % (pids, buildid), True)
+    return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, buildid))
