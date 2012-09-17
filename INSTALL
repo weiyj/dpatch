@@ -1,0 +1,35 @@
+INSTALLATION   
+-------------
+Prerequisite:  Fedora 17 is required.
+
+To install the dpatch engine do the following:
+
+1) Download the dpatch source code from dpatch github website at:
+       https://github.com/weiyj/dpatch.git
+
+    $ git clone https://github.com/weiyj/dpatch.git
+
+2） Build dpatch binary RPM as the following:
+    $ cd dpatch/
+    $ sh autopack.sh
+
+    The binary RPM of dpatch will be wrote to:
+    ~/rpmbuild/RPMS/noarch/dpatch-0.4-0.fc17.noarch.rpm
+
+3) Install the binary RPM:
+    $ sudo rpm -ivh ~/rpmbuild/RPMS/noarch/dpatch-0.4-0.fc17.noarch.rpm
+
+4) Initialize the database used by the web UI:
+    $ su -
+    $ su dpatch
+    $ /usr/dpatch/bin/initdata.sh
+   The will need you input the admintrator name and password, the web UI
+   using this name/password to login as administrator.
+
+5) Using web browse to access the web UI, only firefox and chrome
+   is support.
+    http://127.0.0.1:8888/
+
+6) The engine will download or update linux.git and linux-next.git
+   at the 11am every day, and scan for patchs.
+
