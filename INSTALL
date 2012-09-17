@@ -14,14 +14,16 @@ To install the dpatch engine do the following:
     $ sh autopack.sh
 
     The binary RPM of dpatch will be wrote to:
-    ~/rpmbuild/RPMS/noarch/dpatch-0.4-0.fc17.noarch.rpm
+    ~/rpmbuild/RPMS/noarch/dpatch-*.noarch.rpm
 
 3) Install the binary RPM:
-    $ sudo rpm -ivh ~/rpmbuild/RPMS/noarch/dpatch-0.4-0.fc17.noarch.rpm
+    $ sudo rpm -ivh ~/rpmbuild/RPMS/noarch/dpatch-*.noarch.rpm
 
 4) Initialize the database used by the web UI:
     $ su -
     $ su dpatch
+    $ cd /usr/dpatch
+    $ python manage.py syncdb
     $ /usr/dpatch/bin/initdata.sh
    The will need you input the admintrator name and password, the web UI
    using this name/password to login as administrator.
