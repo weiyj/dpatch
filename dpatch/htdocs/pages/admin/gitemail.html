@@ -1,5 +1,7 @@
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
 
+<div id="dialogtest" title="Test SMTP Sever" style="display:none"></div>
+
 <div class='subtoptitle'>SMTP Mail Server</div>
 
 <form method="post" action="#">
@@ -33,6 +35,7 @@
 	<div class="input">
               <button id='apply' class="btn danger">Apply</button>&nbsp;&nbsp;&nbsp;&nbsp;
               <button class="btn danger" onclick="this.form.reset();return false;">Reset</button>
+              &nbsp;&nbsp;&nbsp;&nbsp;<button id='testconfig' class="btn danger">Test</button>
       </div>
 			</td>
 		</tr>
@@ -45,6 +48,34 @@
 			function getvalue(name) {
 				return $('#' + name).eq(0).val();
 			}
+
+			$('#dialogtest').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 580,
+				resizable: true,
+				buttons:
+					[{
+						text: "Send",
+				      	click: function() {
+				      		from = $(this).find("input[id=from]").eq(0).val();
+				      		to = $(this).find("input[id=to]").eq(0).val();
+				      		subject = $(this).find("input[id=subject]").eq(0).val();
+				      		mbody = $(this).find("textarea[id=mbody]").eq(0).val();
+							$(this).dialog("close");
+				      		showModelDialog('/sysadmin/gitemail/test/', {'from': from, 'to': to, 'subject': subject, 'mbody': mbody}, 'POST', "");
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
+			});
+
+			$('#testconfig').click(function () {
+				ajaxShowDialog("#dialogtest", "GET", '/sysadmin/gitemail/test/');
+				return false;
+			});
 
 			$('#apply').click(function () {
 				server = getvalue('server');

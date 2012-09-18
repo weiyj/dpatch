@@ -1,4 +1,29 @@
+#!/usr/bin/python
+#
+# Dailypatch - automated kernel patch create engine
+# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+#
+# This file is part of the Dailypatch package.
+#
+# Dailypatch is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# Dailypatch is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Patchwork; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+import os
 import subprocess
+import tempfile
+
+from time import gmtime, strftime
 
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -244,3 +269,35 @@ def git_email(request):
         context['from'] = mfrom
     
         return render_to_response("admin/gitemail.html", context)
+    
+@login_required
+@csrf_exempt
+def git_email_test(request):
+    if request.method == "POST":
+        cfrom = execute_shell('git config sendemail.from')
+        mfrom = request.POST.get('from', cfrom)
+        mto = request.POST.get('to', cfrom)
+        subject = request.POST.get('subject', 'test mail')
+        mbody = request.POST.get('mbody', 'This is a test mail')
+
+        mail = "Content-Type: text/plain; charset=ISO-8859-1\n"
+        mail += "Content-Transfer-Encoding: 7bit\n"
+        mail += "From: %s\n" % (mfrom)
+        mail += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+        mail += "Subject: %s\n" % subject
+        mail += "To: %s\n" % mto
+        mail += "\n%s\n\n" % mbody
+
+        tmpfname = tempfile.mktemp()
+        mfile = open(tmpfname, "w")
+        mfile.write(mail)
+        mfile.close()
+
+        drun = execute_shell('/usr/bin/git send-email --quiet --no-thread --confirm=never --to="%s" %s' \
+                                % (mto, tmpfname))
+        os.unlink(tmpfname)
+        return HttpResponse('TEST MAIL SEND: %s' % drun)
+    else:
+        context = RequestContext(request)
+        context['from'] = execute_shell('git config sendemail.from')
+        return render_to_response("admin/gitemailtest.html", context)

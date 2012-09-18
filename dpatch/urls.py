@@ -140,6 +140,7 @@ urlpatterns += patterns('dpatch.views.admin',
     url(r'^sysadmin/gitrepo/enable/(?P<repo_id>\d+)/$', 'git_repo_enable'),
 
     url(r'^sysadmin/gitemail/$', 'git_email'),
+    url(r'^sysadmin/gitemail/test/$', 'git_email_test'),
 )
 
 urlpatterns += patterns('dpatch.views.dash',
