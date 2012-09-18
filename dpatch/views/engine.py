@@ -501,7 +501,7 @@ def exceptfile_new(request):
             if len(coccis) > 0:
                 rewrite_engine(coccis[0])
 
-        logevent("NEW: except file, SUCCEED: new id %s" % einfo.id)
+        logevent("NEW: except file, SUCCEED: new id %s" % einfo.id, True)
         return HttpResponse('NEW: except file, SUCCEED')
     else:
         context = RequestContext(request)
