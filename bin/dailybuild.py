@@ -95,9 +95,12 @@ def main(args):
     
                 pcount['total'] += 1
                 fname = os.path.join(patch.dirname(), patch.filename())
-                cocci = open(fname, "w")
-                cocci.write(patch.content)
-                cocci.close()
+                pdiff = open(fname, "w")
+                try:
+                    pdiff.write(patch.content)
+                except:
+                    pdiff.write(unicode.encode(patch.content, 'utf-8'))
+                pdiff.close()
     
                 print "build for patch %s...\n" % os.path.basename(fname)
                 logger.logger.info("build for patch %s..." % os.path.basename(fname))
@@ -161,9 +164,12 @@ def main(args):
     
                 rcount['total'] += 1
                 fname = os.path.join(report.dirname(), report.filename())
-                cocci = open(fname, "w")
-                cocci.write(report.content)
-                cocci.close()
+                pdiff = open(fname, "w")
+                try:
+                    pdiff.write(patch.content)
+                except:
+                    pdiff.write(unicode.encode(patch.content, 'utf-8'))
+                pdiff.close()
     
                 print "build for report patch %s...\n" % os.path.basename(fname)
                 logger.logger.info("build for report patch %s..." % os.path.basename(fname))
