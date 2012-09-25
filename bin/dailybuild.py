@@ -71,7 +71,7 @@ def main(args):
         # prepare build env
         gitlog = ''
         if not os.path.exists(repo.builddir()):
-            os.system("cd /var/lib/dpatch/build/; git clone file://%s" % repo.dirname())
+            os.system("cd %s; git clone file://%s" % (os.path.dirname(repo.builddir()), repo.dirname()))
             os.system("cd %s; make allmodconfig" % repo.builddir())
             rebuildrepo = True
         elif rebuildrepo == True:
