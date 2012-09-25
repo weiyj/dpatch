@@ -55,7 +55,7 @@ def main(args):
               'desc': 'Remove duplicated include.'},]
 
     for t in types:
-        if Type.objects.filter(name = t['name']).count() >= 0:
+        if Type.objects.filter(name = t['name']).count() > 0:
             continue
         stype = Type(id = t['id'], name = t['name'], ptitle = t['title'], pdesc = t['desc'], status = False)
         stype.save()
