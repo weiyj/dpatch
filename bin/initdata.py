@@ -36,7 +36,7 @@ def main(args):
         repo.save()
 
     for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored']:
-        if Status.objects.filter(name = s).count() == 0:
+        if Status.objects.filter(name = s).count() > 0:
             continue
         status = Status(name = s)
         status.save()
@@ -55,7 +55,7 @@ def main(args):
               'desc': 'Remove duplicated include.'},]
 
     for t in types:
-        if Type.objects.filter(name = t['name']).count() == 0:
+        if Type.objects.filter(name = t['name']).count() >= 0:
             continue
         stype = Type(id = t['id'], name = t['name'], ptitle = t['title'], pdesc = t['desc'], status = False)
         stype.save()
