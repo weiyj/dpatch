@@ -11,12 +11,14 @@ ADMINS = (
 MANAGERS = ADMINS
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+PACKAGE_DIR = os.path.dirname(ROOT_DIR)
+BIN_DIR = os.path.join(PACKAGE_DIR, 'bin')
+DATA_DIR = os.path.dirname(ROOT_DIR)
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        #'NAME': '/home/weiyj/workspace/dpatch/database/sqlite.db',                      # Or path to database file if using sqlite3.
-        'NAME': '/var/lib/dpatch/database/sqlite.db',                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(DATA_DIR, 'database/sqlite.db'),                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.

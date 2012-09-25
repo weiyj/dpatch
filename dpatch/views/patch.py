@@ -27,6 +27,7 @@ import subprocess
 import urllib
 import urlparse
 
+from django.conf import settings
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse
 from django.utils import simplejson
@@ -849,7 +850,8 @@ def patch_status(request):
 
 @login_required
 def patch_build_all(request):
-    buildlog = subprocess.Popen('/usr/dpatch/bin/dailybuild.sh patch', shell=True,
+    args = '%s/dailybuild.sh patch' % (settings.BIN_DIR)
+    buildlog = subprocess.Popen(args, shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     buildOut = buildlog.communicate()[0]
     if buildlog.returncode == 0:

@@ -23,20 +23,20 @@ import sys
 from dpatch.models import GitRepo, Status, Type
 
 def main(args):
-    if GitRepo.objects.filter(name = 'linux.git').count() > 0:
+    if GitRepo.objects.filter(name = 'linux.git').count() == 0:
         repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git',
                        name = 'linux.git', user = 'Wei Yongjun', email = 'yongjun_wei@trendmicro.com.cn',
                        status = True, delta = False, build = True)
         repo.save()
 
-    if GitRepo.objects.filter(name = 'linux-next.git').count() > 0:
+    if GitRepo.objects.filter(name = 'linux-next.git').count() == 0:
         repo = GitRepo(url = 'git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git',
                        name = 'linux-next.git', user = 'Wei Yongjun', email = 'yongjun_wei@trendmicro.com.cn',
                        status = True)
         repo.save()
 
     for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored']:
-        if Status.objects.filter(name = s).count() > 0:
+        if Status.objects.filter(name = s).count() == 0:
             continue
         status = Status(name = s)
         status.save()
@@ -55,7 +55,7 @@ def main(args):
               'desc': 'Remove duplicated include.'},]
 
     for t in types:
-        if Type.objects.filter(name = t['name']).count() > 0:
+        if Type.objects.filter(name = t['name']).count() == 0:
             continue
         stype = Type(id = t['id'], name = t['name'], ptitle = t['title'], pdesc = t['desc'], status = False)
         stype.save()

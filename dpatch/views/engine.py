@@ -24,6 +24,7 @@ import tarfile
 import tempfile
 import subprocess
 
+from django.conf import settings
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -332,7 +333,7 @@ def semantic_import(request):
             for chunk in fp.chunks():
                 destination.write(chunk)
 
-        args = '/usr/dpatch/bin/importcocci.sh %s' % fname
+        args = '%s/importcocci.sh %s' % (settings.BIN_DIR, fname)
         shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]
@@ -785,7 +786,7 @@ def report_semantic_import(request):
             for chunk in fp.chunks():
                 destination.write(chunk)
 
-        args = '/usr/dpatch/bin/importreport.sh %s' % fname
+        args = '%s/importreport.sh %s' % (settings.BIN_DIR, fname)
         shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]

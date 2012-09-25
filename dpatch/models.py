@@ -24,6 +24,7 @@ import re
 import datetime
 
 from django.db import models
+from django.conf import settings
 #from django.contrib.auth.models import User
 
 #class UserProfile(models.Model):
@@ -51,11 +52,11 @@ class GitRepo(models.Model):
 
     def dirname(self):
         dname = os.path.basename(self.url).replace('.git', '')
-        return '/var/lib/dpatch/repo/' + dname
+        return os.path.join(settings.DATA_DIR, 'repo', dname)
 
     def builddir(self):
         dname = os.path.basename(self.url).replace('.git', '')
-        return '/var/lib/dpatch/build/' + dname
+        return os.path.join(settings.DATA_DIR, 'build', dname)
 
 class GitTag(models.Model):
     id = models.AutoField(primary_key = True)
@@ -87,7 +88,7 @@ class CocciEngine(models.Model):
         return u'%d %s' %(self.id, self.file)#, self.options)
 
     def fullpath(self):
-        return os.path.join('/var/lib/dpatch/pattern/cocci/%s' % self.file)
+        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', self.file)
 
     def rawformat(self, title, desc, exceptinfo = []):
         spctx = '/// %s\n' %  title
@@ -121,7 +122,7 @@ class CocciReport(models.Model):
         return u'%d %s' %(self.id, self.file)
 
     def fullpath(self):
-        return os.path.join('/var/lib/dpatch/pattern/cocci/report/%s' % self.file)
+        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', 'report', self.file)
 
     def rawformat(self, title, desc, exceptinfo = []):
         spctx = '/// %s\n' %  title
@@ -199,7 +200,7 @@ class Patch(models.Model):
         return "%04d-%s.patch" % (prefix, fname)
 
     def dirname(self):
-        return '/var/lib/dpatch/repo/PATCH/'
+        return os.path.join(settings.DATA_DIR, 'repo', 'PATCH')
 
     def username(self):
         if len(self.type.user) == 0:
@@ -217,7 +218,7 @@ class Patch(models.Model):
         return os.path.join(self.tag.repo.dirname(), self.file)
 
     def fullpath(self):
-        return '/var/lib/dpatch/repo/PATCH/%s' % self.filename()
+        return os.path.join(settings.DATA_DIR, 'repo', 'PATCH', self.filename())
 
 class Report(models.Model):
     id = models.AutoField(primary_key = True)
@@ -249,7 +250,7 @@ class Report(models.Model):
         return "%04d-%s.patch" % (prefix, fname)
 
     def dirname(self):
-        return '/var/lib/dpatch/repo/PATCH/'
+        return os.path.join(settings.DATA_DIR, 'repo', 'PATCH')
 
     def username(self):
         if len(self.type.user) == 0:
@@ -267,7 +268,7 @@ class Report(models.Model):
         return os.path.join(self.tag.repo.dirname(), self.file)
 
     def fullpath(self):
-        return '/var/lib/dpatch/repo/PATCH/%s' % self.filename()
+        return os.path.join(settings.DATA_DIR, 'repo', 'PATCH', self.filename())
 
 class ScanLog(models.Model):
     id = models.AutoField(primary_key = True)
