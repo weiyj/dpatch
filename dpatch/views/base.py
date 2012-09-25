@@ -23,6 +23,7 @@ from django.shortcuts import render_to_response
 from dpatch.models import GitRepo, GitTag
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 
 def dashboard(request):
     context = RequestContext(request)
@@ -30,13 +31,13 @@ def dashboard(request):
     return render_to_response("dashboard.html", context)
 
 def patchstatus(request):
-    tags = GitTag.objects.filter(total__gt=0).order_by("-id")
+    tags = GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id")
     context = RequestContext(request)
     context['tags'] = tags
     return render_to_response("patchstatus.html", context)
 
 def reportstatus(request):
-    tags = GitTag.objects.filter(rptotal__gt=0).order_by("-id")
+    tags = GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id")
     context = RequestContext(request)
     context['tags'] = tags
     return render_to_response("reportstatus.html", context)
