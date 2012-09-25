@@ -28,16 +28,17 @@ Automated kernel patch generate engine
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%{__install} -d $RPM_BUILD_ROOT/usr/dpatch
-%{__install} -d $RPM_BUILD_ROOT/usr/dpatch/bin
-%{__install} -d $RPM_BUILD_ROOT/usr/dpatch/dpatch
-%{__install} -d $RPM_BUILD_ROOT/usr/dpatch/dpatch/views
-%{__install} -D manage.py $RPM_BUILD_ROOT/usr/dpatch/
-%{__install} -D bin/*.py $RPM_BUILD_ROOT/usr/dpatch/bin/
-%{__install} -D bin/*.sh $RPM_BUILD_ROOT/usr/dpatch/bin/
-%{__install} -D dpatch/*.py $RPM_BUILD_ROOT/usr/dpatch/dpatch/
-%{__install} -D dpatch/views/*.py $RPM_BUILD_ROOT/usr/dpatch/dpatch/views
-cp -rf dpatch/htdocs $RPM_BUILD_ROOT/usr/dpatch/dpatch/
+%{__install} -d $RPM_BUILD_ROOT/usr/share/dpatch
+%{__install} -d $RPM_BUILD_ROOT/usr/share/dpatch/bin
+%{__install} -d $RPM_BUILD_ROOT/usr/share/dpatch/dpatch
+%{__install} -d $RPM_BUILD_ROOT/usr/share/dpatch/dpatch/views
+%{__install} -D manage.py $RPM_BUILD_ROOT/usr/share/dpatch/
+%{__install} -D bin/*.py $RPM_BUILD_ROOT/usr/share/dpatch/bin/
+%{__install} -D bin/*.sh $RPM_BUILD_ROOT/usr/share/dpatch/bin/
+%{__install} -D dpatch/*.py $RPM_BUILD_ROOT/usr/share/dpatch/dpatch/
+%{__install} -D dpatch/views/*.py $RPM_BUILD_ROOT/usr/share/dpatch/dpatch/views
+cp -rf dpatch/htdocs $RPM_BUILD_ROOT/usr/share/dpatch/dpatch/
+sed -i -e "s/DATA_DIR = os.path.dirname(ROOT_DIR)/DATA_DIR = '\/var\/lib\/dpatch'/" $RPM_BUILD_ROOT/usr/share/dpatch/dpatch/settings.py
 
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/repo
@@ -59,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,dpatch,dpatch)
 %attr(0644,root,root)/etc/cron.d/dpatch
 /etc/httpd/conf.d/dpatch.conf
-/usr/dpatch
+/usr/share/dpatch
 /var/lib/dpatch/repo
 /var/lib/dpatch/build
 /var/lib/dpatch/pattern
@@ -67,7 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre
 /usr/sbin/groupadd -r dpatch &>/dev/null || :
-/usr/sbin/useradd -r -s /sbin/nologin -d /usr/dpatch -M \
+/usr/sbin/useradd -r -s /sbin/nologin -d /usr/share/dpatch -M \
         -c 'Dailypatch User' -s /bin/sh -g dpatch dpatch &>/dev/null || :
 
 %post
