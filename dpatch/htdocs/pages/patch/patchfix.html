@@ -1,12 +1,54 @@
+<style type="text/css" media="screen">
+	#patchfix .peditor { 
+		margin: 0;
+		position: absolute;
+		top: 22;
+		bottom: 0;
+		left: 0;
+		right: 0;
+	}
+
+	#patchfix div.toptitle {
+		background:url(../images/bg_title.png) repeat-x left top;
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 21px;
+		padding:0;
+		border-bottom: solid 1px #CBCBCB;
+		font-size: 14px;
+		font-weight: bold;
+		vertical-align: middle;
+		margin: 0;
+	}
+
+	#patchfix div.difftip {
+		position: absolute;
+		border: solid 1px #CBCBCB;
+		height: 100px;
+		display:none;
+		overflow-y:auto;
+		top: 22;
+		left: 0;
+		right: 0;
+	}
+</style>
+<script src="/javascripts/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/javascripts/ace/mode-c_cpp.js" type="text/javascript" charset="utf-8"></script>
+<script src="/javascripts/ace/theme-chrome.js" type="text/javascript" charset="utf-8"></script>
+
 <input id="id" type="hidden" value="{{ patch.id }}">
 
-<div>
-    <div>Source File: {{ patch.file }} <div id="difftip" style="float:right;"><U>DIFF&gt;&gt;</U></div></div>
-    <div id="diff" style="border: solid 1px #CBCBCB;height: 100px;display:none;overflow-y:auto;">
+<div id="patchfix">
+    <div class="toptitle">File: {{ patch.file }} <div id="difftip" style="float:right;"><U>DIFF&gt;&gt;</U></div></div>
+    
+    <div id="diff" class="difftip">
         <pre>{{ patch.diff }}</pre>
     </div>
 
-    <textarea id="src" rows="25" cols="80" name="src">{{ src }}</textarea>
+    <textarea id="src" rows="25" cols="80" name="src" style="display:none;">{{ src }}</textarea>
+    <pre class="peditor" id="editor">{{ src }}</pre>
 </div>
 
 <script type="text/javascript">
@@ -16,12 +58,21 @@
 				if ($(this).data("show") == true) {
 					$('#diff').css("display", "none");
 					$('#difftip').html("<U>DIFF&gt;&gt;</U>")
+					$('#editor').css("top", "22");
 					$(this).data("show", false);
 				} else {
 					$('#diff').css("display", "block");
 					$('#difftip').html("<U>DIFF&lt;&lt;</U>")
+					$('#editor').css("top", "124");
 					$(this).data("show", true);
 				}
+			});
+
+			var editor = ace.edit("editor");
+			editor.setTheme("ace/theme/chrome");
+			editor.getSession().setMode("ace/mode/c_cpp");
+			$("#patchfix").bind( "dialogbeforeclose", function(event, ui) {
+				$("#src").val(editor.getValue());
 			});
 		});
 	})(jQuery);
