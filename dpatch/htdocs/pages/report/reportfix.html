@@ -71,6 +71,7 @@
 			editor.setTheme("ace/theme/chrome");
 			editor.getSession().setMode("ace/mode/c_cpp");
 			editor.getSession().setUseSoftTabs(false);
+			editor.getSession().setTabSize(8);
 			$("#reportfix").bind( "dialogbeforeclose", function(event, ui) {
 				$("#src").val(editor.getValue());
 			});
