@@ -1,5 +1,5 @@
 <style type="text/css" media="screen">
-	#patchfix .reditor { 
+	#reportfix .reditor { 
 		margin: 0;
 		position: absolute;
 		top: 22;
@@ -8,7 +8,7 @@
 		right: 0;
 	}
 
-	#patchfix div.toptitle {
+	#reportfix div.toptitle {
 		background:url(../images/bg_title.png) repeat-x left top;
 		position: absolute;
 		top: 0;
@@ -23,7 +23,7 @@
 		margin: 0;
 	}
 
-	#patchfix div.logtip {
+	#reportfix div.logtip {
 		position: absolute;
 		border: solid 1px #CBCBCB;
 		height: 100px;
@@ -40,13 +40,13 @@
 
 <input id="id" type="hidden" value="{{ report.id }}">
 
-<div>
-    <div>File: {{ report.file }} <div id="tip" style="float:right;"><U>REPORT&gt;&gt;</U></div></div>
+<div id="reportfix">
+    <div class="toptitle">File: {{ report.file }} <div id="tip" style="float:right;"><U>REPORT&gt;&gt;</U></div></div>
     <div id="log" class="logtip">
         <pre>{{ report.reportlog }}</pre>
     </div>
 
-    <textarea id="src" rows="25" cols="80" name="src">{{ src }}</textarea>
+    <textarea id="src" rows="25" cols="80" name="src" style="display:none;">{{ src }}</textarea>
     <pre class="reditor" id="reditor">{{ src }}</pre>
 </div>
 
