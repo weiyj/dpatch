@@ -106,7 +106,11 @@ class PatchFormat:
                 line = re.sub("\(.*", "", line).strip()
                 if len(line) != 0:
                     fun = line.split(' ')[-1]
-                    funcname.append("%s()" % fun)
+                    # skip lable
+                    if re.match(r".*:$", fun):
+                        continue
+                    if funcname.count("%s()" % fun) == 0:
+                        funcname.append("%s()" % fun)
         return funcname
 
     def _guest_email_list(self):
