@@ -724,8 +724,7 @@ def patch_fix(request, patch_id):
             formater = PatchFormat(repo.dirname(), patch.file, user, email,
                                    title, desc, diff)
             patch.content = formater.format_patch()
-            if patch.title is None or len(patch.title) == 0:
-                patch.title = formater.format_title()
+            patch.title = formater.format_title()
             if patch.desc is None or len(patch.desc) == 0:
                 patch.desc = rtype.pdesc
             patch.emails = formater.get_mail_list()
