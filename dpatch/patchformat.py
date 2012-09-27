@@ -96,6 +96,19 @@ class PatchFormat:
 
         return module
 
+    def _guest_function_name(self):
+        funcname = []
+        if self._content is None:
+            return funcname
+        for line in self._content.split('\n'):
+            if re.match(r"@@[^@]*@@", line):
+                line = re.sub("@@[^@]*@@", "", line)
+                line = re.sub("\(.*", "", line).strip()
+                if len(line) != 0:
+                    fun = line.split(' ')[-1]
+                    funcname.append("%s()" % fun)
+        return funcname
+
     def _guest_email_list(self):
         mailto = []
         mailcc = []
@@ -181,6 +194,15 @@ class PatchFormat:
             title = re.sub(r'{{\s*file\s*}}', '', title)
         else:
             title = re.sub(r'{{\s*file\s*}}', self._basename(), title)
+
+        if re.match('{{\s*function\s*}}', title):
+            funcs = self._guest_function_name()
+            if len(funcs) == 1:
+                title = re.sub(r'{{\s*function\s*}}', funcs[0], title)
+            else:
+                title = re.sub(r'\s+of\s*{{\s*function\s*}}', '', title)
+                title = re.sub(r'\s+in\s*{{\s*function\s*}}', '', title)
+                title = re.sub(r'{{\s*function\s*}}', '', title)
 
         return '[PATCH] %s: %s' % (self._module, title)
 
