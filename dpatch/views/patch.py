@@ -151,12 +151,14 @@ def patchlistdata(request, tag_name):
         action = ''
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
-            action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
+            if patch.mglist is None or len(patch.mglist.strip()) == 0:
+                action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
             if patch.build in [1, 3, 4]:
                 action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
         elif request.user.is_authenticated() and patch.status.name == 'Sent':
-            action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
+            if patch.mglist is None or len(patch.mglist.strip()) == 0:
+                action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
 
         if patch.build == 0:
