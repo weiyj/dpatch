@@ -187,14 +187,14 @@ class PatchFormat:
     def format_title(self):
         title = self._title
 
-        if re.match('{{[^}]*}}', title):
+        if re.match(r'.*{{[^}]*}}', title):
             if os.path.isdir(self._fullpath()):
                 title = re.sub(r'\s+from\s*{{\s*file\s*}}', '', title)
                 title = re.sub(r'{{\s*file\s*}}', '', title)
             else:
                 title = re.sub(r'{{\s*file\s*}}', self._basename(), title)
     
-            if re.match('{{\s*function\s*}}', title):
+            if re.match(r'.*{{\s*function\s*}}', title):
                 funcs = self._guest_function_name()
                 if len(funcs) == 1:
                     title = re.sub(r'{{\s*function\s*}}', funcs[0], title)
