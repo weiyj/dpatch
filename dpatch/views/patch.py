@@ -727,8 +727,7 @@ def patch_fix(request, patch_id):
                                    title, desc, diff)
             patch.content = formater.format_patch()
             patch.title = formater.format_title()
-            if patch.desc is None or len(patch.desc) == 0:
-                patch.desc = rtype.pdesc
+            patch.desc = formater.format_desc()
             patch.emails = formater.get_mail_list()
             if patch.diff != diff:
                 patch.diff = diff

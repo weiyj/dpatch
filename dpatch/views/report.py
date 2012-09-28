@@ -341,8 +341,7 @@ def report_fix(request, report_id):
                                    title, desc, diff)
             report.content = formater.format_patch()
             report.title = formater.format_title()
-            if report.desc is None or len(report.desc) == 0:
-                report.desc = rtype.pdesc
+            report.desc = formater.format_desc()
             report.emails = formater.get_mail_list()
             report.diff = diff
             report.build = 0

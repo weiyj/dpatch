@@ -188,29 +188,34 @@ class PatchFormat:
 
         return self._mlist
 
-    def format_title(self):
-        title = self._title
-
-        if re.match(r'.*{{[^}]*}}', title):
+    def _format_value(self, value):
+        if re.match(r'.*{{[^}]*}}', value):
             if os.path.isdir(self._fullpath()):
-                title = re.sub(r'\s+from\s*{{\s*file\s*}}', '', title)
-                title = re.sub(r'{{\s*file\s*}}', '', title)
+                value = re.sub(r'\s+from\s*{{\s*file\s*}}', '', value)
+                value = re.sub(r'{{\s*file\s*}}', '', value)
             else:
-                title = re.sub(r'{{\s*file\s*}}', self._basename(), title)
+                value = re.sub(r'{{\s*file\s*}}', self._basename(), value)
     
-            if re.match(r'.*{{\s*function\s*}}', title):
+            if re.match(r'.*{{\s*function\s*}}', value):
                 funcs = self._guest_function_name()
                 if len(funcs) == 1:
-                    title = re.sub(r'{{\s*function\s*}}', funcs[0], title)
+                    value = re.sub(r'{{\s*function\s*}}', funcs[0], value)
                 else:
-                    title = re.sub(r'\s+of\s*{{\s*function\s*}}', '', title)
-                    title = re.sub(r'\s+in\s*{{\s*function\s*}}', '', title)
-                    title = re.sub(r'{{\s*function\s*}}', '', title)
+                    value = re.sub(r'\s+of\s*{{\s*function\s*}}', '', value)
+                    value = re.sub(r'\s+in\s*{{\s*function\s*}}', '', value)
+                    value = re.sub(r'{{\s*function\s*}}', '', value)
+        return value
+        
+    def format_title(self):
+        title = self._format_value(self._title)
 
         if title.find('[PATCH') != -1:
             return title
         else:
             return '[PATCH] %s: %s' % (self._module, title)
+
+    def format_desc(self):
+        return self._format_value(self._desc)
 
     def format_patch(self):
         self._guest_module_name()
@@ -225,7 +230,7 @@ class PatchFormat:
         except:
             patch += self._weak_email_list()
         #patch += "\nFrom: %s <%s>\n\n" % (self._user, self._email)
-        patch += "\n%s\n\n" % self._desc
+        patch += "\n%s\n\n" % self.format_desc()
         patch += "Signed-off-by: %s <%s>\n" % (self._user, self._email)
         patch += "---\n"
         patch += "%s" % self._content
