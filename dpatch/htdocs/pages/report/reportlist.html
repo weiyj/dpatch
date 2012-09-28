@@ -206,9 +206,9 @@
 					[{
 						text: "Save",
 				      	click: function() {
+				      		$(this).dialog("close");
 				      		id = $(this).find("input[id=id]").eq(0).val();
 				      		src = $(this).find("textarea[id=src]").eq(0).val();
-							$(this).dialog("close");
 				      		showModelDialog('/report/fix/' + id + '/', {'src': src}, 'POST', "#reportlist");
 						}
 					},

@@ -25,6 +25,7 @@ import tarfile
 import subprocess
 import urllib
 import urlparse
+import tempfile
 
 from django.conf import settings
 from django.shortcuts import render_to_response, get_object_or_404
@@ -358,6 +359,29 @@ def report_fix(request, report_id):
             srcfile = open(sfile, "r")
             src = srcfile.read()
             srcfile.close()
+
+            if report.diff != None and len(report.diff) != 0:
+                try:
+                    tmpsrcfname = tempfile.mktemp()
+                    tmpsrcfile = open(tmpsrcfname, "w")
+                    tmpsrcfile.write(src)
+                    tmpsrcfile.close()
+
+                    tmpdiffname = tempfile.mktemp()
+                    tmpdiffile = open(tmpdiffname, "w")
+                    tmpdiffile.write(report.diff)
+                    tmpdiffile.close()
+
+                    os.system('patch %s -i %s' % (tmpsrcfname, tmpdiffname))
+                    srcfile = open(tmpsrcfname, "r")
+                    src = srcfile.read()
+                    srcfile.close()
+
+                    os.unlink(tmpsrcfname)
+                    os.unlink(tmpdiffname)
+                except:
+                    pass
+
         context['report'] = report
         context['src'] = src
         return render_to_response("report/reportfix.html", context)
