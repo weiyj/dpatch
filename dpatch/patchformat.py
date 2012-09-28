@@ -138,7 +138,8 @@ class PatchFormat:
             else:
                 if re.search('@vger.kernel.org', m) != None:
                     nolkml = False
-                mailcc.append(m)
+                if len(m.strip()) != 0:
+                    mailcc.append(m)
 
         if nolkml == True and skiplkml == True:
             mailcc.append('linux-kernel@vger.kernel.org')
