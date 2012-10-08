@@ -134,6 +134,7 @@ def main(args):
                             continue
                     else:
                         buildlog += 'do not known how to build\n'
+                    log.append('LD [M] %s' % patch.file)
 
                 if patch.file.find('include/') != 0 and patch.file.find('tools/') != 0:
                     dname = os.path.dirname(patch.file)
@@ -150,7 +151,7 @@ def main(args):
                         continue
     
                 output = '\n'.join(log)
-                if patch.file.find('include/') != 0 and patch.file.find('tools/') != 0 and output.find('LD [M]') == -1 and patch.file[-2:] == '.c':
+                if patch.file.find('include/') != 0 and output.find('LD [M]') == -1 and patch.file[-2:] == '.c':
                     objfile = "%s.o" % patch.file[:-2]
                     buildlog += '\n# make %s\n' % objfile
                     ret, log = execute_shell("cd %s; make %s" % (repo.builddir(), objfile), logger)
