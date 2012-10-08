@@ -166,11 +166,11 @@ def main(args):
                 fname = os.path.join(report.dirname(), report.filename())
                 pdiff = open(fname, "w")
                 try:
-                    pdiff.write(patch.content)
+                    pdiff.write(report.content)
                 except:
-                    pdiff.write(unicode.encode(patch.content, 'utf-8'))
+                    pdiff.write(unicode.encode(report.content, 'utf-8'))
                 pdiff.close()
-    
+
                 print "build for report patch %s...\n" % os.path.basename(fname)
                 logger.logger.info("build for report patch %s..." % os.path.basename(fname))
     
