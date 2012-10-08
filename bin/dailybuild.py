@@ -123,7 +123,7 @@ def main(args):
                     dname = os.path.dirname(patch.file)
                     while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
                         dname = os.path.dirname(dname)
-                    if len(dname != 0):
+                    if len(dname) != 0:
                         ret, log = execute_shell("cd %s; make" % (os.path.join(repo.builddir(), dname)), logger)
                         buildlog += unicode('\n'.join(log), errors='ignore')
                         if ret != 0:
