@@ -118,8 +118,24 @@ def main(args):
                     patch.buildlog = buildlog
                     patch.save()
                     continue
-    
-                if patch.file.find('include/') != 0:
+
+                if patch.file.find('tools/') == 0:
+                    dname = os.path.dirname(patch.file)
+                    while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                        dname = os.path.dirname(dname)
+                    if len(dname != 0):
+                        ret, log = execute_shell("cd %s; make" % (os.path.join(repo.builddir(), dname)), logger)
+                        buildlog += unicode('\n'.join(log), errors='ignore')
+                        if ret != 0:
+                            pcount['fail'] += 1
+                            patch.build = 2
+                            patch.buildlog = buildlog
+                            patch.save()
+                            continue
+                    else:
+                        buildlog += 'do not known how to build\n'
+
+                if patch.file.find('include/') != 0 and patch.file.find('tools/') != 0:
                     dname = os.path.dirname(patch.file)
                     if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
                         dname = os.path.dirname(dname)
