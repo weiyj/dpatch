@@ -23,6 +23,7 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.utils import simplejson
 from django.template import RequestContext
+from django.contrib.auth.decorators import login_required
 
 from dpatch.models import ScanLog, Event
 
@@ -109,3 +110,22 @@ def log_detail(request, log_id):
     context = RequestContext(request)
     context['logs'] = logs
     return render_to_response("event/logdetail.html", context)
+
+@login_required
+def event_delete(request):
+    eids = get_request_paramter(request, 'ids')
+    if eids is None:
+        return HttpResponse('DELETE ERROR: no event id specified')
+
+    ids = eids.split(',')
+    events = []
+    for i in ids:
+        event = Event.objects.filter(id = i)
+        if len(event) == 0:
+            return HttpResponse('DELETE ERROR: event %s does not exists' % i)
+        events.append(event[0])
+
+    for event in events:
+        event.delete()
+
+    return HttpResponse('DELETE SUCCEED: event ids [%s]' % eids)

@@ -129,6 +129,7 @@ urlpatterns += patterns('dpatch.views.event',
     url(r'^event/logs/detail/(?P<log_id>\d+)/$', 'log_detail'),
     url(r'^event/events/$', 'events'),
     url(r'^event/events/data/$', 'event_data'),
+    url(r'^event/events/delete/$', 'event_delete'),
 )
 
 urlpatterns += patterns('dpatch.views.admin',
