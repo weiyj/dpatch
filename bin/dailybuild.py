@@ -160,6 +160,8 @@ def main(args):
                         patch.build = 2
                         patch.buildlog = buildlog
                         patch.save()
+                        if buildlog.find("Run 'make oldconfig' to update configuration.") != -1:
+                            os.system("cd %s; make allmodconfig" % repo.builddir())
                         continue
                     output = '\n'.join(log)
                     if output.find(objfile) != -1:
@@ -175,6 +177,8 @@ def main(args):
                         patch.build = 2
                         patch.buildlog = buildlog
                         patch.save()
+                        if buildlog.find("Run 'make oldconfig' to update configuration.") != -1:
+                            os.system("cd %s; make allmodconfig" % repo.builddir())
                         continue
     
                 pcount['pass'] += 1
