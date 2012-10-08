@@ -346,7 +346,8 @@ def patch_format(patch):
     #ctx += "From: %s <%s>\n\n" % (user, email)
     ctx += "%s\n\n" % patch.desc
     ctx += "Signed-off-by: %s <%s>\n" % (user, email)
-    ctx += "---\n"
+    if patch.diff == None or patch.diff.find('Acked-by: ') == -1:
+        ctx += "---\n"
     ctx += "%s\n" % patch.diff
 
     return ctx
