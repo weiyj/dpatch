@@ -4,6 +4,27 @@
 
 <script type="text/javascript">
 	(function($) {
+{% if user.is_authenticated %}
+		function getGridSelected() {
+			var ids = [];
+			$('#logs tr.trSelected').each( function(){
+				id = $(this).find("td:eq(2)").eq(0).text();
+				ids.push(id);
+			});
+			return ids;
+		}
+	
+		function doLogDelete() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('DELETE ERROR: at least one row must be selected!');
+			} else {
+				showModelDialog("/event/logs/delete/", {'ids': ids.join()}, 'GET', '#logs');
+			}
+		}
+{% endif %}
+
 		$(document).ready(function () {
 			function onGridLoadSuccess(grid) {			
 				$("#logs .detail").click(function () {
@@ -19,14 +40,21 @@
 				title: 'Scan Logs',
 				url: '/event/logs/data/',
 				method: 'GET',
-				colModel : [ { display: 'Start Time', name : 'start', width : 120, align: 'left'},
+				colModel : [ { display: 'ID', name : 'id', width : 50, align: 'center'},
+				             { display: 'Start Time', name : 'start', width : 120, align: 'left'},
 				             { display: 'End Time', name : 'end', width : 120, align: 'left'},
 				             { display: 'Repo Name', name : 'repo', width : 80, align: 'left'},
 				             { display: 'Tag Name', name : 'tag', width : 80, align: 'left'},
-				             { display: 'Description', name : 'desc', width : 520, align: 'left'},
+				             { display: 'Description', name : 'desc', width : 460, align: 'left'},
 				             { display: 'Actions', name : 'actions', width : 80, align: 'center'},],
+{% if user.is_authenticated %}
+				showCheckbox: true,
+				buttons : [ { name : 'Delete', bclass : 'delete', onpress : doLogDelete },
+				            { separator : true },],
+{% else %}
 				showCheckbox: false,
 				singleSelect: true,
+{% endif %}
 				usepager: true,
 				onSuccess: onGridLoadSuccess
 			});

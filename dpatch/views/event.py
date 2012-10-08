@@ -129,3 +129,22 @@ def event_delete(request):
         event.delete()
 
     return HttpResponse('DELETE SUCCEED: event ids [%s]' % eids)
+
+@login_required
+def log_delete(request):
+    lids = get_request_paramter(request, 'ids')
+    if lids is None:
+        return HttpResponse('DELETE ERROR: no log id specified')
+
+    ids = lids.split(',')
+    logs = []
+    for i in ids:
+        log = ScanLog.objects.filter(id = i)
+        if len(log) == 0:
+            return HttpResponse('DELETE ERROR: log %s does not exists' % i)
+        logs.append(log[0])
+
+    for log in logs:
+        log.delete()
+
+    return HttpResponse('DELETE SUCCEED: log ids [%s]' % lids)
