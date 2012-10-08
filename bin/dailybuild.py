@@ -150,6 +150,22 @@ def main(args):
                         continue
     
                 output = '\n'.join(log)
+                if patch.file.find('include/') != 0 and output.find('LD [M]') == -1 and patch.file[-2:] == '.c':
+                    objfile = "%s.o" % patch.file[:-2]
+                    buildlog += '\n# make %s\n' % objfile
+                    ret, log = execute_shell("cd %s; make %s" % (repo.builddir(), objfile), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        pcount['fail'] += 1
+                        patch.build = 2
+                        patch.buildlog = buildlog
+                        patch.save()
+                        continue
+                    output = '\n'.join(log)
+                    if output.find(objfile) != -1:
+                        log.append('LD [M] %s' % objfile)
+
+                output = '\n'.join(log)
                 if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
                     buildlog += '\n# make vmlinux\n'
                     ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
