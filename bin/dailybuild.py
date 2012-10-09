@@ -46,6 +46,22 @@ def commit_from_repo(repo):
     ret, commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.builddir())
     return commits[-1]
 
+def is_c_file(filename):
+    if filename.find('include/') != 0 and filename.find('tools/') != 0 and filename[-2:] == '.c':
+        return True
+    else:
+        return False
+
+def is_module_build(filename, output):
+    if output.find('LD [M]') == -1:
+        return False
+
+    objfile = "%s.o" % filename[:-2]
+    if filename[-2:] == '.c' and output.find(objfile) != -1:
+        return True
+    else:
+        return False
+
 def main(args):
     buildpatch = True
     buildreport = True
@@ -92,7 +108,7 @@ def main(args):
                     patch.build = 3
                     patch.save()
                     continue
-    
+
                 pcount['total'] += 1
                 fname = os.path.join(patch.dirname(), patch.filename())
                 pdiff = open(fname, "w")
@@ -119,6 +135,7 @@ def main(args):
                     patch.save()
                     continue
 
+                objfile = "%s.o" % patch.file[:-2]
                 if patch.file.find('tools/') == 0:
                     dname = os.path.dirname(patch.file)
                     while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
@@ -135,7 +152,7 @@ def main(args):
                             continue
                     else:
                         buildlog += 'do not known how to build\n'
-                    log.append('LD [M] %s' % patch.file)
+                    log.append('LD [M] %s' % objfile)
 
                 if patch.file.find('include/') != 0 and patch.file.find('tools/') != 0:
                     dname = os.path.dirname(patch.file)
@@ -152,8 +169,7 @@ def main(args):
                         continue
     
                 output = '\n'.join(log)
-                if patch.file.find('include/') != 0 and output.find('LD [M]') == -1 and patch.file[-2:] == '.c':
-                    objfile = "%s.o" % patch.file[:-2]
+                if is_c_file(patch.file) and is_module_build(patch.file, output) == False:
                     buildlog += '\n# make %s\n' % objfile
                     ret, log = execute_shell("cd %s; make %s" % (repo.builddir(), objfile), logger)
                     buildlog += unicode('\n'.join(log), errors='ignore')
@@ -170,7 +186,7 @@ def main(args):
                         log.append('LD [M] %s' % objfile)
 
                 output = '\n'.join(log)
-                if patch.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                if patch.file.find('include/') == 0 or is_module_build(patch.file, output) == False:
                     buildlog += '\n# make vmlinux\n'
                     ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
                     buildlog += unicode('\n'.join(log), errors='ignore')
@@ -199,7 +215,7 @@ def main(args):
                     report.build = 3
                     report.save()
                     continue
-    
+
                 rcount['total'] += 1
                 fname = os.path.join(report.dirname(), report.filename())
                 pdiff = open(fname, "w")
@@ -225,8 +241,27 @@ def main(args):
                     report.buildlog = buildlog
                     report.save()
                     continue
-    
-                if report.file.find('include/') != 0:
+
+                if report.file.find('tools/') == 0:
+                    dname = os.path.dirname(report.file)
+                    while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                        dname = os.path.dirname(dname)
+                    if len(dname) != 0:
+                        buildlog += '\n# cd %s; make\n' % dname
+                        ret, log = execute_shell("cd %s; make" % (os.path.join(repo.builddir(), dname)), logger)
+                        buildlog += unicode('\n'.join(log), errors='ignore')
+                        if ret != 0:
+                            pcount['fail'] += 1
+                            report.build = 2
+                            report.buildlog = buildlog
+                            report.save()
+                            continue
+                    else:
+                        buildlog += 'do not known how to build\n'
+                    log.append('LD [M] %s' % objfile)
+
+                objfile = "%s.o" % report.file[:-2]
+                if report.file.find('include/') != 0 and report.file.find('tools/') != 0:
                     dname = os.path.dirname(report.file)
                     if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
                         dname = os.path.dirname(dname)
@@ -239,9 +274,26 @@ def main(args):
                         report.buildlog = buildlog
                         report.save()
                         continue
-    
+
                 output = '\n'.join(log)
-                if report.file.find('include/') == 0 or output.find('LD [M]') == -1:
+                if is_c_file(report.file) and is_module_build(report.file, output) == False:
+                    buildlog += '\n# make %s\n' % objfile
+                    ret, log = execute_shell("cd %s; make %s" % (repo.builddir(), objfile), logger)
+                    buildlog += unicode('\n'.join(log), errors='ignore')
+                    if ret != 0:
+                        pcount['fail'] += 1
+                        report.build = 2
+                        report.buildlog = buildlog
+                        report.save()
+                        if buildlog.find("Run 'make oldconfig' to update configuration.") != -1:
+                            os.system("cd %s; make allmodconfig" % repo.builddir())
+                        continue
+                    output = '\n'.join(log)
+                    if output.find(objfile) != -1:
+                        log.append('LD [M] %s' % objfile)
+
+                output = '\n'.join(log)
+                if report.file.find('include/') == 0 or is_module_build(report.file, output) == False:
                     buildlog += '\n# make vmlinux\n'
                     ret, log = execute_shell("cd %s; make vmlinux" % (repo.builddir()), logger)
                     buildlog += unicode('\n'.join(log), errors='ignore')
