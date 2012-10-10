@@ -53,6 +53,9 @@ def is_c_file(filename):
         return False
 
 def is_module_build(filename, output):
+    if not isinstance(output, unicode):
+        output = unicode(output, errors='ignore')
+
     if output.find('LD [M]') == -1:
         return False
 
