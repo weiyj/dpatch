@@ -159,17 +159,18 @@ def main(args):
 
                 if patch.file.find('include/') != 0 and patch.file.find('tools/') != 0:
                     dname = os.path.dirname(patch.file)
-                    if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                    while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
                         dname = os.path.dirname(dname)
-                    buildlog += '\n# make M=%s\n' % dname
-                    ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
-                    buildlog += unicode('\n'.join(log), errors='ignore')
-                    if ret != 0:
-                        pcount['fail'] += 1
-                        patch.build = 2
-                        patch.buildlog = buildlog
-                        patch.save()
-                        continue
+                    if len(dname) != 0:
+                        buildlog += '\n# make M=%s\n' % dname
+                        ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
+                        buildlog += unicode('\n'.join(log), errors='ignore')
+                        if ret != 0:
+                            pcount['fail'] += 1
+                            patch.build = 2
+                            patch.buildlog = buildlog
+                            patch.save()
+                            continue
     
                 output = '\n'.join(log)
                 if is_c_file(patch.file) and is_module_build(patch.file, output) == False:
@@ -266,17 +267,18 @@ def main(args):
                 objfile = "%s.o" % report.file[:-2]
                 if report.file.find('include/') != 0 and report.file.find('tools/') != 0:
                     dname = os.path.dirname(report.file)
-                    if not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
+                    while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
                         dname = os.path.dirname(dname)
-                    buildlog += '\n# make M=%s\n' % dname
-                    ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
-                    buildlog += unicode('\n'.join(log), errors='ignore')
-                    if ret != 0:
-                        rcount['fail'] += 1
-                        report.build = 2
-                        report.buildlog = buildlog
-                        report.save()
-                        continue
+                    if len(dname) != 0:
+                        buildlog += '\n# make M=%s\n' % dname
+                        ret, log = execute_shell("cd %s; make M=%s" % (repo.builddir(), dname), logger)
+                        buildlog += unicode('\n'.join(log), errors='ignore')
+                        if ret != 0:
+                            rcount['fail'] += 1
+                            report.build = 2
+                            report.buildlog = buildlog
+                            report.save()
+                            continue
 
                 output = '\n'.join(log)
                 if is_c_file(report.file) and is_module_build(report.file, output) == False:
