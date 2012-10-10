@@ -24,18 +24,6 @@ DAILYPATCH_BASE=`readlink -e $BIN_DIR/../`
 
 PYTHONPATH="$DAILYPATCH_BASE/" \
         DJANGO_SETTINGS_MODULE=dpatch.settings \
-        "$DAILYPATCH_BASE/bin/dailyupdate.py"
-
-PYTHONPATH="$DAILYPATCH_BASE/" \
-        DJANGO_SETTINGS_MODULE=dpatch.settings \
-        "$DAILYPATCH_BASE/bin/dailyreport.py"
-
-PYTHONPATH="$DAILYPATCH_BASE/" \
-        DJANGO_SETTINGS_MODULE=dpatch.settings \
         "$DAILYPATCH_BASE/bin/dailystatus.py"
-
-PYTHONPATH="$DAILYPATCH_BASE/" \
-        DJANGO_SETTINGS_MODULE=dpatch.settings \
-        "$DAILYPATCH_BASE/bin/dailybuild.py"
 
 exit 0
