@@ -76,12 +76,25 @@ def is_report_fixed(repo, cocci, spfile, fname):
     else:
         return False
 
+def may_reject_cleanup(filename):
+    # http://marc.info/?l=linux-ide&m=134988347418046&w=2
+    # From David S. Miller <davem@davemloft.net>
+    # Sorry, the IDE device layer is in deep freeze state, no simplifications,
+    # no cleanups.
+    # I'll accept changes that address kernel-wide API adjustments, but that's
+    # it.
+    if filename.find('drivers/ide/') == 0 or filename == 'include/linux/ide.h':
+        return True
+
+    return False
+
 def main(args):
     baserepo = None
 
     fixed = Status.objects.filter(name = 'Fixed')[0]
     removed = Status.objects.filter(name = 'Removed')[0]
     applied = Status.objects.filter(name = 'Accepted')[0]
+    rejected = Status.objects.filter(name = 'Rejected')[0]
 
     for repo in GitRepo.objects.filter(status = True):
         if baserepo is None:
@@ -117,6 +130,11 @@ def main(args):
                     test.set_filename(patch.file)
                     pcount['total'] += 1
                     print "check for %s\n" % patch.filename()
+                    if may_reject_cleanup(patch.file):
+                        update_patch_status(patch, rejected)
+                        logger.logger.info('rejected patch %d' % patch.id)
+                        continue
+
                     if not os.path.exists(test._get_file_path()):
                         update_patch_status(patch, removed)
                         pcount['removed'] += 1
@@ -166,6 +184,11 @@ def main(args):
                                            Q(status__name = 'New') | Q(status__name = 'Patched') | Q(status__name = 'Sent'))
             for patch in patchs:
                 if not patch.mglist is None and len(patch.mglist) != 0:
+                    continue
+
+                if may_reject_cleanup(patch.file):
+                    update_patch_status(patch, rejected)
+                    logger.logger.info('rejected patch %d' % patch.id)
                     continue
 
                 if not os.path.exists(os.path.join(repo.dirname(), patch.file)):
