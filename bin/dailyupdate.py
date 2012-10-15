@@ -309,7 +309,7 @@ def main(args):
             # we got a new tag, just scan from last commit to otag
             # as common, new tag is the last commit, so does not need
             # to scan twice
-            commit = tag_to_commit(repo, tag)
+            commit = tag_to_commit(repo, ntag)
         else:
             commit = commit_from_repo(repo)
 
