@@ -229,7 +229,11 @@ class PatchFormat:
 
             if re.match(r'.*{{\s*variable\s*}}', value):
                 varnames = self._guest_variable_name()
-                if len(varnames) > 0:
+                if len(varnames) == 1:
+                    value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
+                elif len(varnames) > 1:
+                    value = re.sub(r'\s*variable\s*', "variables", value)
+                    value = re.sub(r'{{\s*variable\*}}\s*is', "%s are" % ', '.join(varnames), value)
                     value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
                 else:
                     value = re.sub(r'{{\s*variable\s*}}', '', value)                    
