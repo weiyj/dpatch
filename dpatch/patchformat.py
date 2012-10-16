@@ -114,6 +114,26 @@ class PatchFormat:
                         funcname.append("%s()" % fun)
         return funcname
 
+    def _guest_variable_name(self):
+        varname = []
+        if self._content is None:
+            return varname
+        for line in self._content.split('\n'):
+            line = line.strip()
+            if line.find('-') != 0:
+                continue
+            line = re.sub("-", "", line).strip()
+            if line.split(' ')[0] in ['struct', 'int', 'long', 'char', 'unsigned', 'u64', 'u32', 'size_t']:
+                if line.find('=') != -1:
+                    line = re.sub("=.*", "", line)
+                line = re.sub(";", "", line)
+                line = re.sub("\*", " ", line)
+                name = line.strip().split(' ')[-1]
+                if len(name) != 0 and varname.count(name) == 0:
+                        varname.append("%s" % name)
+
+        return varname
+
     def _guest_email_list(self):
         mailto = []
         mailcc = []
@@ -206,6 +226,14 @@ class PatchFormat:
                     value = re.sub(r'\s+of\s*{{\s*function\s*}}', '', value)
                     value = re.sub(r'\s+in\s*{{\s*function\s*}}', '', value)
                     value = re.sub(r'{{\s*function\s*}}', '', value)
+
+            if re.match(r'.*{{\s*variable\s*}}', value):
+                varnames = self._guest_variable_name()
+                if len(varnames) > 0:
+                    value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
+                else:
+                    value = re.sub(r'{{\s*variable\s*}}', '', value)                    
+
         return value
         
     def format_title(self):
