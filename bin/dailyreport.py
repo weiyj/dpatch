@@ -25,6 +25,7 @@ import sys
 import subprocess
 
 from time import gmtime, strftime
+from django.conf import settings
 
 from dpatch.models import GitRepo, GitTag, Type, Status, CocciReport, ExceptFile, Report, ScanLog
 from logger import MyLogger
@@ -111,9 +112,9 @@ def checkreport(repo, rtag, cocci, flists, logger):
                     r.save()
             continue
 
-        args = '/usr/bin/spatch %s -I %s -timeout 1 -very_quiet -sp_file %s %s' % (cocci.options,
-                        os.path.join(repo.dirname(), 'include'), spfile,
-                        os.path.join(repo.dirname(), fname))
+        args = '/usr/bin/spatch %s -I %s -timeout %d -very_quiet -sp_file %s %s' % (cocci.options,
+                        os.path.join(repo.dirname(), 'include'), settings.COCCI_TIMEOUT, 
+                        spfile, os.path.join(repo.dirname(), fname))
 
         reportlog = execute_shell(args)
         if len(reportlog) == 0:

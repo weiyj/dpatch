@@ -4,6 +4,8 @@ import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+COCCI_TIMEOUT = 30
+
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),
 )

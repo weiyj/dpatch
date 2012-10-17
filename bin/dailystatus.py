@@ -27,6 +27,7 @@ import subprocess
 from time import gmtime, strftime
 
 from django.db.models import Q
+from django.conf import settings
 
 from dpatch.models import GitRepo, Type, Status, Patch, CocciReport, Report, ScanLog
 from checkversion import CheckVersionDetector
@@ -66,8 +67,8 @@ def execute_shell(args):
     return lines
 
 def is_report_fixed(repo, cocci, spfile, fname):
-    args = '/usr/bin/spatch %s -I %s -timeout 10 -very_quiet -sp_file %s %s' % (cocci.options,
-                    os.path.join(repo.dirname(), 'include'), spfile,
+    args = '/usr/bin/spatch %s -I %s -timeout %d -very_quiet -sp_file %s %s' % (cocci.options,
+                    os.path.join(repo.dirname(), 'include'), settings.COCCI_TIMEOUT, spfile,
                     os.path.join(repo.dirname(), fname))
 
     reportlog = execute_shell(args)

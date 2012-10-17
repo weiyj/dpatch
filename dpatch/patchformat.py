@@ -115,6 +115,7 @@ class PatchFormat:
         return funcname
 
     def _guest_variable_name(self):
+        types = ['struct', 'int', 'long', 'char', 'unsigned', 'u64', 'u32', 'size_t']
         varname = []
         if self._content is None:
             return varname
@@ -123,7 +124,7 @@ class PatchFormat:
             if line.find('-') != 0:
                 continue
             line = re.sub("-", "", line).strip()
-            if line.split(' ')[0] in ['struct', 'int', 'long', 'char', 'unsigned', 'u64', 'u32', 'size_t']:
+            if line.split(' ')[0] in types:
                 if line.find('=') != -1:
                     line = re.sub("=.*", "", line)
                 line = re.sub(";", "", line)
