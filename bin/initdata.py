@@ -35,7 +35,7 @@ def main(args):
                        status = True)
         repo.save()
 
-    for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored', 'Skip']:
+    for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored', 'Obsoleted']:
         if Status.objects.filter(name = s).count() > 0:
             continue
         status = Status(name = s)

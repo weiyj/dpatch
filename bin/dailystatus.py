@@ -25,6 +25,7 @@ import sys
 import subprocess
 
 from time import gmtime, strftime
+from datetime import datetime
 
 from django.db.models import Q
 from django.conf import settings
@@ -66,6 +67,17 @@ def execute_shell(args):
 
     return lines
 
+def execute_shell_full(args):
+    if isinstance(args, basestring):
+        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
+    else:
+        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE)
+    shellOut = shelllog.communicate()[0]
+
+    lines = shellOut.split("\n")
+
+    return lines
+
 def is_report_fixed(repo, cocci, spfile, fname):
     args = '/usr/bin/spatch %s -I %s -timeout %d -very_quiet -sp_file %s %s' % (cocci.options,
                     os.path.join(repo.dirname(), 'include'), settings.COCCI_TIMEOUT, spfile,
@@ -96,6 +108,7 @@ def main(args):
     removed = Status.objects.filter(name = 'Removed')[0]
     applied = Status.objects.filter(name = 'Accepted')[0]
     rejected = Status.objects.filter(name = 'Rejected')[0]
+    obsoleted = Status.objects.filter(name = 'Obsoleted')[0]
 
     for repo in GitRepo.objects.filter(status = True):
         if baserepo is None:
@@ -107,7 +120,7 @@ def main(args):
                        desc = 'Processing, please wait...')
         logs.save()
 
-        pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0}
+        pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
         for dot in [CheckVersionDetector, CheckReleaseDetector, CheckIncludeDetector, CheckCocciDetector]:
             test = dot(repo.dirname(), logger.logger)
             for i in range(test.tokens()):
@@ -167,6 +180,16 @@ def main(args):
                             update_patch_status(patch, applied)
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
+                    else:
+                        if patch.status.name != 'New':
+                            continue
+                        times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
+                        dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
+                        delta = datetime.now() - dt
+                        if delta.days > 180:
+                            update_patch_status(patch, obsoleted)
+                            pcount['skip'] += 1
+                            logger.logger.info('skip patch %d' % patch.id)
 
                 logger.logger.info('End scan type %d' % test.get_type())
                 test.next_token()
@@ -227,11 +250,21 @@ def main(args):
                             update_report_status(patch, fixed)
                             pcount['fixed'] += 1
                             logger.logger.info('fixed patch %d' % patch.id)
+                else:
+                    if patch.status.name != 'New':
+                        continue
+                    times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
+                    dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
+                    delta = datetime.now() - dt
+                    if delta.days > 180:
+                        update_patch_status(patch, obsoleted)
+                        pcount['skip'] += 1
+                        logger.logger.info('skip patch %d' % patch.id)
 
             logger.logger.info('End scan type %d' % rtype.id)
 
-        logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d' % (
-                        pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'])
+        logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d, skip: %s' % (
+                        pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'], pcount['skip'])
         logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         logs.logs = logger.getlog()
         logs.save()

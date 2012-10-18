@@ -65,7 +65,7 @@ def execute_shell(args):
     return shelllog.returncode, shellOut
 
 def status_name(name):
-    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Skip']:
+    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Obsoleted']:
         return name.upper()
     elif name == 'Accepted':
         return 'APPLIED'
@@ -106,8 +106,8 @@ def html_patch_status(name):
         return '<FONT COLOR="#FF0000">REJECTED</FONT>'
     elif name == 'Ignored':
         return '<FONT COLOR="#AAAAAA">IGNORED</FONT>'
-    elif name == 'Skip':
-        return '<FONT COLOR="#AAAAAA">SKIP</FONT>'
+    elif name == 'Obsoleted':
+        return '<FONT COLOR="#AAAAAA">OBSOLETED</FONT>'
     else:
         return name
 
@@ -174,10 +174,8 @@ def patchlistdata(request, tag_name):
         elif patch.build == 3:
             build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
 
-        if patch.mglist is None or len(patch.mglist.strip()) == 0:
-            fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (patch.id, patch.file)
-        else:
-            fileinfo = patch.file
+        fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (patch.id, patch.file)
+
         patchs['rows'].append({
             'id': patch.id,
             'cell': {
@@ -898,8 +896,6 @@ def patch_fileinfo(request, patch_id):
     sfile = patch.sourcefile()
     if not os.path.exists(sfile):
         return HttpResponse('FILEINFO, ERROR: %s does not exists' % sfile)
-    if not os.path.isfile(sfile):
-        return HttpResponse('FILEINFO, ERROR: %s is not a file' % sfile)
     fileinfo = ''
     rdir = patch.tag.repo.dirname()
     ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci  %%an  %%s' %s" % (rdir, patch.file))

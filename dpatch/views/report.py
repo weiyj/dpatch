@@ -52,7 +52,7 @@ def logevent(event, status = False):
     evt.save()
 
 def status_name(name):
-    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Skip']:
+    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Obsoleted']:
         return name.upper()
     elif name == 'Accepted':
         return 'APPLIED'
@@ -95,8 +95,8 @@ def html_report_status(name):
         return '<FONT COLOR="#FF0000">REJECTED</FONT>'
     elif name == 'Ignored':
         return '<FONT COLOR="#AAAAAA">IGNORED</FONT>'
-    elif name == 'Skip':
-        return '<FONT COLOR="#AAAAAA">SKIP</FONT>'
+    elif name == 'Obsoleted':
+        return '<FONT COLOR="#AAAAAA">OBSOLETED</FONT>'
     else:
         return name
 
