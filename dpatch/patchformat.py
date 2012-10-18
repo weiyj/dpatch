@@ -234,8 +234,10 @@ class PatchFormat:
                 if len(varnames) == 1:
                     value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
                 elif len(varnames) > 1:
-                    value = re.sub(r'\s*variable\s*', " variables ", value)
+                    value = re.sub(r'\s+variable\s+', " variables ", value)
+                    value = re.sub(r'{{\s*variables\*}}\s*is\s*', "%s are " % ', '.join(varnames), value)
                     value = re.sub(r'{{\s*variable\*}}\s*is\s*', "%s are " % ', '.join(varnames), value)
+                    value = re.sub(r'{{\s*variables\s*}}', ', '.join(varnames), value)
                     value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
                 else:
                     value = re.sub(r'{{\s*variable\s*}}', '', value)                    

@@ -29,6 +29,11 @@
 				ajaxShowDialog("#dialog", "GET", '/patch/build/' + id, {});
 			});
 
+			$("#patchlist .fileinfo").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#dialog", "GET", '/patch/fileinfo/' + id, {});
+			});
+
 {% if user.is_authenticated %}
 			$("#patchlist .fix").click(function () {
 				id = $(this).attr('id');

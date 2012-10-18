@@ -172,11 +172,15 @@ def patchlistdata(request, tag_name):
         elif patch.build == 3:
             build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
 
+        if patch.mglist is None or len(patch.mglist.strip()) == 0:
+            fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (patch.id, patch.file)
+        else:
+            fileinfo = patch.file
         patchs['rows'].append({
             'id': patch.id,
             'cell': {
                 'id': patch.id,
-                'file': patch.file,
+                'file': fileinfo,
                 'title': html.escape(patch.title),
                 'date': patch.date.strftime("%Y-%m-%d"),
                 'type': patch.type.name,
@@ -886,3 +890,16 @@ def patch_build_status(request):
 
     logevent("MARK: patch build [%s] %s, SUCCEED" % (pids, buildid), True)
     return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, buildid))
+
+def patch_fileinfo(request, patch_id):
+    patch = Patch.objects.get(id = patch_id)
+    sfile = patch.sourcefile()
+    if not os.path.exists(sfile):
+        return HttpResponse('FILEINFO, ERROR: %s does not exists' % sfile)
+    if not os.path.isfile(sfile):
+        return HttpResponse('FILEINFO, ERROR: %s is not a file' % sfile)
+    fileinfo = ''
+    rdir = patch.tag.repo.dirname()
+    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci  %%an  %%s'" % rdir)
+    fileinfo += gitlog
+    return HttpResponse('<pre>%s</pre>' % fileinfo)
