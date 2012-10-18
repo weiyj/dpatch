@@ -900,6 +900,6 @@ def patch_fileinfo(request, patch_id):
         return HttpResponse('FILEINFO, ERROR: %s is not a file' % sfile)
     fileinfo = ''
     rdir = patch.tag.repo.dirname()
-    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci  %%an  %%s'" % rdir)
+    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci  %%an  %%s' %s" % (rdir, patch.file))
     fileinfo += gitlog
     return HttpResponse('<pre>%s</pre>' % fileinfo)
