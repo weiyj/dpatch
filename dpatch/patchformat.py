@@ -212,14 +212,14 @@ class PatchFormat:
         return self._mlist
 
     def _format_value(self, value):
-        if re.match(r'.*{{[^}]*}}', value):
+        if re.search(r'{{[^}]*}}', value):
             if os.path.isdir(self._fullpath()):
                 value = re.sub(r'\s+from\s*{{\s*file\s*}}', '', value)
                 value = re.sub(r'{{\s*file\s*}}', '', value)
             else:
                 value = re.sub(r'{{\s*file\s*}}', self._basename(), value)
     
-            if re.match(r'.*{{\s*function\s*}}', value):
+            if re.search(r'{{\s*function\s*}}', value):
                 funcs = self._guest_function_name()
                 if len(funcs) == 1:
                     value = re.sub(r'{{\s*function\s*}}', funcs[0], value)
@@ -229,7 +229,7 @@ class PatchFormat:
                     value = re.sub(r'\s+in\s*{{\s*function\s*}}', '', value)
                     value = re.sub(r'{{\s*function\s*}}', '', value)
 
-            if re.match(r'.*{{\s*variable\s*}}', value):
+            if re.search(r'{{\s*variable\s*}}', value):
                 varnames = self._guest_variable_name()
                 if len(varnames) == 1:
                     value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
