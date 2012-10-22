@@ -37,7 +37,7 @@ from time import gmtime, strftime
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
-from dpatch.models import GitRepo, GitTag, Patch, Status, Event, Type
+from dpatch.models import GitRepo, GitTag, Patch, Status, Event, Type, ExceptFile
 from dpatch.patchformat import PatchFormat 
 from dpatch.forms import PatchNewForm
 
@@ -665,6 +665,33 @@ def patchdelete(request):
 
     logevent("DELETE: patch [%s], SUCCEED" % pids, True)
     return HttpResponse('DELETE SUCCEED: patch ids [%s]' % pids)
+
+@login_required
+def patch_special(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('SPECIAL ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("SPECIAL: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('SPECIAL ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    for patch in patchs:
+        rtype = patch.type
+        fname = patch.file
+        reason = 'special case that can not detect correctly'
+
+        if ExceptFile.objects.filter(type = rtype, file = fname).count() == 0:
+            einfo = ExceptFile(type = rtype, file = fname, reason = reason)
+            einfo.save()
+
+    logevent("SPECIAL: patch [%s], SUCCEED" % pids, True)
+    return HttpResponse('SPECIAL SUCCEED: patch ids [%s]' % pids)
 
 def patchreview(request, patch_id):
     patch = Patch.objects.filter(id = patch_id)

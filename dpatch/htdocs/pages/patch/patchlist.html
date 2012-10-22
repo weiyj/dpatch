@@ -96,6 +96,16 @@
 			}
 		}
 
+		function onSpecialFile() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('SPECIAL FILE: at least one row must be selected!');
+			} else {
+				showModelDialog("/patch/special/", {'ids': ids.join()}, 'GET', '#patchlist');
+			}			
+		}
+
 		function onPatchExport() {
 			var ids = getGridSelected();
 
@@ -169,6 +179,8 @@
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
+				            { separator : true },
+				            { name : 'Add To Special', bclass : 'export', onpress: onSpecialFile },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onPatchMarkStatus },
 				            { separator : true },
