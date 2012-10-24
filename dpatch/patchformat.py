@@ -253,7 +253,7 @@ class PatchFormat:
         elif target == 'linux':
             return '[PATCH] %s: %s' % (self._module, title)
         elif target == 'linux-next':
-            return '[PATCH -next] %s: %s' % (target, self._module, title)
+            return '[PATCH -next] %s: %s' % (self._module, title)
         else:
             return '[PATCH %s] %s: %s' % (target, self._module, title)            
 
