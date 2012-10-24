@@ -139,7 +139,7 @@
 				if (ids.length < 1) {
 					alertBox("DELTASCAN ERROR: at least one row must be selected!");
 				} else {
-					$.download('/engine/cocci/deltascan/', {'ids': ids.join()}, 'GET');
+					showModelDialog("/engine/cocci/deltascan/", {'ids': ids.join()}, 'GET', '#semantics')
 				}
 			}
 			
@@ -149,7 +149,7 @@
 				if (ids.length < 1) {
 					alertBox("FULLSCAN ERROR: at least one row must be selected!");
 				} else {
-					$.download('/engine/cocci/fullscan/', {'ids': ids.join()}, 'GET');
+					showModelDialog("/engine/cocci/fullscan/", {'ids': ids.join()}, 'GET', '#semantics')
 				}
 			}
 
