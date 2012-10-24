@@ -173,11 +173,13 @@ def report_list_data(request, tag_name):
         elif report.build == 3:
             build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
 
+        fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (report.id, report.file)
+
         reports['rows'].append({
             'id': report.id,
             'cell': {
                 'id': report.id,
-                'file': report.file,
+                'file': fileinfo,
                 'title': html.escape(report.title),
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
@@ -617,6 +619,35 @@ def report_build(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     return render_to_response("report/reportbuild.html", {'buildlog': report.buildlog})
 
+def report_format_gitinfo(repo, gitlog):
+    lines = gitlog.split("\n")
+    fileinfos = []
+    for line in lines:
+        subflds = line.split('||||')
+        commit = subflds[-1]
+        title = subflds[-2]
+        line = '%s  %-20s' % (subflds[0], subflds[1])
+        url = "%s;a=commit;h=%s" % (repo.url, commit)
+        url = re.sub("git:", "http:", url)
+        url = re.sub("pub/scm/", "?p=", url)
+        fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, title))
+
+    return '\n'.join(fileinfos)
+
+def report_fileinfo(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    sfile = report.sourcefile()
+    if not os.path.exists(sfile):
+        return HttpResponse('FILEINFO, ERROR: %s does not exists' % sfile)
+    rdir = report.tag.repo.dirname()
+    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci||||%%an||||%%s||||%%H' %s" % (rdir, report.file))
+    fileinfo = '# git log -n 20 %s\n' % report.file
+    fileinfo += report_format_gitinfo(report.tag.repo, gitlog)
+    ret, gitlog = execute_shell("cd %s; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --scm" % (rdir, report.file))
+    fileinfo += '\n\n# ./scripts/get_maintainer.pl -f %s --scm\n' % report.file    
+    fileinfo += gitlog
+    return HttpResponse('<pre>%s</pre>' % fileinfo)
+    
 @login_required
 def report_status(request):
     statusid = get_request_paramter(request, 'status')

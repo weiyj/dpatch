@@ -27,6 +27,11 @@
 				ajaxShowDialog("#reportdetail", "GET", '/report/build/' + id, {});
 			});
 
+			$("#reportlist .fileinfo").click(function () {
+				id = $(this).attr('id');
+				ajaxShowDialog("#dialog", "GET", '/report/fileinfo/' + id, {});
+			});
+
 {% if user.is_authenticated %}
 			$("#reportlist .fix").click(function () {
 				id = $(this).attr('id');
