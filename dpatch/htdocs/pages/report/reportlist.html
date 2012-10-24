@@ -29,7 +29,7 @@
 
 			$("#reportlist .fileinfo").click(function () {
 				id = $(this).attr('id');
-				ajaxShowDialog("#dialog", "GET", '/report/fileinfo/' + id, {});
+				ajaxShowDialog("#reportdetail", "GET", '/report/fileinfo/' + id, {});
 			});
 
 {% if user.is_authenticated %}
