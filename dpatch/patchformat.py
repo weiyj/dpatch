@@ -247,10 +247,15 @@ class PatchFormat:
     def format_title(self):
         title = self._format_value(self._title)
 
+        target = os.path.basename(self._repo)
         if title.find('[PATCH') != -1:
             return title
-        else:
+        elif target == 'linux':
             return '[PATCH] %s: %s' % (self._module, title)
+        elif target == 'linux-next':
+            return '[PATCH -next] %s: %s' % (target, self._module, title)
+        else:
+            return '[PATCH %s] %s: %s' % (target, self._module, title)            
 
     def format_desc(self):
         return self._format_value(self._desc)
