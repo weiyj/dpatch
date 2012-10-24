@@ -46,21 +46,38 @@ def execute_shell(args):
 
     return lines
 
-def get_linux_next_commit(repo):
+def get_linux_next_stable(repo):
     os.system('wget -O /tmp/linux-next-git-stable http://www.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/refs/heads/stable')
     commits = execute_shell('cat /tmp/linux-next-git-stable')
     return commits[0]
+
+def get_linux_next_master(repo):
+    os.system('wget -O /tmp/linux-next-git-master http://www.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/refs/heads/master')
+    commits = execute_shell('cat /tmp/linux-next-git-master')
+    return commits[0]
+
+def get_linux_next_master_local(repo):
+    commits = execute_shell('cd %s ; cat .git/refs/heads/master' % repo.dirname())
+    return commits[0]
+
+def is_linux_next_master_update(repo):
+    nmaster = get_linux_next_master(repo)
+    master = get_linux_next_master_local(repo)
+    if nmaster == master:
+        return False
+    return True
     
 def is_linux_next_update(repo):
-    commit = get_linux_next_commit(repo)
-    if commit == repo.commit:
+    if not is_linux_next_master_update(repo):
         return False
+
     if repo.commit is None or len(repo.commit) == 0:
         tag = tag_from_repo(repo)
         os.system('cd %s ; git reset --hard %s' % (repo.dirname(), tag))
     else:
         os.system('cd %s ; git reset --hard %s' % (repo.dirname(), repo.commit))
-    repo.commit = commit
+
+    repo.commit = get_linux_next_stable(repo)
     repo.delta = True
     repo.save()
     return True
@@ -71,7 +88,7 @@ def check_repo_update(repo):
         rpath = os.path.dirname(dpath)
         execute_shell('cd %s ; git clone %s' % (rpath, repo.url))
         if repo.name == 'linux-next.git':
-            commit = get_linux_next_commit(repo)
+            commit = get_linux_next_stable(repo)
             repo.commit = commit
             repo.save()
     else:
