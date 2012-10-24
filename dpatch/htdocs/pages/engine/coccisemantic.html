@@ -76,6 +76,9 @@
 				            { name : 'Export', bclass : 'export', onpress: onSemanticExport },
 				            { name : 'Export All', bclass : 'export', onpress: onSemanticExportAll },
 				            { separator : true },
+				            { name : 'Delta Scan', bclass : 'import', onpress: onSemanticDeltaScan },
+				            { name : 'Full Scan', bclass : 'export', onpress: onSemanticFullScan },
+				            { separator : true },
 				            { name : 'Move To Report', bclass : 'export', onpress: onSemanticMove },
 				            { separator : true } ],
 {% else %}
@@ -128,6 +131,26 @@
 
 			function onSemanticExportAll() {
 				$.download('/engine/cocci/export/all/', {}, 'GET');
+			}
+
+			function onSemanticDeltaScan() {
+				var ids = getGridSelected();
+
+				if (ids.length < 1) {
+					alertBox("DELTASCAN ERROR: at least one row must be selected!");
+				} else {
+					$.download('/engine/cocci/deltascan/', {'ids': ids.join()}, 'GET');
+				}
+			}
+			
+			function onSemanticFullScan() {
+				var ids = getGridSelected();
+
+				if (ids.length < 1) {
+					alertBox("FULLSCAN ERROR: at least one row must be selected!");
+				} else {
+					$.download('/engine/cocci/fullscan/', {'ids': ids.join()}, 'GET');
+				}
 			}
 
 			function onSemanticMove() {

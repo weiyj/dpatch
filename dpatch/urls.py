@@ -106,6 +106,8 @@ urlpatterns += patterns('dpatch.views.engine',
     url(r'^engine/cocci/import/$', 'semantic_import'),
     url(r'^engine/cocci/export/$', 'semantic_export'),
     url(r'^engine/cocci/export/all/$', 'semantic_export_all'),
+    url(r'^engine/cocci/deltascan/$', 'semantic_deltascan'),
+    url(r'^engine/cocci/fullscan/$', 'semantic_fullscan'),
     url(r'^engine/cocci/move/$', 'semantic_move_to_report'),
     url(r'^engine/type/(?P<type_id>\d+)/enable/$', 'enabletype'),
 

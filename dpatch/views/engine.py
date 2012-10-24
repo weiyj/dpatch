@@ -33,7 +33,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from time import gmtime, strftime
 
-from dpatch.models import CocciEngine, CocciReport, Type, Event, Patch, Report, ExceptFile
+from dpatch.models import CocciEngine, CocciReport, Type, Event, Patch, Report, ExceptFile, GitRepo, GitCommit
 from dpatch.forms import ExceptFileForm
 
 def get_request_paramter(request, key):
@@ -391,6 +391,76 @@ def semantic_export_all(request):
 
     logevent("EXPORT: coccinelle semantic all, SUCCEED", True)
     return response
+
+@login_required
+@csrf_exempt
+def semantic_deltascan(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('DELTASCAN ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciEngine.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("DELTASCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
+            return HttpResponse('DELTASCAN ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 3000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+            commit = None
+
+            for repo in GitRepo.objects.all():
+                if commit is None:
+                    commit = repo.commit
+
+                for gcommit in GitCommit.objects.filter(repo = repo, type = rtype):
+                    gcommit.commit = repo.commit
+                    gcommit.save()
+
+            if commit != None:
+                rtype.commit = commit
+                rtype.save()
+
+    logevent("DELTASCAN: coccinelle semantic [%s], SUCCEED" % pids, True)
+    return HttpResponse('DELTASCAN SUCCEED: engine ids [%s]' % pids)
+
+@login_required
+@csrf_exempt
+def semantic_fullscan(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('FULLSCAN ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciEngine.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("FULLSCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
+            return HttpResponse('FULLSCAN ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 3000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+            commit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
+
+            for repo in GitRepo.objects.filter(delta = False):
+                for gcommit in GitCommit.objects.filter(repo = repo, type = rtype):
+                    gcommit.commit = commit
+                    gcommit.save()
+
+            rtype.commit = commit
+            rtype.save()
+
+    logevent("FULLSCAN: coccinelle semantic [%s], SUCCEED" % pids, True)
+    return HttpResponse('FULLSCAN SUCCEED: engine ids [%s]' % pids)
 
 @login_required
 @csrf_exempt
