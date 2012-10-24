@@ -918,13 +918,31 @@ def patch_build_status(request):
     logevent("MARK: patch build [%s] %s, SUCCEED" % (pids, buildid), True)
     return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, buildid))
 
+def patch_format_gitinfo(repo, gitlog):
+    lines = gitlog.split("\n")
+    fileinfos = []
+    for line in lines:
+        subflds = line.split('||||')
+        commit = subflds[-1]
+        title = subflds[-2]
+        line = '%s  %-20s' % (subflds[0], subflds[1])
+        url = "%s;a=commit;h=%s" % (repo.url, commit)
+        url = re.sub("git:", "http:", url)
+        url = re.sub("pub/scm/", "?p=", url)
+        fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, title))
+
+    return '\n'.join(fileinfos)
+
 def patch_fileinfo(request, patch_id):
     patch = Patch.objects.get(id = patch_id)
     sfile = patch.sourcefile()
     if not os.path.exists(sfile):
         return HttpResponse('FILEINFO, ERROR: %s does not exists' % sfile)
-    fileinfo = ''
     rdir = patch.tag.repo.dirname()
-    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci  %%an  %%s' %s" % (rdir, patch.file))
+    ret, gitlog = execute_shell("cd %s; git log -n 20 --pretty=format:'%%ci||||%%an||||%%s||||%%H' %s" % (rdir, patch.file))
+    fileinfo = '# git log -n 20 %s\n' % patch.file
+    fileinfo += patch_format_gitinfo(patch.tag.repo, gitlog)
+    ret, gitlog = execute_shell("cd %s; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --scm" % (rdir, patch.file))
+    fileinfo += '\n\n# ./scripts/get_maintainer.pl -f %s --scm\n' % patch.file    
     fileinfo += gitlog
     return HttpResponse('<pre>%s</pre>' % fileinfo)
