@@ -422,6 +422,11 @@ def semantic_deltascan(request):
                     gcommit.commit = repo.commit
                     gcommit.save()
 
+                if repo.delta == False:
+                    if GitCommit.objects.filter(repo = repo, type = rtype).count() == 0:
+                        gcommit = GitCommit(repo = repo, type = rtype, commit = repo.commit)
+                        gcommit.save()
+
             if commit != None:
                 rtype.commit = commit
                 rtype.save()
