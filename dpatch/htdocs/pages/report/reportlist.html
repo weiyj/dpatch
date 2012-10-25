@@ -1,9 +1,10 @@
 <div id="reportlist"></div>
-<div id="reportdetail" title="Report Detail" style="display:none">
+<div id="reportdetail" title="Report Detail" style="display:none"></div>
 {% if user.is_authenticated %}
-<div id="reportsend" title="Report Patch Send" style="display:none">
-<div id="reportfix" title="Fix Source File" style="display:none">
-<div id="reportedit" title="Edit Patch" style="display:none">
+<div id="reportsend" title="Report Patch Send" style="display:none"></div>
+<div id="reportfix" title="Fix Source File" style="display:none"></div>
+<div id="reportedit" title="Edit Patch" style="display:none"></div>
+<div id="reportnew" title="New Patch" style="display:none"></div>
 {% endif %}
 <script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
 <script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
@@ -80,6 +81,10 @@
 			}
 		}
 
+		function doReportNew() {
+			ajaxShowDialog('#reportnew', 'GET', "/report/new/", {})
+		}
+
 		function doReportDelete() {
 			var ids = getGridSelected();
 			
@@ -142,7 +147,8 @@
 				usepager: true,
 {% if user.is_authenticated %}
 				showCheckbox: true,
-				buttons : [ { name : 'Delete', bclass : 'delete', onpress : doReportDelete },
+				buttons : [ { name : 'New', bclass : 'add', onpress : doReportNew },
+				            { name : 'Delete', bclass : 'delete', onpress : doReportDelete },
 				            { separator : true },
 				            { name : 'Merge', bclass : 'merge', onpress : doReportMerge },
 				            { name : 'Unmerge', bclass : 'unmerge', onpress : doReportUnMerge },
@@ -215,6 +221,40 @@
 				      		id = $(this).find("input[id=id]").eq(0).val();
 				      		src = $(this).find("textarea[id=src]").eq(0).val();
 				      		showModelDialog('/report/fix/' + id + '/', {'src': src}, 'POST', "#reportlist");
+						}
+					},
+					{
+						text: "Cancel",
+				       	click: function() { $(this).dialog("close"); }
+					}]
+			});
+
+			$('#reportnew').dialog({
+				autoOpen: false,
+				modal: true,
+				width: 400,
+				resizable: false,
+				buttons:
+					[{
+						text: "Save",
+				      	click: function() {
+				      		tag = $(this).find("select[name=tag]").eq(0).val();
+				      		type = $(this).find("select[name=type]").eq(0).val();
+				      		file = $(this).find("input[name=file]").eq(0).val();
+				      		if (tag.length == 0) {
+				      			alert('please select tag!');
+				      			return;
+				      		} //a
+				      		if (type.length == 0) {
+				      			alert('please select type!');
+				      			return;
+				      		} //a
+				      		if (file.length == 0) {
+				      			alert('The file field is required.')
+				      			return;
+				      		} //a
+							$(this).dialog("close");
+				      		showModelDialog('/report/new/', {'tag': tag, 'type': type, 'file': file}, 'POST', '#reportlist');
 						}
 					},
 					{

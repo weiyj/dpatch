@@ -39,6 +39,7 @@ from time import gmtime, strftime
 
 from dpatch.models import GitRepo, GitTag, Report, Status, Event, Type
 from dpatch.patchformat import PatchFormat 
+from dpatch.forms import ReportNewForm
 
 def get_request_paramter(request, key, default=None):
     if request.GET.has_key(key):
@@ -259,6 +260,41 @@ def report_format(patch):
     ctx += "%s\n" % patch.diff
 
     return ctx
+
+@login_required
+@csrf_exempt
+def report_new(request):
+    if request.method == "POST":
+        tagid = get_request_paramter(request, 'tag')
+        typeid = get_request_paramter(request, 'type')
+        rfile = get_request_paramter(request, 'file')
+
+        rtags = GitTag.objects.filter(id = tagid)
+        if len(rtags) == 0:
+            logevent("NEW: report , ERROR: tag id %s does not exists" % tagid)
+            return HttpResponse('NEW: report, ERROR: tag id %s does not exists' % tagid)
+
+        rtypes = Type.objects.filter(id = typeid)
+        if len(rtypes) == 0:
+            logevent("NEW: report , ERROR: type id %s does not exists" % typeid)
+            return HttpResponse('NEW: report, ERROR: type id %s does not exists' % typeid)
+
+        new = Status.objects.get(name = 'New')
+        report = Report(tag = rtags[0], type = rtypes[0], file = rfile, status = new, diff = '')
+        if not os.path.exists(report.sourcefile()):
+            logevent("NEW: report , ERROR: type id %s does not exists" % typeid)
+            return HttpResponse('NEW: report, ERROR: type id %s does not exists' % typeid)
+        report.save()
+
+        rtags[0].rptotal += 1
+        rtags[0].save()
+
+        logevent("NEW: report for %s, SUCCEED: new id %s" % (rfile, report.id), True)
+        return HttpResponse('NEW: report for file, SUCCEED')
+    else:
+        context = RequestContext(request)
+        context['form'] = ReportNewForm()
+        return render_to_response("report/reportnew.html", context)
 
 @login_required
 @csrf_exempt
