@@ -61,6 +61,14 @@ def commit_from_repo(repo):
     ret, commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.builddir())
     return commits[-1]
 
+def is_linux_next_update(repo):
+    ret, commits = execute_shell('diff %s/.git/refs/remotes/origin/stable %s/.git/refs/remotes/stable' % (repo.dirname(), repo.builddir()))
+    return ret
+
+def get_linux_next_stable(repo):
+    ret, commits = execute_shell('cd %s; cat .git/refs/remotes/stable' % (repo.builddir()))
+    return commits[0]
+
 def is_c_file(filename):
     if filename.find('include/') != 0 and filename.find('tools/') != 0 and filename[-2:] == '.c':
         return True
@@ -106,12 +114,23 @@ def main(args):
         gitlog = ''
         if not os.path.exists(repo.builddir()):
             os.system("cd %s; git clone file://%s" % (os.path.dirname(repo.builddir()), repo.dirname()))
+            if repo.name == 'linux-next.git':
+                os.system("cd %s; cp %s/.git/refs/remotes/origin/stable .git/refs/remotes/stable" % (repo.builddir(), repo.dirname()))
             os.system("cd %s; make allmodconfig" % repo.builddir())
             rebuildrepo = True
         elif rebuildrepo == True:
-            os.system("cd %s; git diff | patch -p1 -R" % repo.builddir())
-            ret, tmplog = execute_shell("cd %s; git pull" % repo.builddir(), logger)
-            gitlog = '\n'.join(tmplog)
+            if repo.name == 'linux-next.git':
+                if is_linux_next_update(repo):
+                    os.system("cd %s; git reset --hard %s" % (repo.builddir(), get_linux_next_stable(repo)))
+                    ret, tmplog = execute_shell_log("cd %s; git pull" % repo.builddir(), logger)
+                    gitlog = tmplog
+                    #os.system("cd %s; make allmodconfig" % repo.builddir())
+                else:
+                    gitlog = 'Already up-to-date.'
+            else:
+                os.system("cd %s; git reset --hard" % repo.builddir())
+                ret, tmplog = execute_shell_log("cd %s; git pull" % repo.builddir(), logger)
+                gitlog = tmplog
 
         if rebuildrepo == True and gitlog.find('Already up-to-date.') == -1:
             execute_shell("cd %s; make" % repo.builddir(), logger)
