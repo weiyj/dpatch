@@ -1,0 +1,30 @@
+<style type="text/css" media="screen">
+.clearfix div.input input, .clearfix div.input select {
+	width: 280px;
+}
+
+.clearfix label {
+	width: 60px;
+}
+</style>
+<br>
+<div class="clearfix">
+  <label for="type">Tag:</label>
+  <div class="input">
+    {{ form.tag }}
+  </div>
+</div>
+<br>
+<div class="clearfix">
+  <label for="file">Type:</label>
+  <div class="input">
+    {{ form.type }}
+  </div>
+</div>
+<br>
+<div class="clearfix">
+  <label for="reason">Filename:</label>
+  <div class="input">
+    {{ form.file }}
+  </div>
+</div>
