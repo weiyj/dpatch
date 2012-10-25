@@ -727,6 +727,33 @@ def report_status(request):
     return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, rstatus.name))
 
 @login_required
+def report_build_status(request):
+    buildid = get_request_paramter(request, 'build')
+    rids = get_request_paramter(request, 'ids')
+
+    if rids is None:
+        return HttpResponse('MARK BUILD ERROR: no report id specified')
+
+    if buildid is None:
+        return HttpResponse('MARK BUILD ERROR: no build id specified')
+
+    ids = rids.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("MARK: build [%s], ERROR: report %s does not exists" % (rids, i))
+            return HttpResponse('MARK ERROR: report %s does not exists' % i)
+        reports.append(report[0])
+
+    for report in reports:
+        report.build = buildid
+        report.save()
+        
+    logevent("MARK: report build [%s] %s, SUCCEED" % (rids, buildid), True)
+    return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, buildid))
+
+@login_required
 def report_merge(request):
     pids = get_request_paramter(request, 'ids')
     if pids is None:

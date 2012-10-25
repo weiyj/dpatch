@@ -122,6 +122,16 @@
 				showModelDialog("/report/status/", {'ids': ids.join(), 'status': value}, 'GET', '#reportlist');
 			}
 		}
+
+		function onReportMarkBuild(name, div, value) {
+			var ids = getGridSelected();
+
+			if (ids.length < 1) {
+				alertBox("Status change ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/report/build/status/", {'ids': ids.join(), 'build': value}, 'GET', '#reportlist');
+			}
+		}
 {% endif %}
 
 		$(document).ready(function () {
@@ -159,6 +169,8 @@
 				            { name : 'Build All', bclass : 'export', onpress: onReportBuild },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onReportMarkStatus },
+				            { separator : true },
+				            { name : 'Build', bclass : 'export', values: "SKIP=3|TBD=0", onpress: onReportMarkBuild },
 				            { separator : true } ],
 {% else %}
 				showCheckbox: false,
