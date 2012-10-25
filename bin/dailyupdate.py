@@ -315,6 +315,11 @@ def main(args):
         # the last tag name
         otag = tag_from_repo(repo)
         if check_repo_update(repo) == False:
+            rtags = GitTag.objects.filter(repo = repo).order_by("-id")
+            if len(rtags) > 0:
+                rtag = rtags[0]
+                rtag.flist = ''
+                rtag.save()
             continue
         # the tag name after git pull
         ntag = tag_from_repo(repo)
