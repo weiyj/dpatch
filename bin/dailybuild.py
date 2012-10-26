@@ -103,7 +103,7 @@ def main(args):
             rebuildrepo = False
 
     if len(args) > 2:
-        repoid = args[2]
+        repoid = int(args[2])
 
     for repo in GitRepo.objects.filter(status = True, build = True):
         if repoid != None and repoid != repo.id:
@@ -130,7 +130,7 @@ def main(args):
                     os.system("cd %s; git reset --hard %s" % (repo.builddir(), get_linux_next_stable(repo)))
                     ret, tmplog = execute_shell_log("cd %s; git pull" % repo.builddir(), logger)
                     gitlog = tmplog
-                    #os.system("cd %s; make allmodconfig" % repo.builddir())
+                    os.system("cd %s; make allmodconfig" % repo.builddir())
                 else:
                     gitlog = 'Already up-to-date.'
             else:
