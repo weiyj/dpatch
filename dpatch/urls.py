@@ -150,6 +150,7 @@ urlpatterns += patterns('dpatch.views.admin',
     url(r'^sysadmin/gitrepo/edit/(?P<repo_id>\d+)/$', 'git_repo_edit'),
     url(r'^sysadmin/gitrepo/delete/$', 'gitrepodelete'),
     url(r'^sysadmin/gitrepo/enable/(?P<repo_id>\d+)/$', 'git_repo_enable'),
+    url(r'^sysadmin/gitrepo/enable/build/(?P<repo_id>\d+)/$', 'git_repo_enable_build'),
 
     url(r'^sysadmin/gitemail/$', 'git_email'),
     url(r'^sysadmin/gitemail/test/$', 'git_email_test'),

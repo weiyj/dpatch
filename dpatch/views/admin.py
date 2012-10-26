@@ -55,6 +55,11 @@ def gitrepolist(request):
         else:
             status = '<a href="#" class="status" id="%s">Enabled</a>' % repo.id
 
+        if repo.build == False:
+            build = '<a href="#" class="build" id="%s">Disabled</a>' % repo.id
+        else:
+            build = '<a href="#" class="build" id="%s">Enabled</a>' % repo.id
+
         repos['rows'].append({
             'id': repo.id,
             'cell': {
@@ -64,6 +69,7 @@ def gitrepolist(request):
                 'email': repo.email,
                 'url': repo.url,
                 'status': status,
+                'build': build,
                 'action': action,
         }}) # comment
 
@@ -89,6 +95,19 @@ def git_repo_enable(request, repo_id):
     repo[0].save()
 
     logevent('ENABLE: git repo, SUCCEED: status change to %s' % repo[0].status, True)
+    return HttpResponse('ENABLE SUCCEED: type id %s' % repo_id)
+
+@login_required
+def git_repo_enable_build(request, repo_id):
+    repo = GitRepo.objects.filter(id = repo_id)
+    if len(repo) == 0:
+        logevent('ENABLE: git repo build, ERROR: id %s does not exists' % repo_id)
+        return HttpResponse('ENABLE ERROR: id %s does not exists' % repo_id)
+
+    repo[0].build = not repo[0].build
+    repo[0].save()
+
+    logevent('ENABLE: git repo build, SUCCEED: status change to %s' % repo[0].build, True)
     return HttpResponse('ENABLE SUCCEED: type id %s' % repo_id)
 
 @login_required

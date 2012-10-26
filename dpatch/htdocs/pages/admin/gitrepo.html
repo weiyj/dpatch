@@ -21,6 +21,11 @@
 					showModelDialog('/sysadmin/gitrepo/enable/' + id + '/', {},
 								'GET', '#repos');
 				});
+				$("#repos .build").click(function () {
+					id = $(this).attr('id');
+					showModelDialog('/sysadmin/gitrepo/enable/build/' + id + '/', {},
+								'GET', '#repos');
+				});
 			}
 {% endif %}
 
@@ -34,8 +39,9 @@
 				             { display: 'Name', name : 'name', width : 120, align: 'left'},
 				             { display: 'User', name : 'user', width : 80, align: 'left'},
 				             { display: 'Email', name : 'email', width : 160, align: 'left'},
-				             { display: 'URL', name : 'url', width : 420, align: 'left'},
+				             { display: 'URL', name : 'url', width : 340, align: 'left'},
 				             { display: 'Status', name : 'status', width : 80, align: 'left'},
+				             { display: 'Build', name : 'build', width : 80, align: 'left'},
 				             { display: 'Action', name : 'action', width : 80, align: 'center'},],
 				usepager: true,
 {% if user.is_authenticated %}
