@@ -561,6 +561,8 @@ def execute_shell(args):
         shelllog = subprocess.Popen(args, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
     shellOut = shelllog.communicate()[0]
+    if not isinstance(shellOut, unicode):
+        shellOut = unicode(shellOut, errors='ignore')
 
     return shelllog.returncode, shellOut
 
@@ -698,8 +700,7 @@ def report_format_gitinfo(repo, gitlog):
         title = subflds[-2]
         line = '%s  %-20s' % (subflds[0], subflds[1])
         url = "%s;a=commit;h=%s" % (repo.url, commit)
-        url = re.sub("git:", "http:", url)
-        url = re.sub("pub/scm/", "?p=", url)
+        url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
         fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, title))
 
     return '\n'.join(fileinfos)
