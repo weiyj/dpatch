@@ -114,7 +114,7 @@
 		}
 
 		function onReportBuild() {
-			showModelDialog("/report/build/all/", {}, 'GET', '#reportlist');
+			showModelDialog("/report/build/all/", {'repo': '{{repo}}'}, 'GET', '#reportlist');
 		}
 
 		function onReportMarkStatus(name, div, value) {

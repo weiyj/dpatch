@@ -92,6 +92,7 @@ def main(args):
     buildpatch = True
     buildreport = True
     rebuildrepo = True
+    repoid = None
     if len(args) > 1:
         arg = args[1]
         if arg == 'patch':
@@ -101,7 +102,12 @@ def main(args):
             buildpatch = False
             rebuildrepo = False
 
+    if len(args) > 2:
+        repoid = args[2]
+
     for repo in GitRepo.objects.filter(status = True, build = True):
+        if repoid != None and repoid != repo.id:
+            continue
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
                        starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),

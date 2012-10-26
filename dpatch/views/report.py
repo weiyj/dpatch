@@ -943,7 +943,9 @@ def report_unmerge(request):
 
 @login_required
 def report_build_all(request):
-    args = '%s/dailybuild.sh report' % (settings.BIN_DIR)
+    repoid = get_request_paramter(request, 'repo', '')
+
+    args = '%s/dailybuild.sh report %s' % (settings.BIN_DIR, repoid)
     buildlog = subprocess.Popen(args, shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     buildOut = buildlog.communicate()[0]

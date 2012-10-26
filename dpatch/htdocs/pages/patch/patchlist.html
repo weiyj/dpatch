@@ -126,7 +126,7 @@
 
 		function onPatchBuild() {
 			var ids = getGridSelected();
-			showModelDialog("/patch/build/all/", {}, 'GET', '#patchlist');
+			showModelDialog("/patch/build/all/", {'repo': '{{repo}}'}, 'GET', '#patchlist');
 		}
 
 		function onPatchMarkStatus(name, div, value) {

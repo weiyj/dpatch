@@ -921,7 +921,9 @@ def patch_status(request):
 
 @login_required
 def patch_build_all(request):
-    args = '%s/dailybuild.sh patch' % (settings.BIN_DIR)
+    repoid = get_request_paramter(request, 'repo', '')
+
+    args = '%s/dailybuild.sh patch %s' % (settings.BIN_DIR, repoid)
     buildlog = subprocess.Popen(args, shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     buildOut = buildlog.communicate()[0]
