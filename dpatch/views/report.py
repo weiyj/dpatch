@@ -507,18 +507,19 @@ def report_export(request):
 @login_required
 def report_export_all(request, tag_name):
     rid = int(get_request_paramter(request, 'repo', '1'))
+    byver = int(get_request_paramter(request, 'version', '0'))
 
     repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
         return render_to_response("repo id not specified")
 
-    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
-    if (len(rtag) == 0):
-        return render_to_response("tag id not specified")
-
     files = []
     idx = 1
-    for report in Report.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
+    if byver == 1:
+        reportset = Report.objects.filter(tag__name__icontains = tag_name, tag__repo = repo, mergered = 0).order_by("date")
+    else:
+        reportset = Report.objects.filter(tag__name = tag_name, tag__repo = repo, mergered = 0).order_by("date")
+    for report in reportset:
         if report.content is None or len(report.content) == 0:
             continue
         try:

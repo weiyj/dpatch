@@ -117,10 +117,15 @@
 		}
 
 		function onPatchExportAll() {
+{% if byversion %}
+			$.download('/patch/export/all/{{ tag }}/', {'repo': '{{repo}}', 'version': 1}, 'GET');
+{% else %}
 			$.download('/patch/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
+{% endif %}
 		}
 
 		function onPatchBuild() {
+			var ids = getGridSelected();
 			showModelDialog("/patch/build/all/", {}, 'GET', '#patchlist');
 		}
 

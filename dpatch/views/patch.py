@@ -640,23 +640,24 @@ def patch_export(request):
 @login_required
 def patch_export_all(request, tag_name):
     rid = int(get_request_paramter(request, 'repo', '1'))
+    byver = int(get_request_paramter(request, 'version', '0'))
 
     repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
         return render_to_response("repo id not specified")
 
-    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
-    if (len(rtag) == 0):
-        return render_to_response("tag id not specified")
-
     files = []
     idx = 1
-    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0).order_by("date"):
+    if byver == 1:
+        patchset = Patch.objects.filter(tag__name__icontains = tag_name, tag__repo = repo, mergered = 0).order_by("date")
+    else:
+        patchset = Patch.objects.filter(tag__name = tag_name, tag__repo = repo, mergered = 0).order_by("date")
+    for patch in patchset:
         try:
             fname = os.path.join(patch.dirname(), patch.filename(idx))
-            cocci = open(fname, "w")
-            cocci.write(patch.content)
-            cocci.close()
+            fpatch = open(fname, "w")
+            fpatch.write(patch.content)
+            fpatch.close()
             files.append(fname)
             idx = idx + 1
         except:

@@ -106,7 +106,11 @@
 		}
 
 		function onReportExportAll() {
+{% if byversion %}
+			$.download('/report/export/all/{{ tag }}/', {'repo': '{{repo}}', 'version': 1}, 'GET');
+{% else %}
 			$.download('/report/export/all/{{ tag }}/', {'repo': '{{repo}}'}, 'GET');
+{% endif %}
 		}
 
 		function onReportBuild() {
