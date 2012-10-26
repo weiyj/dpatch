@@ -117,6 +117,16 @@
 			showModelDialog("/report/build/all/", {'repo': '{{repo}}'}, 'GET', '#reportlist');
 		}
 
+		function onReportSpecialFile() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('SPECIAL FILE: at least one row must be selected!');
+			} else {
+				showModelDialog("/report/special/", {'ids': ids.join()}, 'GET', '#reportlist');
+			}			
+		}
+
 		function onReportMarkStatus(name, div, value) {
 			var ids = getGridSelected();
 
@@ -185,6 +195,8 @@
 				            { name : 'Export Patch All', bclass : 'export', onpress: onReportExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onReportBuild },
+				            { separator : true },
+				            { name : 'Special File', bclass : 'export', onpress: onReportSpecialFile },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onReportMarkStatus },
 				            { separator : true },

@@ -37,7 +37,7 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from time import gmtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Report, Status, Event, Type
+from dpatch.models import GitRepo, GitTag, Report, Status, Event, Type, ExceptFile
 from dpatch.patchformat import PatchFormat 
 from dpatch.forms import ReportNewForm
 
@@ -953,3 +953,30 @@ def report_build_all(request):
         return HttpResponse('BUILD SUCCEED: %s' % buildOut)
     else:
         return HttpResponse('BUILD FAIL: %s' % buildOut)
+
+@login_required
+def report_special(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('SPECIAL ERROR: no report id specified')
+
+    ids = pids.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("SPECIAL: report [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('SPECIAL ERROR: patch %s does not exists' % i)
+        reports.append(report[0])
+
+    for report in reports:
+        rtype = report.type
+        fname = report.file
+        reason = 'special case that can not detect correctly'
+
+        if ExceptFile.objects.filter(type = rtype, file = fname).count() == 0:
+            einfo = ExceptFile(type = rtype, file = fname, reason = reason)
+            einfo.save()
+
+    logevent("SPECIAL: report [%s], SUCCEED" % pids, True)
+    return HttpResponse('SPECIAL SUCCEED: patch ids [%s]' % pids)

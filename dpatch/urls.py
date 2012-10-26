@@ -99,6 +99,7 @@ urlpatterns += patterns('dpatch.views.report',
     url(r'^report/status/$', 'report_status'),
     url(r'^report/build/status/$', 'report_build_status'),
     url(r'^report/build/all/$', 'report_build_all'),
+    url(r'^report/special/$', 'report_special'),
 )
 
 urlpatterns += patterns('dpatch.views.engine',
