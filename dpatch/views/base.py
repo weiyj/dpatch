@@ -19,11 +19,14 @@
 # along with Patchwork; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import re
+
 from django.shortcuts import render_to_response
 from dpatch.models import GitRepo, GitTag
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.conf import settings
 
 def dashboard(request):
     context = RequestContext(request)
@@ -31,16 +34,62 @@ def dashboard(request):
     return render_to_response("dashboard.html", context)
 
 def patchstatus(request):
-    tags = GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id")
-    context = RequestContext(request)
-    context['tags'] = tags
-    return render_to_response("patchstatus.html", context)
+    if settings.STATUS_BY_VERSION == True:
+        tags = []
+        versions = {}
+        rtag = {}
+        for tag in GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id"):
+            if not versions.has_key(tag.repo.name):
+                versions[tag.repo.name] = tag.name
+                version = re.sub('-rc\d+$', '', tag.name)
+                rtag[tag.repo.name] = {'version': version, 'total': tag.total, 'repoid': tag.repo.id,
+                                       'reponame': tag.repo.name, 'running': tag.running}
+                tags.append(rtag[tag.repo.name])
+            else:
+                if tag.name.find('rc') == -1:
+                    rtag[tag.repo.name] = {'version': tag.name, 'total': tag.total, 'repoid': tag.repo.id,
+                                           'reponame': tag.repo.name, 'running': tag.running}
+                    tags.append(rtag[tag.repo.name])
+                else:
+                    rtag[tag.repo.name]['total'] += tag.total
+
+        context = RequestContext(request)
+        context['tags'] = tags
+        return render_to_response("patch/statusbyversion.html", context)
+    else:
+        tags = GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id")
+        context = RequestContext(request)
+        context['tags'] = tags
+        return render_to_response("patchstatus.html", context)
 
 def reportstatus(request):
-    tags = GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id")
-    context = RequestContext(request)
-    context['tags'] = tags
-    return render_to_response("reportstatus.html", context)
+    if settings.STATUS_BY_VERSION == True:
+        tags = []
+        versions = {}
+        rtag = {}
+        for tag in GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id"):
+            if not versions.has_key(tag.repo.name):
+                versions[tag.repo.name] = tag.name
+                version = re.sub('-rc\d+$', '', tag.name)
+                rtag[tag.repo.name] = {'version': version, 'rptotal': tag.rptotal, 'repoid': tag.repo.id,
+                                       'reponame': tag.repo.name, 'running': tag.running}
+                tags.append(rtag[tag.repo.name])
+            else:
+                if tag.name.find('rc') == -1:
+                    rtag[tag.repo.name] = {'version': tag.name, 'rptotal': tag.rptotal, 'repoid': tag.repo.id,
+                                           'reponame': tag.repo.name, 'running': tag.running}
+                    tags.append(rtag[tag.repo.name])
+                else:
+                    rtag[tag.repo.name]['rptotal'] += tag.rptotal
+
+        context = RequestContext(request)
+        context['tags'] = tags
+        return render_to_response("report/statusbyversion.html", context)
+    else:
+        tags = GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id")
+        context = RequestContext(request)
+        context['tags'] = tags
+        return render_to_response("reportstatus.html", context)
 
 def patchengine(request):
     context = RequestContext(request)

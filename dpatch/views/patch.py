@@ -89,6 +89,30 @@ def patchlist(request, tag_name):
     context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
     return render_to_response("patch/patchlist.html", context)
 
+def patch_list_version(request, tag_name):
+    rtypes = []
+    for rtype in Type.objects.filter(id__lte = 10000):
+        rtypes.append("%s=%s" % (rtype.name, rtype.id))
+
+    rstatus = []
+    for rt in Status.objects.all():
+        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
+
+    rtagnames = []
+    for rtag in GitTag.objects.filter(name__icontains = tag_name):
+        if rtagnames.count(rtag.name) == 0:
+            rtagnames.append(rtag.name)
+
+    context = RequestContext(request)
+    context['tag'] = tag_name
+    context['repo'] = get_request_paramter(request, 'repo', '1')
+    context['types'] = '|'.join(rtypes)
+    context['status'] = '|'.join(rstatus)
+    context['tagnames'] = '|'.join(rtagnames)
+    context['byversion'] = True
+    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    return render_to_response("patch/patchlist.html", context)
+
 def html_patch_status(name):
     if name == 'New':
         return '<FONT COLOR="#000000">NEW</FONT>'
@@ -130,6 +154,8 @@ def patchfilter(pfilter):
             kwargs.update({'file__icontains': value})
         elif key == 'build':
             kwargs.update({'build': value})
+        elif key == 'tag':
+            kwargs.update({'tag__name': value})
     return kwargs
 
 def patchlistdata(request, tag_name):
@@ -138,18 +164,27 @@ def patchlistdata(request, tag_name):
 
     rid = int(get_request_paramter(request, 'repo', '1'))
     pfilter = get_request_paramter(request, 'filter')
+    byver = int(get_request_paramter(request, 'version', '0'))
 
     patchs = {'page': 1, 'total': 0, 'rows': [] }
+
     repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
-        return render_to_response(simplejson.dumps(patchs))
+        return HttpResponse(simplejson.dumps(patchs))
 
-    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
-    if (len(rtag) == 0):
-        return render_to_response(simplejson.dumps(patchs))
+    if byver == 0:
+        rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
+        if (len(rtag) == 0):
+            return HttpResponse(simplejson.dumps(patchs))
 
-    kwargs = patchfilter(pfilter)
-    for patch in Patch.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id"):
+        kwargs = patchfilter(pfilter)
+        patchset = Patch.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")
+    else:
+        kwargs = patchfilter(pfilter)
+        patchset = Patch.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
+                                        mergered = 0, **kwargs).order_by("-id")
+        
+    for patch in patchset:
         action = ''
         action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
         if request.user.is_authenticated() and patch.status.name == 'New':
@@ -187,6 +222,7 @@ def patchlistdata(request, tag_name):
                 'status': html_patch_status(patch.status.name),
                 'build': build,
                 'action': action,
+                'tagname': patch.tag.name,
         }}) # comment
 
     if rp * page > len(patchs['rows']):

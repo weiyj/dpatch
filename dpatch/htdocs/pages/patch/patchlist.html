@@ -150,11 +150,21 @@
 				height : 'auto',
 				showToggleBtn: false,
 				title: 'Tag {{ tag }}',
+{% if byversion %}
+				url: '/patch/list/{{ tag }}/data/?repo={{repo}}&version=1',
+{% else %}
 				url: '/patch/list/{{ tag }}/data/?repo={{repo}}',
+{% endif %}
 				method: 'GET',
 				colModel : [ { display: 'ID', name : 'id', width : 50, align: 'center'},
+{% if byversion %}
+				             { display: 'TITLE', name : 'title', width : 270, align: 'left'},
+				             { display: 'FILENAME', name : 'file', width : 160, align: 'left'},
+				             { display: 'TAGNAME', name : 'tagname', width : 50, align: 'left'},
+{% else %}
 				             { display: 'TITLE', name : 'title', width : 320, align: 'left'},
 				             { display: 'FILENAME', name : 'file', width : 160, align: 'left'},
+{% endif %}
 				             { display: 'DATE', name : 'date', width : 60, align: 'left'},
 				             { display: 'TYPE', name : 'type', width : 100, align: 'center'},
 				             { display: 'STATUS', name : 'status', width : 50, align: 'center'},
@@ -163,6 +173,9 @@
 				filteritems: [{display: 'Type', name: 'type', values: "{{ types }}"},
 				              {display: 'Status', name: 'status', values: "{{ status }}"},
 	             			  {display: 'Build', name: 'build', values: "{{ build }}"},
+{% if byversion %}
+	             			  {display: 'Tag', name: 'tag', values: "{{ tagnames }}"},
+{% endif %}
 				              {display: 'Filename', name: 'file'}
 				              ],
 				rp: 15,
@@ -180,7 +193,7 @@
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
 				            { separator : true },
-				            { name : 'Add To Special', bclass : 'export', onpress: onSpecialFile },
+				            { name : 'Special File', bclass : 'export', onpress: onSpecialFile },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onPatchMarkStatus },
 				            { separator : true },

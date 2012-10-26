@@ -77,6 +77,30 @@ def report_list(request, tag_name):
     context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
     return render_to_response("report/reportlist.html", context)
 
+def report_list_version(request, tag_name):
+    rtypes = []
+    for rtype in Type.objects.filter(id__gte = 10000):
+        rtypes.append("%s=%s" % (rtype.name, rtype.id))
+
+    rstatus = []
+    for rt in Status.objects.all():
+        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
+
+    rtagnames = []
+    for rtag in GitTag.objects.filter(name__icontains = tag_name):
+        if rtagnames.count(rtag.name) == 0:
+            rtagnames.append(rtag.name)
+
+    context = RequestContext(request)
+    context['tag'] = tag_name
+    context['repo'] = get_request_paramter(request, 'repo', '1')
+    context['types'] = '|'.join(rtypes)
+    context['status'] = '|'.join(rstatus)
+    context['tagnames'] = '|'.join(rtagnames)
+    context['byversion'] = True
+    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    return render_to_response("report/reportlist.html", context)
+
 def html_report_status(name):
     if name == 'New':
         return '<FONT COLOR="#000000">NEW</FONT>'
@@ -120,6 +144,8 @@ def reportfilter(pfilter):
             kwargs.update({'file__icontains': value})
         elif key == 'build':
             kwargs.update({'build': value})
+        elif key == 'tag':
+            kwargs.update({'tag__name': value})
     return kwargs
 
 def report_list_data(request, tag_name):
@@ -128,18 +154,25 @@ def report_list_data(request, tag_name):
 
     rid = int(get_request_paramter(request, 'repo', '1'))
     rfilter = get_request_paramter(request, 'filter')
+    byver = int(get_request_paramter(request, 'version', '0'))
 
     reports = {'page': 1, 'total': 0, 'rows': [] }
     repo = GitRepo.objects.filter(id = rid)
     if (len(repo) == 0):
-        return render_to_response(simplejson.dumps(reports))
+        return HttpResponse(simplejson.dumps(reports))
 
-    rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
-    if (len(rtag) == 0):
-        return render_to_response(simplejson.dumps(reports))
+    if byver == 0:
+        rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
+        if (len(rtag) == 0):
+            return HttpResponse(simplejson.dumps(reports))
+        kwargs = reportfilter(rfilter)
+        reportset = Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")
+    else:
+        kwargs = reportfilter(rfilter)
+        reportset = Report.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
+                                        mergered = 0, **kwargs).order_by("-id")
 
-    kwargs = reportfilter(rfilter)
-    for report in Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id"):
+    for report in reportset:
         action = ''
         action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
         if report.status.name == 'New':
@@ -187,6 +220,7 @@ def report_list_data(request, tag_name):
                 'status': html_report_status(report.status.name),
                 'build': build,
                 'action': action,
+                'tagname': report.tag.name,
         }}) # comment
 
     if rp * page > len(reports['rows']):

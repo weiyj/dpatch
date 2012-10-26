@@ -5,6 +5,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 COCCI_TIMEOUT = 30
+STATUS_BY_VERSION = True
 
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),
