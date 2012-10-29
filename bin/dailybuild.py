@@ -108,6 +108,12 @@ def main(args):
     for repo in GitRepo.objects.filter(status = True, build = True):
         if repoid != None and repoid != repo.id:
             continue
+
+        patchcnt = Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New').count()
+        reportcnt = Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched').count()
+        if (buildpatch == False or patchcnt == 0) and (buildreport == False or reportcnt == 0):
+            continue
+
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
                        starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
