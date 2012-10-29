@@ -326,7 +326,10 @@ def main(args):
         if otag is None:
             otag = ntag
 
-        tag = otag
+        if repo.name == 'linux-next.git':
+            tag = ntag
+        else:
+            tag = otag
         if otag != ntag:
             # we got a new tag, just scan from last commit to otag
             # as common, new tag is the last commit, so does not need
