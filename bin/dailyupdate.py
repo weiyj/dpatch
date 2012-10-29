@@ -348,7 +348,8 @@ def main(args):
                 continue
 
         # file change list from last update
-        flists = repo_get_changelist(repo, repo.commit, commit)
+        oflists = repo_get_changelist(repo, repo.commit, commit)
+        flists = oflists
 
         tags = GitTag.objects.filter(repo = repo, name = tag)
         rtag = None
@@ -357,6 +358,10 @@ def main(args):
             rtag.save()
         else:
             rtag = tags[0]
+            if repo.name == 'linux-next.git':
+                nflists = list(set(flists) - set(rtag.flist.split(',')))
+                if len(nflists) > 0:
+                    flists = nflists
 
         if rtag.running == True:
             continue
@@ -368,7 +373,10 @@ def main(args):
         pcount = check_patch(repo, rtag, flists, commit)
 
         rtag.total += pcount
-        rtag.flist = ','.join(flists)
+        if repo.name == 'linux-next.git' and len(nflists) > 0:
+            rtag.flist = ','.join(nflists + nflists + list(set(rtag.flist.split(','))))
+        else:
+            rtag.flist = ','.join(oflists)
         rtag.running = False
         rtag.save()
 

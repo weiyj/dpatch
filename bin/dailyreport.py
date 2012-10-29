@@ -181,8 +181,17 @@ def main(args):
         logs.save()
 
         flists = rtag.flist.split(',')
+        if repo.name == 'linux-next.git':
+            nflists = list(set(filter(lambda x : flists.count(x) != 1, flists)))
+            if len(nflists) > 0:
+                flists = nflists
         print "Check Report for repo %s" % os.path.basename(repo.url)
         rcount = 0
+
+        info(logger, 'File changes:')
+        info(logger, '=' * 40)
+        info(logger, '%s' % '\n'.join(flists))
+        info(logger, '=' * 40)
 
         rtag.running = True
         rtag.save()
