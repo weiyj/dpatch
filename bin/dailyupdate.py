@@ -353,6 +353,7 @@ def main(args):
         # file change list from last update
         oflists = repo_get_changelist(repo, repo.commit, commit)
         flists = oflists
+        nflists = []
 
         tags = GitTag.objects.filter(repo = repo, name = tag)
         rtag = None
