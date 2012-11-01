@@ -33,6 +33,7 @@ from checkrelease import CheckReleaseDetector
 from checkinclude import CheckIncludeDetector
 from checkcocci import CheckCocciDetector
 from logger import MyLogger
+from django.conf import settings
 
 def execute_shell(args):
     if isinstance(args, basestring):
@@ -362,7 +363,11 @@ def main(args):
             rtag.save()
         else:
             rtag = tags[0]
-            if repo.name == 'linux-next.git':
+            if settings.UPDATE_DELTA_INTERVAL < 2:
+                dodelta = int(strftime("%j", gmtime())) % settings.UPDATE_DELTA_INTERVAL
+            else:
+                dodelta = 0
+            if repo.name == 'linux-next.git' and dodelta != 0:
                 nflists = list(set(flists) - set(rtag.flist.split(',')))
                 if len(nflists) > 0:
                     flists = nflists

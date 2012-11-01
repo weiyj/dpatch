@@ -6,6 +6,7 @@ TEMPLATE_DEBUG = DEBUG
 
 COCCI_TIMEOUT = 30
 STATUS_BY_VERSION = True
+UPDATE_DELTA_INTERVAL = 1
 
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),
