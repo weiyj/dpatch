@@ -66,7 +66,7 @@ class PatchFormat:
             return os.path.basename(os.path.dirname(self._fname))
 
     def _guest_module_name(self):
-        lists = self._execute_shell("cd %s ; git log -n 20 --pretty=format:%%s %s" % (self._repo, self._fname))
+        lists = self._execute_shell("cd %s ; git log -n 20 --pretty=format:%%s %s ; echo" % (self._repo, self._fname))
 
         modules = {}
         mcount = 0
