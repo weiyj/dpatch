@@ -104,7 +104,7 @@ class PatchFormat:
             if re.match(r"@@[^@]*@@", line):
                 line = re.sub("@@[^@]*@@", "", line)
                 line = re.sub("\(.*", "", line).strip()
-                line = re.sub("^\*", "", line)
+                line = re.sub("\*", "", line)
                 if len(line) != 0:
                     fun = line.split(' ')[-1]
                     # skip lable
