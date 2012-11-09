@@ -363,11 +363,11 @@ def main(args):
             rtag.save()
         else:
             rtag = tags[0]
-            if settings.UPDATE_DELTA_INTERVAL < 2:
-                dodelta = int(strftime("%j", gmtime())) % settings.UPDATE_DELTA_INTERVAL
-            else:
-                dodelta = 0
-            if repo.name == 'linux-next.git' and dodelta != 0:
+            #if settings.UPDATE_DELTA_INTERVAL < 2:
+            #    dodelta = 0
+            #else:
+            #    dodelta = int(strftime("%j", gmtime())) % settings.UPDATE_DELTA_INTERVAL
+            if repo.name == 'linux-next.git' and settings.DELTA_UPDATE:
                 nflists = list(set(flists) - set(rtag.flist.split(',')))
                 if len(nflists) > 0:
                     flists = nflists

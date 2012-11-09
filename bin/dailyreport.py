@@ -181,7 +181,7 @@ def main(args):
         logs.save()
 
         flists = rtag.flist.split(',')
-        if repo.name == 'linux-next.git':
+        if repo.name == 'linux-next.git' and settings.DELTA_UPDATE:
             nflists = list(set(filter(lambda x : flists.count(x) != 1, flists)))
             if len(nflists) > 0:
                 flists = nflists
