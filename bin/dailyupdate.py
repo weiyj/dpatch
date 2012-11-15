@@ -319,7 +319,10 @@ def main(args):
             rtags = GitTag.objects.filter(repo = repo).order_by("-id")
             if len(rtags) > 0:
                 rtag = rtags[0]
-                rtag.flist = ''
+                if repo.name == 'linux-next.git':
+                    rtag.flist = ','.join(list(set(rtag.flist.split(','))))
+                else:
+                    rtag.flist = ''
                 rtag.save()
             continue
         # the tag name after git pull
@@ -331,7 +334,7 @@ def main(args):
             tag = ntag
         else:
             tag = otag
-        if otag != ntag:
+        if tag != ntag:
             # we got a new tag, just scan from last commit to otag
             # as common, new tag is the last commit, so does not need
             # to scan twice
