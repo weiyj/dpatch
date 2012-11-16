@@ -310,14 +310,14 @@ def rewrite_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        if len(einfo) > 0:
-            spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
-            try:
-                cocci = open(cocci.fullpath(), "w")
-                cocci.write(spctx)
-                cocci.close()
-            except:
-                pass
+        #if len(einfo) > 0:
+        spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
+        try:
+            cocci = open(cocci.fullpath(), "w")
+            cocci.write(spctx)
+            cocci.close()
+        except:
+            pass
 
 @login_required
 @csrf_exempt
@@ -883,14 +883,14 @@ def rewrite_report_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        if len(einfo) > 0:
-            spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
-            try:
-                cocci = open(cocci.fullpath(), "w")
-                cocci.write(spctx)
-                cocci.close()
-            except:
-                pass
+        #if len(einfo) > 0:
+        spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
+        try:
+            cocci = open(cocci.fullpath(), "w")
+            cocci.write(spctx)
+            cocci.close()
+        except:
+            pass
 
 def report_semantic_export(request):
     cids = get_request_paramter(request, 'ids')
