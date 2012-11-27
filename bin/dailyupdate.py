@@ -50,11 +50,15 @@ def execute_shell(args):
 def get_linux_next_stable(repo):
     os.system('wget -O /tmp/linux-next-git-stable http://www.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/refs/heads/stable')
     commits = execute_shell('cat /tmp/linux-next-git-stable')
+    if len(commits) == 0:
+        commits = execute_shell('cd %s ; cat .git/refs/remotes/origin/stable' % repo.dirname())
     return commits[0]
 
 def get_linux_next_master(repo):
     os.system('wget -O /tmp/linux-next-git-master http://www.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/refs/heads/master')
     commits = execute_shell('cat /tmp/linux-next-git-master')
+    if len(commits) == 0:
+        return None
     return commits[0]
 
 def get_linux_next_master_local(repo):
