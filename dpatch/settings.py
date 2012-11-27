@@ -8,6 +8,7 @@ COCCI_TIMEOUT = 30
 STATUS_BY_VERSION = True
 #UPDATE_DELTA_INTERVAL = False
 DELTA_UPDATE = False
+PATCH_OBSOLETED_DAYS = 0
 
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),

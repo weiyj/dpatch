@@ -180,13 +180,13 @@ def main(args):
                             update_patch_status(patch, applied)
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
-                    else:
+                    elif settings.PATCH_OBSOLETED_DAYS > 0:
                         if patch.status.name != 'New':
                             continue
                         times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
                         dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
                         delta = datetime.now() - dt
-                        if delta.days > 180:
+                        if delta.days > settings.PATCH_OBSOLETED_DAYS:
                             update_patch_status(patch, obsoleted)
                             pcount['skip'] += 1
                             logger.logger.info('skip patch %d' % patch.id)
@@ -250,13 +250,13 @@ def main(args):
                             update_report_status(patch, fixed)
                             pcount['fixed'] += 1
                             logger.logger.info('fixed patch %d' % patch.id)
-                else:
+                elif settings.PATCH_OBSOLETED_DAYS > 0:
                     if patch.status.name != 'New':
                         continue
                     times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
                     dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
                     delta = datetime.now() - dt
-                    if delta.days > 180:
+                    if delta.days > settings.PATCH_OBSOLETED_DAYS:
                         update_patch_status(patch, obsoleted)
                         pcount['skip'] += 1
                         logger.logger.info('skip patch %d' % patch.id)
