@@ -276,7 +276,10 @@ class PatchFormat:
         patch += "\n%s\n\n" % self.format_desc()
         patch += "Signed-off-by: %s <%s>\n" % (self._user, self._email)
         patch += "---\n"
-        patch += "%s" % self._content
+        try:
+            patch += "%s" % self._content
+        except:
+            patch += "%s" % unicode(self._content, 'utf-8')
 
         self._patch = patch
 
