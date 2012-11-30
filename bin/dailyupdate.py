@@ -71,6 +71,8 @@ def get_linux_next_master(repo):
 
 def get_linux_next_master_local(repo):
     commits = execute_shell('cd %s ; cat .git/refs/heads/master' % repo.dirname())
+    if len(commits) == 0:
+        return None
     return commits[0]
 
 def is_linux_next_master_update(repo):
