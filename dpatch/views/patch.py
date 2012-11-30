@@ -278,7 +278,10 @@ def patchsendwizardstep(request, patch_id):
 
         temp = patch.fullpath()
         cfg = open(temp, "w")
-        cfg.write(patch.content)
+        try:
+            cfg.write(patch.content)
+        except:
+            cfg.write(unicode.encode(patch.content, 'utf-8'))
         cfg.close()
 
         #os.system('/usr/bin/dos2unix %s' % patch.fullpath())
