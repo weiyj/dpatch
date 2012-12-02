@@ -265,8 +265,10 @@ def semantic_list(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
-    coccis = {'page': 1, 'total': 0, 'rows': [] }
-    for cocci in CocciEngine.objects.all():
+    coccis = {'page': page, 'total': CocciEngine.objects.all().count(), 'rows': [] }
+    rstart = rp * (page - 1)
+    rend = rp * page
+    for cocci in CocciEngine.objects.all()[rstart:rend]:
         rtype = Type.objects.get(id = cocci.id + 3000)
         if rtype.status == False:
             status = '<a href="#" class="status" id="%s">Disabled</a>' % rtype.id
@@ -289,15 +291,6 @@ def semantic_list(request):
                 'options': '-',
                 'action': action,
         }}) # comment
-
-    if rp * page > len(coccis['rows']):
-        end = len(coccis['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
-    coccis['page'] = page
-    coccis['total'] = len(coccis['rows'])
-    coccis['rows'] = coccis['rows'][start:end]
 
     return HttpResponse(simplejson.dumps(coccis))
 
@@ -535,7 +528,11 @@ def exceptfile_list(request):
     rp = int(get_request_paramter(request, 'rp'))
 
     efiles = {'page': 1, 'total': 0, 'rows': [] }
-    for efile in ExceptFile.objects.all():
+    efilecnt = ExceptFile.objects.all().count()
+    rstart = rp * (page - 1)
+    rend = rp * page
+
+    for efile in ExceptFile.objects.all()[rstart:rend]:
         efiles['rows'].append({
             'id': efile.id,
             'cell': {
@@ -545,14 +542,8 @@ def exceptfile_list(request):
                 'reason': efile.reason,
         }}) # comment
 
-    if rp * page > len(efiles['rows']):
-        end = len(efiles['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
     efiles['page'] = page
-    efiles['total'] = len(efiles['rows'])
-    efiles['rows'] = efiles['rows'][start:end]
+    efiles['total'] = efilecnt
 
     return HttpResponse(simplejson.dumps(efiles))
 
@@ -619,8 +610,13 @@ def report_semantic_list(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
+    rstart = rp * (page - 1)
+    rend = rp * page
+
     coccis = {'page': 1, 'total': 0, 'rows': [] }
-    for cocci in CocciReport.objects.all():
+    coccicnt = CocciReport.objects.all().count()
+
+    for cocci in CocciReport.objects.all()[rstart:rend]:
         rtype = Type.objects.get(id = cocci.id + 10000)
         if rtype.status == False:
             status = '<a href="#" class="status" id="%s">Disabled</a>' % rtype.id
@@ -644,14 +640,8 @@ def report_semantic_list(request):
                 'action': action,
         }}) # comment
 
-    if rp * page > len(coccis['rows']):
-        end = len(coccis['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
     coccis['page'] = page
-    coccis['total'] = len(coccis['rows'])
-    coccis['rows'] = coccis['rows'][start:end]
+    coccis['total'] = coccicnt
 
     return HttpResponse(simplejson.dumps(coccis))
 

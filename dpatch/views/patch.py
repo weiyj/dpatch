@@ -174,17 +174,23 @@ def patchlistdata(request, tag_name):
     if (len(repo) == 0):
         return HttpResponse(simplejson.dumps(patchs))
 
+    rstart = rp * (page - 1)
+    rend = rp * page
+
     if byver == 0:
         rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
         if (len(rtag) == 0):
             return HttpResponse(simplejson.dumps(patchs))
 
         kwargs = patchfilter(pfilter)
-        patchset = Patch.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")
+        patchcnt = Patch.objects.filter(tag = rtag[0], mergered = 0, **kwargs).count()
+        patchset = Patch.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")[rstart:rend]
     else:
         kwargs = patchfilter(pfilter)
+        patchcnt = Patch.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
+                                        mergered = 0, **kwargs).count()
         patchset = Patch.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
-                                        mergered = 0, **kwargs).order_by("-id")
+                                        mergered = 0, **kwargs).order_by("-id")[rstart:rend]
         
     for patch in patchset:
         action = ''
@@ -227,14 +233,8 @@ def patchlistdata(request, tag_name):
                 'tagname': patch.tag.name,
         }}) # comment
 
-    if rp * page > len(patchs['rows']):
-        end = len(patchs['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
     patchs['page'] = page
-    patchs['total'] = len(patchs['rows'])
-    patchs['rows'] = patchs['rows'][start:end]
+    patchs['total'] = patchcnt
 
     return HttpResponse(simplejson.dumps(patchs))
 

@@ -149,8 +149,8 @@ def reportfilter(pfilter):
     return kwargs
 
 def report_list_data(request, tag_name):
-    page = int(get_request_paramter(request, 'page'))
-    rp = int(get_request_paramter(request, 'rp'))
+    page = int(get_request_paramter(request, 'page'), '1')
+    rp = int(get_request_paramter(request, 'rp'), '15')
 
     rid = int(get_request_paramter(request, 'repo', '1'))
     rfilter = get_request_paramter(request, 'filter')
@@ -161,16 +161,22 @@ def report_list_data(request, tag_name):
     if (len(repo) == 0):
         return HttpResponse(simplejson.dumps(reports))
 
+    rstart = rp * (page - 1)
+    rend = rp * page
+
     if byver == 0:
         rtag = GitTag.objects.filter(name = tag_name, repo = repo[0])
         if (len(rtag) == 0):
             return HttpResponse(simplejson.dumps(reports))
         kwargs = reportfilter(rfilter)
-        reportset = Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")
+        reportcnt = Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).count()
+        reportset = Report.objects.filter(tag = rtag[0], mergered = 0, **kwargs).order_by("-id")[rstart:rend]
     else:
         kwargs = reportfilter(rfilter)
+        reportcnt = Report.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
+                                        mergered = 0, **kwargs).count()
         reportset = Report.objects.filter(tag__name__icontains = tag_name, tag__repo = repo,
-                                        mergered = 0, **kwargs).order_by("-id")
+                                        mergered = 0, **kwargs).order_by("-id")[rstart:rend]
 
     for report in reportset:
         action = ''
@@ -223,14 +229,8 @@ def report_list_data(request, tag_name):
                 'tagname': report.tag.name,
         }}) # comment
 
-    if rp * page > len(reports['rows']):
-        end = len(reports['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
     reports['page'] = page
-    reports['total'] = len(reports['rows'])
-    reports['rows'] = reports['rows'][start:end]
+    reports['total'] = reportcnt
 
     return HttpResponse(simplejson.dumps(reports))
 

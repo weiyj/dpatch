@@ -42,8 +42,13 @@ def log_data(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
+    rstart = rp * (page - 1)
+    rend = rp * page
+
     logs = {'page': 1, 'total': 0, 'rows': [] }
-    for log in ScanLog.objects.all().order_by("-id"):
+    logcnt = ScanLog.objects.all().count()
+
+    for log in ScanLog.objects.all().order_by("-id")[rstart:rend]:
         if len(log.logs) != 0:
             action = '<a href="#" class="detail" id="%s"/>Detail</a>' % log.id
         else:
@@ -59,14 +64,9 @@ def log_data(request):
                 'desc': log.desc,
                 'actions': action,
         }}) # comment
-    if rp * page > len(logs['rows']):
-        end = len(logs['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
+
     logs['page'] = page
-    logs['total'] = len(logs['rows'])
-    logs['rows'] = logs['rows'][start:end]
+    logs['total'] = logcnt
 
     return HttpResponse(simplejson.dumps(logs))
 
@@ -78,8 +78,13 @@ def event_data(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
 
+    rstart = rp * (page - 1)
+    rend = rp * page
+
     events = {'page': 1, 'total': 0, 'rows': [] }
-    for event in Event.objects.all().order_by("-id"):
+    eventcnt = Event.objects.all().count()
+
+    for event in Event.objects.all().order_by("-id")[rstart:rend]:
         if event.status == False:
             status = '<font color=red>FAILED</font>'
         else:
@@ -94,14 +99,8 @@ def event_data(request):
                 'status': status,
         }}) # comment
 
-    if rp * page > len(events['rows']):
-        end = len(events['rows'])
-    else:
-        end = rp * page
-    start = rp * (page - 1)
     events['page'] = page
-    events['total'] = len(events['rows'])
-    events['rows'] = events['rows'][start:end]
+    events['total'] = eventcnt
 
     return HttpResponse(simplejson.dumps(events))
 
