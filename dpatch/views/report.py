@@ -149,8 +149,8 @@ def reportfilter(pfilter):
     return kwargs
 
 def report_list_data(request, tag_name):
-    page = int(get_request_paramter(request, 'page'), '1')
-    rp = int(get_request_paramter(request, 'rp'), '15')
+    page = int(get_request_paramter(request, 'page', '1'))
+    rp = int(get_request_paramter(request, 'rp', '15'))
 
     rid = int(get_request_paramter(request, 'repo', '1'))
     rfilter = get_request_paramter(request, 'filter')
