@@ -330,7 +330,7 @@ def main(args):
         # the last tag name
         otag = tag_from_repo(repo)
         if check_repo_update(repo) == False:
-            rtags = GitTag.objects.filter(repo = repo).order_by("-id")
+            rtags = GitTag.objects.filter(repo = repo, name = otag)
             if len(rtags) > 0:
                 rtag = rtags[0]
                 if repo.name == 'linux-next.git':
