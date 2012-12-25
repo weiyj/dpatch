@@ -39,15 +39,16 @@ def patchstatus(request):
         versions = {}
         rtag = {}
         for tag in GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id"):
+            version = re.sub('-rc\d+$', '', tag.name)
             if not versions.has_key(tag.repo.name):
-                versions[tag.repo.name] = tag.name
-                version = re.sub('-rc\d+$', '', tag.name)
+                versions[tag.repo.name] = version
                 rtag[tag.repo.name] = {'version': version, 'total': tag.total, 'repoid': tag.repo.id,
                                        'reponame': tag.repo.name, 'running': tag.running}
                 tags.append(rtag[tag.repo.name])
             else:
-                if tag.name.find('rc') == -1:
-                    rtag[tag.repo.name] = {'version': tag.name, 'total': tag.total, 'repoid': tag.repo.id,
+                if versions[tag.repo.name] != version:
+                    versions[tag.repo.name] = version
+                    rtag[tag.repo.name] = {'version': version, 'total': tag.total, 'repoid': tag.repo.id,
                                            'reponame': tag.repo.name, 'running': tag.running}
                     tags.append(rtag[tag.repo.name])
                 else:
@@ -68,15 +69,16 @@ def reportstatus(request):
         versions = {}
         rtag = {}
         for tag in GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id"):
+            version = re.sub('-rc\d+$', '', tag.name)
             if not versions.has_key(tag.repo.name):
-                versions[tag.repo.name] = tag.name
-                version = re.sub('-rc\d+$', '', tag.name)
+                versions[tag.repo.name] = version
                 rtag[tag.repo.name] = {'version': version, 'rptotal': tag.rptotal, 'repoid': tag.repo.id,
                                        'reponame': tag.repo.name, 'running': tag.running}
                 tags.append(rtag[tag.repo.name])
             else:
-                if tag.name.find('rc') == -1:
-                    rtag[tag.repo.name] = {'version': tag.name, 'rptotal': tag.rptotal, 'repoid': tag.repo.id,
+                if versions[tag.repo.name] != version:
+                    versions[tag.repo.name] = version
+                    rtag[tag.repo.name] = {'version': version, 'rptotal': tag.rptotal, 'repoid': tag.repo.id,
                                            'reponame': tag.repo.name, 'running': tag.running}
                     tags.append(rtag[tag.repo.name])
                 else:
