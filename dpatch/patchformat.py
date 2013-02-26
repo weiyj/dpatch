@@ -24,6 +24,7 @@ import re
 import subprocess
 
 from time import gmtime, strftime
+from django.conf import settings
 
 class PatchFormat:
     def __init__(self, repo, fname, user, email, title, desc, content):
@@ -141,13 +142,16 @@ class PatchFormat:
         nolkml = True
         skiplkml = False
         commit_signer = ''
+        commit_signer_list = []
 
         lists = self._execute_shell("cd %s ; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --nogit" % (self._repo, self._fname))
         for m in lists:
             # skip User <mail> (commit_signer:1/15=7%)
             if re.search('\(commit_signer:', m) != None:
+                csm = re.sub('\(.*\)', '', m)
                 if len(commit_signer) == 0:
-                    commit_signer = re.sub('\(.*\)', '', m)
+                    commit_signer = csm
+                commit_signer_list.append(csm)
                 continue
             m = re.sub('\(.*\)', '', m)
             if re.search(r'<.*>', m) != None:
@@ -169,8 +173,12 @@ class PatchFormat:
         if len(mailto) == 0 and mailcc.count('netdev@vger.kernel.org') != 0:
             mailto.append('David S. Miller <davem@davemloft.net>')
 
-        if len(mailto) == 0 and len(commit_signer) != 0:
-            mailto.append(commit_signer)
+        if settings.USING_COMMIT_SINGER:
+            for m in commit_signer_list:
+                mailto.append(m)
+        else:
+            if len(mailto) == 0 and len(commit_signer) != 0:
+                mailto.append(commit_signer)
 
         elist = ""
         if len(mailto) != 0:
