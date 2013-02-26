@@ -183,8 +183,9 @@ def main(args):
         flists = rtag.flist.split(',')
         if repo.name == 'linux-next.git' and settings.DELTA_UPDATE:
             nflists = list(set(filter(lambda x : flists.count(x) != 1, flists)))
-            if len(nflists) > 0:
-                flists = nflists
+            if len(nflists) == 0:
+                continue
+            flists = nflists
         print "Check Report for repo %s" % os.path.basename(repo.url)
         rcount = 0
 
