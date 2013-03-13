@@ -30,7 +30,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.conf import settings
 
-from dpatch.models import GitRepo, Type, Status, Patch, CocciReport, Report, ScanLog
+from dpatch.models import GitRepo, GitTag, Type, Status, Patch, CocciReport, Report, ScanLog
 from checkversion import CheckVersionDetector
 from checkrelease import CheckReleaseDetector
 from checkinclude import CheckIncludeDetector
@@ -119,6 +119,16 @@ def main(args):
                        starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
                        desc = 'Processing, please wait...')
         logs.save()
+
+        for tag in GitTag.objects.filter(repo = repo):
+            ptotal = Patch.objects.filter(tag = tag, mergered = 0).count()
+            rtotal = Report.objects.filter(tag = tag, mergered = 0).count()
+            if ptotal != tag.total:
+                tag.total = ptotal
+                tag.save()
+            if rtotal != tag.rptotal:
+                tag.rptotal = rtotal
+                tag.save()
 
         pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
         for dot in [CheckVersionDetector, CheckReleaseDetector, CheckIncludeDetector, CheckCocciDetector]:
