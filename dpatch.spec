@@ -48,6 +48,7 @@ sed -i -e "s/DATA_DIR = os.path.dirname(ROOT_DIR)/DATA_DIR = '\/var\/lib\/dpatch
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/pattern/cocci
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/pattern/cocci/report
 %{__install} -d $RPM_BUILD_ROOT/var/lib/dpatch/database
+%{__install} -D pattern/cocci/empty.iso $RPM_BUILD_ROOT/var/lib/dpatch/pattern/cocci/
 #%{__install} -m 644 -D database/*.db $RPM_BUILD_ROOT/var/lib/dpatch/database/
 
 %{__install} -D -m 644 config/dpatch.conf $RPM_BUILD_ROOT/etc/httpd/conf.d/dpatch.conf
