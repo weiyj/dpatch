@@ -170,6 +170,12 @@ class PatchFormat:
         if nolkml == True and skiplkml == True:
             mailcc.append('linux-kernel@vger.kernel.org')
 
+        if mailcc.count('linux-wireless@vger.kernel.org') != 0:
+            if mailcc.count('netdev@vger.kernel.org') != 0:
+                mailcc.remove('netdev@vger.kernel.org')
+            if mailto.count('David S. Miller <davem@davemloft.net>') != 0:
+                mailto.remove('David S. Miller <davem@davemloft.net>')
+
         if len(mailto) == 0 and mailcc.count('netdev@vger.kernel.org') != 0:
             mailto.append('David S. Miller <davem@davemloft.net>')
 
