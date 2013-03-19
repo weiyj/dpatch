@@ -795,7 +795,7 @@ def patch_fix(request, patch_id):
                 title = patch.title
             if patch.desc is None or len(patch.desc) == 0:
                 desc = rtype.pdesc
-            else:
+            elif patch.desc != rtype.pdesc:
                 desc = patch.desc
             formater = PatchFormat(repo.dirname(), patch.file, user, email,
                                    title, desc, diff)

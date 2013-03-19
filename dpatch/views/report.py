@@ -411,7 +411,7 @@ def report_fix(request, report_id):
                 title = report.title
             if report.desc is None or len(report.desc) == 0:
                 desc = rtype.pdesc
-            else:
+            elif report.desc != rtype.pdesc:
                 desc = report.desc
             formater = PatchFormat(repo.dirname(), report.file, user, email,
                                    title, desc, diff)
