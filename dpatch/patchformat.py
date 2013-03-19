@@ -158,7 +158,7 @@ class PatchFormat:
                     commit_signer = csm
                 commit_signer_list.append(csm)
                 continue
-            m = re.sub('\(.*\)', '', m)
+            m = re.sub('\(.*\)', '', m).strip()
             if re.search(r'<.*>', m) != None:
                 mailto.append(m)
             elif re.search('linux-kernel@vger.kernel.org', m) != None:
@@ -180,6 +180,8 @@ class PatchFormat:
                 mailcc.remove('netdev@vger.kernel.org')
             if mailto.count('David S. Miller <davem@davemloft.net>') != 0:
                 mailto.remove('David S. Miller <davem@davemloft.net>')
+            if mailto.count('"David S. Miller" <davem@davemloft.net>') != 0:
+                mailto.remove('"David S. Miller" <davem@davemloft.net>')
 
         if len(mailto) == 0 and mailcc.count('netdev@vger.kernel.org') != 0:
             mailto.append('David S. Miller <davem@davemloft.net>')
