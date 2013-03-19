@@ -80,14 +80,19 @@ class PatchFormat:
                     continue
                 if len(mname) == 0:
                     continue
+                if re.match(r"%s\s*:" % mname, module):
+                    continue
                 if modules.has_key(mname):
                     modules[mname] += 1
                     if mcount < modules[mname]:
                         mcount = modules[mname]
                         module = mname
+                    elif re.match(r"%s\s*:" % module, mname):
+                        mcount = modules[mname]
+                        module = mname
                 else:
                     modules[mname] = 1
-                    if module == '':
+                    if module == '' or re.match(r"%s\s*:" % module, mname):
                         module = mname
 
         if len(module) == 0:
