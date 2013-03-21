@@ -174,18 +174,19 @@ def main(args):
         if rtag.running == True:
             continue
 
-        logger = MyLogger()
-        logs = ScanLog(reponame = repo.name, tagname = rtag.name,
-                       starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
-                       desc = 'Processing, please wait...')
-        logs.save()
-
         flists = rtag.flist.split(',')
         if repo.name == 'linux-next.git' and settings.DELTA_UPDATE:
             nflists = list(set(filter(lambda x : flists.count(x) != 1, flists)))
             if len(nflists) == 0:
                 continue
             flists = nflists
+
+        logger = MyLogger()
+        logs = ScanLog(reponame = repo.name, tagname = rtag.name,
+                       starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+                       desc = 'Processing, please wait...')
+        logs.save()
+
         print "Check Report for repo %s" % os.path.basename(repo.url)
         rcount = 0
 
