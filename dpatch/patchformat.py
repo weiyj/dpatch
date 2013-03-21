@@ -80,19 +80,19 @@ class PatchFormat:
                     continue
                 if len(mname) == 0:
                     continue
-                if re.match(r"%s\s*:" % mname, module):
+                if module.find("%s:" % mname) != -1:
                     continue
                 if modules.has_key(mname):
                     modules[mname] += 1
                     if mcount < modules[mname]:
                         mcount = modules[mname]
                         module = mname
-                    elif re.match(r"%s\s*:" % module, mname):
+                    elif mname.find("%s:" % module) != -1:
                         mcount = modules[mname]
                         module = mname
                 else:
                     modules[mname] = 1
-                    if module == '' or re.match(r"%s\s*:" % module, mname):
+                    if module == '' or mname.find("%s:" % module) != -1:
                         module = mname
 
         if len(module) == 0:
@@ -136,6 +136,7 @@ class PatchFormat:
                 line = re.sub(";", "", line)
                 line = re.sub("\*", " ", line)
                 name = line.strip().split(' ')[-1]
+                name = re.sub(r'\W+', '', name)
                 if len(name) != 0 and varname.count(name) == 0:
                         varname.append("%s" % name)
 
@@ -175,7 +176,7 @@ class PatchFormat:
         if nolkml == True and skiplkml == True:
             mailcc.append('linux-kernel@vger.kernel.org')
 
-        if mailcc.count('linux-wireless@vger.kernel.org') != 0:
+        if mailcc.count('linux-wireless@vger.kernel.org') != 0 or mailcc.count('linux-bluetooth@vger.kernel.org') != 0:
             if mailcc.count('netdev@vger.kernel.org') != 0:
                 mailcc.remove('netdev@vger.kernel.org')
             if mailto.count('David S. Miller <davem@davemloft.net>') != 0:
