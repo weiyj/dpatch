@@ -106,8 +106,14 @@ class PatchFormat:
         funcname = []
         if self._content is None:
             return funcname
+        lastfun = None
         for line in self._content.split('\n'):
+            line = line.strip()
             if re.match(r"@@[^@]*@@", line):
+                if lastfun != None and funcname.count("%s()" % lastfun) == 0:
+                    funcname.append("%s()" % lastfun)
+
+                lastfun = None
                 line = re.sub("@@[^@]*@@", "", line)
                 line = re.sub("\(.*", "", line).strip()
                 line = re.sub("\*", "", line)
@@ -116,8 +122,22 @@ class PatchFormat:
                     # skip lable
                     if re.match(r".*:$", fun):
                         continue
-                    if funcname.count("%s()" % fun) == 0:
-                        funcname.append("%s()" % fun)
+                    lastfun = fun
+                    print lastfun
+            elif line.find('-') == 0:
+                line = re.sub("-", '', line).strip()
+                if re.search('\w+\s*\(\w+\s+\w+', line):
+                    line = re.sub('\(.*', '', line).strip()
+                    if len(line) != 0:
+                        fun = line.split(' ')[-1]
+                        fun = re.sub('\W+', '', fun)
+                        if len(fun) != 0 and funcname.count("%s()" % fun) == 0:
+                            lastfun = None
+                            funcname.append("%s()" % fun)
+
+        if lastfun != None and funcname.count("%s()" % lastfun) == 0:
+            funcname.append("%s()" % lastfun)
+                    
         return funcname
 
     def _guest_variable_name(self):
