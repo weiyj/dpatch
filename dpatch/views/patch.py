@@ -789,14 +789,8 @@ def patch_fix(request, patch_id):
 
             user = patch.username()
             email = patch.email()
-            if patch.title is None or len(patch.title) == 0:
-                title = rtype.ptitle
-            else:
-                title = patch.title
-            if patch.desc is None or len(patch.desc) == 0:
-                desc = rtype.pdesc
-            elif patch.desc != rtype.pdesc:
-                desc = patch.desc
+            title = rtype.ptitle
+            desc = rtype.pdesc
             formater = PatchFormat(repo.dirname(), patch.file, user, email,
                                    title, desc, diff)
             patch.content = formater.format_patch()

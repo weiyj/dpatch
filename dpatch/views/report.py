@@ -405,14 +405,8 @@ def report_fix(request, report_id):
 
             user = report.username()
             email = report.email()
-            if report.title is None or len(report.title) == 0:
-                title = rtype.ptitle
-            else:
-                title = report.title
-            if report.desc is None or len(report.desc) == 0:
-                desc = rtype.pdesc
-            elif report.desc != rtype.pdesc:
-                desc = report.desc
+            title = rtype.ptitle
+            desc = rtype.pdesc
             formater = PatchFormat(repo.dirname(), report.file, user, email,
                                    title, desc, diff)
             report.content = formater.format_patch()

@@ -280,7 +280,7 @@ def check_patch(repo, rtag, flists, commit):
                                            rtype.ptitle, rtype.pdesc, text)
                     patch.content = formater.format_patch()
                     patch.title = formater.format_title()
-                    patch.desc = rtype.pdesc
+                    patch.desc = formater.format_desc()
                     patch.emails = formater.get_mail_list()
                     patch.save()
 
