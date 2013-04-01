@@ -402,7 +402,7 @@ def main(args):
         if repo.name == 'linux-next.git' and len(nflists) > 0:
             rtag.flist = ','.join(nflists + nflists + list(set(rtag.flist.split(','))))
         else:
-            rtag.flist = ','.join(oflists)
+            rtag.flist = ','.join(oflists + oflists)
         rtag.running = False
         rtag.save()
 

@@ -30,7 +30,7 @@ from django.conf import settings
 
 def dashboard(request):
     context = RequestContext(request)
-    context['repos'] = GitRepo.objects.all()
+    context['repos'] = GitRepo.objects.filter(status = True)
     return render_to_response("dashboard.html", context)
 
 def patchstatus(request):

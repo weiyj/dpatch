@@ -863,7 +863,7 @@ def patch_new(request):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
         patch.save()
-
+        
         rtags[0].total += 1
         rtags[0].save()
 
