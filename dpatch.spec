@@ -24,6 +24,7 @@ Group: System Environment/Base
 Summary: Automated Linux Kernel Patch Generate Engine Web UI
 Group: Applications/Internet
 
+Requires: dpatch-core
 Requires: httpd mod_wsgi
 Requires: git-email
 
@@ -99,6 +100,7 @@ rm -rf $RPM_BUILD_ROOT
         -c 'Dailypatch User' -s /bin/sh -g dpatch dpatch &>/dev/null || :
 if [ -e /var/lib/dpatch/database/sqlite.db ]; then
 	cp -rf /var/lib/dpatch/database/sqlite.db /var/lib/dpatch/database/sqlite.db.save
+	chown dpatch:dpatch /var/lib/dpatch/database/sqlite.db.save
 fi
 
 %post core
@@ -107,6 +109,7 @@ fi
 %preun core
 if [ -e /var/lib/dpatch/database/sqlite.db ]; then
 	cp -rf /var/lib/dpatch/database/sqlite.db /var/lib/dpatch/database/sqlite.db.save
+	chown dpatch:dpatch /var/lib/dpatch/database/sqlite.db.save
 fi
 
 %postun core
