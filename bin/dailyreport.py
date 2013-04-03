@@ -57,7 +57,6 @@ def checkreport(repo, rtag, flists):
                 test.next_token()
                 continue
 
-            logger.logger.info('Starting scan type %d' % test.get_type())
             cmts = GitCommit.objects.filter(repo = repo, type = rtype)
             if len(cmts) == 0:
                 cmt = GitCommit(repo = repo, type = rtype)
@@ -75,10 +74,11 @@ def checkreport(repo, rtag, flists):
                 else:
                     rflists = flists
 
+            logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
+
             exceptfiles = []
             for fn in ExceptFile.objects.filter(type = rtype):
                 exceptfiles.append(fn.file)
-
 
             rcount = 0
             for fname in rflists:

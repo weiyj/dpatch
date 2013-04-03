@@ -67,8 +67,6 @@ def check_patch(repo, git, rtag, flists, commit):
                 test.next_token()
                 continue
                 
-            logger.logger.info('Starting scan type %d' % test.get_type())
-
             cmts = GitCommit.objects.filter(repo = repo, type = rtype)
             if len(cmts) == 0:
                 cmt = GitCommit(repo = repo, type = rtype)
@@ -86,6 +84,8 @@ def check_patch(repo, git, rtag, flists, commit):
                     rflists = flists
             else:
                 rflists = flists
+
+            logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
 
             exceptfiles = []
             for fn in ExceptFile.objects.filter(type = rtype):
@@ -166,7 +166,7 @@ def check_patch(repo, git, rtag, flists, commit):
             cmt.commit = commit
             cmt.save()
 
-            logger.logger.info('End scan type %d, patch %d' % (test.get_type(), pcount))
+            logger.info('End scan type %d, patch %d' % (test.get_type(), pcount))
             logs.logs = logger.getlog()
             logs.save()
             test.next_token()
