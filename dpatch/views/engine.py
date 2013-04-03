@@ -353,7 +353,7 @@ def semantic_import(request):
             for chunk in fp.chunks():
                 destination.write(chunk)
 
-        args = '%s/importcocci.sh %s' % (settings.BIN_DIR, fname)
+        args = '%s/importcocci.sh patch %s' % (settings.BIN_DIR, fname)
         shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]
@@ -881,7 +881,7 @@ def report_semantic_import(request):
             for chunk in fp.chunks():
                 destination.write(chunk)
 
-        args = '%s/importreport.sh %s' % (settings.BIN_DIR, fname)
+        args = '%s/importcocci.sh report %s' % (settings.BIN_DIR, fname)
         shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
                                     stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]

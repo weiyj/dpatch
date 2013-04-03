@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -23,102 +23,94 @@ import os
 import sys
 import tarfile
 
-from dpatch.models import CocciEngine, Type, ExceptFile
+from dpatch.lib.common.cocciparser import CocciParser
+from dpatch.models import CocciPatchEngine, CocciReportEngine, Type, ExceptFile
 
-def importsemantic(fname, title, fixed, options, desc, content, exceptfiles):
+def importcoccipatch(fname, lines, title, fixed, options, desc, content, efiles):
     name = os.path.splitext(fname)[0]
     
-    if CocciEngine.objects.filter(file = fname).count() != 0:
+    if CocciPatchEngine.objects.filter(file = fname).count() != 0:
         print 'skip %s, already exists' % fname
-        return
+        return False
 
-    engine = CocciEngine(file = fname, content = content, options = options, fixed = fixed)
-    ctx = engine.rawformat(title, desc, exceptfiles)
+    engine = CocciPatchEngine(file = fname, content = content, options = options, fixed = fixed)
     try:
         cocci = open(engine.fullpath(), "w")
-        cocci.write(ctx)
+        cocci.writelines(lines)
         cocci.close()
     except:
         print 'ERROR: can not write file %s' % engine.fullpath()
-        return
+        return False
 
     engine.save()
 
     rtype = Type(id = engine.id + 3000, name = name, ptitle = title, pdesc = desc, status = False)
     rtype.save()
     
-    for finfo in exceptfiles:
+    for finfo in efiles:
         efile = ExceptFile(type = rtype, file = finfo['file'], reason = finfo['reason'])
         efile.save()
 
-def importcoccifile(fname, lines):
-    if len(lines) < 5:
-        return False
-    
-    options = ''
-    fixed = ''
-    desc = []
-    content = []
-    exceptfiles = []
-    isdesc = False
-    isctx = False
-    for i in range(len(lines)):
-        if i == 0:
-            title = lines[i]
-            title = title.replace('///', '').strip()
-            continue
-
-        if isdesc == False and isctx == False:
-            line = lines[i]
-            if line.find('/// Options:') == 0:
-                options = line
-                options = options.replace('/// Options:', '').strip()
-            elif line.find('/// Fixed:') == 0:
-                fixed = line
-                fixed = fixed.replace('/// Fixed:', '').strip()
-            elif line.find('/// Except File:') == 0:
-                exceptfile = line
-                exceptfile = exceptfile.replace('/// Except File:', '').strip()
-                efileinfo = exceptfile.split(':')
-                if len(efileinfo) == 1:
-                    efileinfo.append('')
-                exceptfiles.append({'file': efileinfo[0].strip(), 'reason': efileinfo[1].strip()})
-            else:
-                descline = line
-                descline = descline.replace('///', '').strip()
-                if len(descline) != 0:
-                    desc.append(descline)
-                    isdesc = True
-            continue
-
-        if isdesc == True:
-            descline = lines[i]
-            if descline.find('///') != -1:
-                descline = descline.replace('///', '').strip()
-                desc.append(descline)
-                continue
-            else:
-                isdesc = False
-                isctx = True
-
-        if isctx == False:
-            continue
-        content.append(lines[i])
-
-    if len(title) == 0 or len(desc) == 0 or len(content) == 0:
-        return False
-
-    if len(desc[-1]) == 0:
-        desc = desc[:-1]
-
-    importsemantic(fname, title, fixed, options, '\n'.join(desc), ''.join(content), exceptfiles)
-    
     return True
 
+def importcoccireport(fname, lines, title, options, desc, content, efiles):
+    name = os.path.splitext(fname)[0]
+    
+    if CocciReportEngine.objects.filter(file = fname).count() != 0:
+        print 'skip %s, already exists' % fname
+        return False
+
+    engine = CocciReportEngine(file = fname, content = content, options = options)
+    try:
+        cocci = open(engine.fullpath(), "w")
+        cocci.writelines(lines)
+        cocci.close()
+    except:
+        print 'ERROR: can not write file %s' % engine.fullpath()
+        return False
+
+    engine.save()
+
+    rtype = Type(id = engine.id + 10000, name = name, ptitle = title, pdesc = desc, status = False)
+    rtype.save()
+    
+    for finfo in efiles:
+        efile = ExceptFile(type = rtype, file = finfo['file'], reason = finfo['reason'])
+        efile.save()
+
+    return True
+
+def importcoccifile(target, fname, lines):
+    if len(lines) < 5:
+        return False
+
+    cocci = CocciParser(lines)
+    cocci.parser()
+
+    if len(cocci.get_title()) == 0 or len(cocci.get_description()) == 0:
+        return False
+    if len(cocci.get_content()) == 0:
+        return False
+
+    if target == 'patch':
+        return importcoccipatch(fname, lines, cocci.get_title(), cocci.get_fixed(), cocci.get_options(),
+                                cocci.get_description(), cocci.get_content(), cocci.get_efiles())
+    elif target == 'report':
+        return importcoccireport(fname, lines, cocci.get_title(), cocci.get_options(), cocci.get_description(),
+                                cocci.get_content(), cocci.get_efiles())
+    else:
+        return False
 def main(args):
-    if len(args) < 1:
-        print 'No filename specified.'
-    for fname in args:
+    if len(args) < 3:
+        print 'Usage: python %s patch|report file...' % args[0]
+        return 0
+
+    if args[1] != 'patch' and args[1] != 'report':
+        print 'Usage: python %s patch|report file...' % args[0]
+        return 0
+
+    target = args[1]
+    for fname in args[2:]:
         if not os.path.isfile(fname):
             print 'file %s does not exists or is not a file' % fname
             continue
@@ -133,7 +125,7 @@ def main(args):
                     continue
                 print tarinfo.name
                 fp = tar.extractfile(tarinfo)
-                if importcoccifile(tarinfo.name, fp.readlines()):
+                if importcoccifile(target, tarinfo.name, fp.readlines()):
                     print 'import succeed: %s' % tarinfo.name
                 else:
                     print 'import fail: %s is not a cocci file' % tarinfo.name
@@ -142,10 +134,10 @@ def main(args):
                 print "import fail: file %s is not a *.cocci file" % fname
                 continue
             fp = open(fname, 'r')
-            if importcoccifile(os.path.basename(fname), fp.readlines()):
+            if importcoccifile(target, os.path.basename(fname), fp.readlines()):
                 print 'import succeed: %s' % fname
             else:
                 print 'import fail: %s is not a cocci file' % fname
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv))
