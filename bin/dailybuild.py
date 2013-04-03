@@ -137,6 +137,7 @@ def main(args):
                     os.system("cd %s; git reset --hard %s" % (repo.builddir(), get_linux_next_stable(repo)))
                     ret, tmplog = execute_shell_log("cd %s; git pull" % repo.builddir(), logger)
                     gitlog = tmplog
+                    os.system("cd %s; cp %s/.git/refs/remotes/origin/stable .git/refs/remotes/stable" % (repo.builddir(), repo.dirname()))
                     os.system("cd %s; make allmodconfig" % repo.builddir())
                 else:
                     gitlog = 'Already up-to-date.'
