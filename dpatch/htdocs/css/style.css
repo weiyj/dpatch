@@ -60,7 +60,7 @@ div.subtoptitle {
     background: url("../images/email.jpg") no-repeat transparent;
 }
 
-.flexigrid a.detail, a.edit, a.send, a.fix, a.patch {
+.flexigrid a.detail, a.edit, a.send, a.fix, a.patch, a.commit {
 	margin: 0px 2px 0px 2px;
 	padding: 0px 6px 0px 6px;
 	color: #000000;
@@ -72,14 +72,32 @@ div.subtoptitle {
 
 .ui-dialog {
 	padding: 0 !important;
+	border-color: rgba(0,0,0,0.3);
+	-webkit-box-shadow: 1px 1px 7px 1px rgba(128,128,128,0.3);
+	box-shadow: 1px 1px 7px 1px rgba(128,128,128,0.3);
+	background-color: #fff;
 }
 
 .ui-dialog .ui-widget-header {
 	border: 0 !important;
+	border-bottom: 1px solid #c5c5c5 !important;
+	background-image: none,-webkit-linear-gradient(top,#f6f6f6 0,#eaeaea 100%);
+	background-image: none,-moz-linear-gradient(top,#f6f6f6 0,#eaeaea 100%);
+	background-image: none,-o-linear-gradient(top,#f6f6f6 0,#eaeaea 100%);
+	background-image: none,linear-gradient(to bottom,#f6f6f6 0,#eaeaea 100%);
+	-moz-border-radius-bottomright: 0px !important;
+	-webkit-border-bottom-right-radius: 0px !important;
+	-khtml-border-bottom-right-radius: 0px !important;
+	border-bottom-right-radius: 0px !important;
+	-moz-border-radius-bottomleft: 0px !important;
+	-webkit-border-bottom-left-radius: 0px !important;
+	-khtml-border-bottom-left-radius: 0px !important;
+	border-bottom-left-radius: 0px !important;
 }
 
 .ui-dialog .ui-dialog-content {
-	margin: 4px 4px 4px 4px;
+	margin: 0px 0px 0px 0px;
+	padding: .5em 0.5em !important;
 }
 
 .ui-tabs {

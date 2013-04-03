@@ -1,2 +1,0 @@
-# Run dpatch dailyupdate once a day at 14pm by default
-0 14 * * * dpatch /usr/share/dpatch/bin/dailypatch.sh

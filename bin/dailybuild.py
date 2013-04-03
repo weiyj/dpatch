@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -26,7 +26,8 @@ import subprocess
 from time import gmtime, strftime
 
 from dpatch.models import GitRepo, Patch, Report, ScanLog
-from logger import MyLogger
+from dpatch.lib.common.logger import MyLogger
+from dpatch.lib.common.status import *
 
 def execute_shell(args, logger = None):
     shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE,
@@ -109,8 +110,8 @@ def main(args):
         if repoid != None and repoid != repo.id:
             continue
 
-        patchcnt = Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New').count()
-        reportcnt = Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched').count()
+        patchcnt = Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status = STATUS_NEW).count()
+        reportcnt = Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status = STATUS_PATCHED).count()
         if (buildpatch == False or patchcnt == 0) and (buildreport == False or reportcnt == 0):
             continue
 
@@ -144,13 +145,13 @@ def main(args):
                 ret, tmplog = execute_shell_log("cd %s; git pull" % repo.builddir(), logger)
                 gitlog = tmplog
 
-        if rebuildrepo == True and gitlog.find('Already up-to-date.') == -1:
-            execute_shell("cd %s; make" % repo.builddir(), logger)
+        #if rebuildrepo == True and gitlog.find('Already up-to-date.') == -1:
+        #    execute_shell("cd %s; make" % repo.builddir(), logger)
 
         commit = commit_from_repo(repo)
 
         if buildpatch == True:
-            for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'New'):
+            for patch in Patch.objects.filter(tag__repo = repo, build = 0, mergered = 0, status = STATUS_NEW):
                 buildlog = ''
     
                 if patch.file.find('arch/') == 0 and patch.file.find('arch/x86') != 0:
@@ -258,7 +259,7 @@ def main(args):
                 patch.save()
 
         if buildreport == True:
-            for report in Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status__name = 'Patched'):
+            for report in Report.objects.filter(tag__repo = repo, build = 0, mergered = 0, status = STATUS_PATCHED):
                 buildlog = ''
     
                 if report.file.find('arch/') == 0 and report.file.find('arch/x86') != 0:

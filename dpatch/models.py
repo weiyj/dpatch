@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -25,16 +25,14 @@ import datetime
 
 from django.db import models
 from django.conf import settings
-#from django.contrib.auth.models import User
 
-#class UserProfile(models.Model):
-#    user = models.ForeignKey(User, unique = True)
+class SysConfig(models.Model):
+    id = models.AutoField(primary_key = True)
+    name = models.CharField(max_length = 256)
+    value = models.CharField(max_length = 256)
 
-#    def name(self):
-#        if self.user.first_name or self.user.last_name:
-#            names = filter(bool, [self.user.first_name, self.user.last_name])
-#            return u' '.join(names)
-#        return self.user.username
+    def __unicode__(self):
+        return u'%s' %(self.name)
 
 class GitRepo(models.Model):
     id = models.AutoField(primary_key = True)
@@ -42,13 +40,15 @@ class GitRepo(models.Model):
     url = models.CharField(max_length = 256)
     user = models.CharField(max_length = 60)
     email = models.CharField(max_length = 256)
-    delta = models.BooleanField(default = True)
-    build = models.BooleanField(default = False)
+    delta = models.BooleanField(default = False)
+    build = models.BooleanField(default = True)
     commit = models.CharField(max_length = 256, blank = True)
+    stable = models.CharField(max_length = 256, blank = True)
+    update = models.DateTimeField(default = datetime.datetime.now())
     status = models.BooleanField(default = False)
 
     def __unicode__(self):
-        return u'%s' %(self.url)
+        return u'%s' %(self.name)
 
     def dirname(self):
         dname = os.path.basename(self.url).replace('.git', '')
@@ -70,84 +70,13 @@ class GitTag(models.Model):
     def __unicode__(self):
         return u'%s - %s' %(self.name, self.repo.name)
 
-class Status(models.Model):
-    id = models.AutoField(primary_key = True)
-    name = models.CharField(max_length = 60)
-
-    def __unicode__(self):
-        return u'%s' %(self.name)
-
-class CocciEngine(models.Model):
-    id = models.AutoField(primary_key = True)
-    file = models.CharField(max_length = 256)
-    options = models.CharField(max_length = 256, blank = True)
-    fixed = models.CharField(max_length = 256, blank = True)
-    content = models.TextField(blank = True)
-
-    def __unicode__(self):
-        return u'%d %s' %(self.id, self.file)#, self.options)
-
-    def fullpath(self):
-        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', self.file)
-
-    def rawformat(self, title, desc, exceptinfo = []):
-        spctx = '/// %s\n' %  title
-        spctx += '///\n'
-        if len(self.options) > 0:
-            spctx += '/// Options: %s\n' % self.options
-            spctx += '///\n'
-        if len(self.fixed) > 0:
-            spctx += '/// Fixed: %s\n' % self.fixed
-            spctx += '///\n'
-        for einfo in exceptinfo:
-            if einfo.has_key('reason'):
-                spctx += '/// Except File: %s : %s\n' %  (einfo['file'], einfo['reason'])
-            else:
-                spctx += '/// Except File: %s\n' % einfo['file']
-        if len(exceptinfo) > 0:
-            spctx += '///\n'
-        for line in desc.split('\n'):
-            spctx += '/// %s\n' %  line
-        spctx += '///\n'
-        spctx += self.content
-        return spctx
-
-class CocciReport(models.Model):
-    id = models.AutoField(primary_key = True)
-    file = models.CharField(max_length = 256)
-    options = models.CharField(max_length = 256, blank = True)
-    content = models.TextField(blank = True)
-
-    def __unicode__(self):
-        return u'%d %s' %(self.id, self.file)
-
-    def fullpath(self):
-        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', 'report', self.file)
-
-    def rawformat(self, title, desc, exceptinfo = []):
-        spctx = '/// %s\n' %  title
-        spctx += '///\n'
-        if len(self.options) > 0:
-            spctx += '/// Options: %s\n' % self.options
-            spctx += '///\n'
-        for einfo in exceptinfo:
-            if einfo.has_key('reason'):
-                spctx += '/// Except File: %s : %s\n' %  (einfo['file'], einfo['reason'])
-            else:
-                spctx += '/// Except File: %s\n' % einfo['file']
-        if len(exceptinfo) > 0:
-            spctx += '///\n'
-        for line in desc.split('\n'):
-            spctx += '/// %s\n' %  line
-        spctx += '///\n'
-        spctx += self.content
-        return spctx
-
 class Type(models.Model):
     id = models.IntegerField(primary_key = True)
     name = models.CharField(max_length = 256, blank = True)
     ptitle = models.CharField(max_length = 256)
     pdesc = models.TextField(blank = True)
+    type = models.IntegerField(default = 0)
+    flags = models.IntegerField(default = 0)
     commit = models.CharField(max_length = 256, default = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2')
     user = models.CharField(max_length = 60, blank = True)
     email = models.CharField(max_length = 60, blank = True)
@@ -162,6 +91,9 @@ class GitCommit(models.Model):
     type = models.ForeignKey(Type)
     commit = models.CharField(max_length = 256, default = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2')
 
+    def __unicode__(self):
+        return u'%s' %(self.repo)
+
 class ExceptFile(models.Model):
     id = models.AutoField(primary_key = True)
     type = models.ForeignKey(Type)
@@ -171,30 +103,66 @@ class ExceptFile(models.Model):
     def __unicode__(self):
         return u'%d %s %s %s' %(self.id, self.type.name, self.file, self.reason)
 
+class CocciPatchEngine(models.Model):
+    id = models.AutoField(primary_key = True)
+    file = models.CharField(max_length = 256)
+    options = models.CharField(max_length = 256, blank = True)
+    fixed = models.CharField(max_length = 256, blank = True)
+    content = models.TextField(blank = True)
+
+    def __unicode__(self):
+        return u'%d %s' %(self.id, self.file)
+
+    def fullpath(self):
+        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', 'patchs', self.file)
+
+class CocciReportEngine(models.Model):
+    id = models.AutoField(primary_key = True)
+    file = models.CharField(max_length = 256)
+    options = models.CharField(max_length = 256, blank = True)
+    content = models.TextField(blank = True)
+
+    def __unicode__(self):
+        return u'%d %s' %(self.id, self.file)
+
+    def fullpath(self):
+        return os.path.join(settings.DATA_DIR, 'pattern', 'cocci', 'reports', self.file)
+
+class Module(models.Model):
+    id = models.AutoField(primary_key = True)
+    name = models.CharField(max_length = 60)
+    file = models.CharField(max_length = 256)
+
+    def __unicode__(self):
+        return u'%s %s' %(self.name, self.file)
+
 class Patch(models.Model):
     id = models.AutoField(primary_key = True)
     tag = models.ForeignKey(GitTag)
     type = models.ForeignKey(Type)
-    status = models.ForeignKey(Status)
+    status = models.IntegerField(default = 1)
     file = models.CharField(max_length = 256)
     date = models.DateTimeField(default = datetime.datetime.now())
     mergered = models.IntegerField(default = 0)
     mglist = models.CharField(max_length = 256, blank = True)
     commit = models.CharField(max_length = 60, blank = True)
+    module = models.CharField(max_length = 60, blank = True)
     diff = models.TextField()
     title = models.CharField(max_length = 256, blank = True)
-    desc = models.TextField(max_length = 256, blank = True)
+    desc = models.TextField(max_length = 512, blank = True)
     emails = models.CharField(max_length = 256, blank = True)
+    comment = models.CharField(max_length = 256, blank = True)
     content = models.TextField(blank = True)
     build = models.IntegerField(default = 0)
     buildlog = models.TextField(blank = True)
+    process = models.BooleanField(default = False)
 
     def __unicode__(self):
         return u'%s %s' %(self.tag, self.file)
 
     def filename(self, prefix = 1):
         fname = re.sub(r'\[[^\]]*\]', '', self.title)
-        fname = re.sub(r'[ .:/\\<>\(\)\'&]+', '-', fname.strip())
+        fname = re.sub(r'\W+', '-', fname.strip())
         if len(fname) > 52:
             fname = fname[:52]
         return "%04d-%s.patch" % (prefix, fname)
@@ -224,27 +192,30 @@ class Report(models.Model):
     id = models.AutoField(primary_key = True)
     tag = models.ForeignKey(GitTag)
     type = models.ForeignKey(Type)
-    status = models.ForeignKey(Status)
+    status = models.IntegerField(default = 1)
     file = models.CharField(max_length = 256)
     date = models.DateTimeField(default = datetime.datetime.now())
     mergered = models.IntegerField(default = 0)
     mglist = models.CharField(max_length = 256, blank = True)
     commit = models.CharField(max_length = 60, blank = True)
     reportlog = models.TextField()
+    module = models.CharField(max_length = 60, blank = True)
     diff = models.TextField(default = '')
     title = models.CharField(max_length = 256, blank = True)
     desc = models.TextField(max_length = 256, blank = True)
     emails = models.CharField(max_length = 256, blank = True)
+    comment = models.CharField(max_length = 256, blank = True)
     content = models.TextField(blank = True)
     build = models.IntegerField(default = 0)
     buildlog = models.TextField(blank = True)
+    process = models.BooleanField(default = False)
 
     def __unicode__(self):
         return u'%s %s' %(self.tag, self.file)
 
     def filename(self, prefix = 1):
         fname = re.sub(r'\[[^\]]*\]', '', self.title)
-        fname = re.sub(r'[ .:/\\<>\(\)\'&]+', '-', fname.strip())
+        fname = re.sub(r'\W+', '-', fname.strip())
         if len(fname) > 52:
             fname = fname[:52]
         return "%04d-%s.patch" % (prefix, fname)

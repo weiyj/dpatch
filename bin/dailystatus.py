@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -28,14 +28,12 @@ from time import gmtime, strftime
 from datetime import datetime
 
 from django.db.models import Q
-from django.conf import settings
 
-from dpatch.models import GitRepo, GitTag, Type, Status, Patch, CocciReport, Report, ScanLog
-from checkversion import CheckVersionDetector
-from checkrelease import CheckReleaseDetector
-from checkinclude import CheckIncludeDetector
-from checkcocci import CheckCocciDetector
-from logger import MyLogger
+from dpatch.models import GitRepo, GitTag, Type, Patch, Report, ScanLog
+from dpatch.lib.engine.manager import patch_engine_list, report_engine_list
+from dpatch.lib.common.logger import MyLogger
+from dpatch.lib.db.sysconfig import read_config
+from dpatch.lib.common.status import *
 
 def update_patch_status(patch, status):
     patch.status = status
@@ -55,18 +53,6 @@ def update_report_status(report, status):
             mreport[0].status = status
             mreport[0].save()
 
-def execute_shell(args):
-    if isinstance(args, basestring):
-        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
-    else:
-        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE)
-    shellOut = shelllog.communicate()[0]
-
-    lines = shellOut.split("\n")
-    lines = lines[0:-1]
-
-    return lines
-
 def execute_shell_full(args):
     if isinstance(args, basestring):
         shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
@@ -77,17 +63,6 @@ def execute_shell_full(args):
     lines = shellOut.split("\n")
 
     return lines
-
-def is_report_fixed(repo, cocci, spfile, fname):
-    args = '/usr/bin/spatch %s -I %s -timeout %d -very_quiet -sp_file %s %s' % (cocci.options,
-                    os.path.join(repo.dirname(), 'include'), settings.COCCI_TIMEOUT, spfile,
-                    os.path.join(repo.dirname(), fname))
-
-    reportlog = execute_shell(args)
-    if len(reportlog) == 0:
-        return True
-    else:
-        return False
 
 def may_reject_cleanup(filename):
     # http://marc.info/?l=linux-ide&m=134988347418046&w=2
@@ -102,13 +77,34 @@ def may_reject_cleanup(filename):
     return False
 
 def main(args):
-    baserepo = None
+    for patch in Patch.objects.filter(commit = '', status = STATUS_ACCEPTED):
+        ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', patch.title).strip()
+        ptitle = re.sub('^.*:', '', ptitle).strip()
+        cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
+        for line in execute_shell_full(cmds)[::-1]:
+            if line.find(ptitle) == -1:
+                continue
+            commit = line.split('|')[0]
+            if Patch.objects.filter(commit = commit).count() != 0:
+                continue
+            patch.commit = commit
+            patch.save()
 
-    fixed = Status.objects.filter(name = 'Fixed')[0]
-    removed = Status.objects.filter(name = 'Removed')[0]
-    applied = Status.objects.filter(name = 'Accepted')[0]
-    rejected = Status.objects.filter(name = 'Rejected')[0]
-    obsoleted = Status.objects.filter(name = 'Obsoleted')[0]
+    for report in Report.objects.filter(commit = '', status = STATUS_ACCEPTED):
+        ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', report.title).strip()
+        ptitle = re.sub('^.*:', '', ptitle).strip()
+        cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
+        for line in execute_shell_full(cmds)[::-1]:
+            if line.find(ptitle) == -1:
+                continue
+            commit = line.split('|')[0]
+            if Report.objects.filter(commit = commit).count() != 0:
+                continue
+            report.commit = commit
+            report.save()
+
+    baserepo = None
+    ob_days = read_config('patch.status.obsoleted_days', 0)
 
     for repo in GitRepo.objects.filter(status = True):
         if baserepo is None:
@@ -131,23 +127,24 @@ def main(args):
                 tag.save()
 
         pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
-        for dot in [CheckVersionDetector, CheckReleaseDetector, CheckIncludeDetector, CheckCocciDetector]:
+        for dot in patch_engine_list():
             test = dot(repo.dirname(), logger.logger)
             for i in range(test.tokens()):
-                logger.logger.info('Starting update type %d' % test.get_type())
-
                 rtype = None
                 try:
                     rtype = Type.objects.filter(id = test.get_type())[0]
                 except:
+                    test.next_token()
                     continue
 
                 if rtype.status == False:
                     test.next_token()
                     continue
 
+                logger.info('Starting update type %d' % test.get_type())
+
                 patchs = Patch.objects.filter(Q(tag__repo = baserepo), Q(type = rtype),
-                                              Q(status__name = 'New') | Q(status__name = 'Sent'))
+                                              Q(status = STATUS_NEW) | Q(status = STATUS_SENT))
                 for patch in patchs:
                     if not patch.mglist is None and len(patch.mglist) != 0:
                         continue
@@ -155,123 +152,133 @@ def main(args):
                     pcount['total'] += 1
                     print "check for %s\n" % patch.filename()
                     if may_reject_cleanup(patch.file):
-                        update_patch_status(patch, rejected)
+                        update_patch_status(patch, STATUS_REJECTED)
                         logger.logger.info('rejected patch %d' % patch.id)
                         continue
 
                     if not os.path.exists(test._get_file_path()):
-                        update_patch_status(patch, removed)
+                        update_patch_status(patch, STATUS_REMOVED)
                         pcount['removed'] += 1
                         logger.logger.info('removed patch %d' % patch.id)
                         continue
 
                     if test.should_patch() == False:
-                        if patch.status.name == 'New':
+                        if patch.status == STATUS_NEW:
                             if patch.mergered != 0:
                                 mpatch = Patch.objects.filter(id = patch.mergered)
                                 if len(mpatch) != 0:
-                                    if mpatch[0].status.name == 'Sent':
-                                        update_patch_status(patch, applied)
+                                    if mpatch[0].status == STATUS_SENT:
+                                        update_patch_status(patch, STATUS_ACCEPTED)
                                         pcount['applied'] += 1
                                         logger.logger.info('applied patch %d' % patch.id)
                                     else:
-                                        update_patch_status(patch, fixed)
+                                        update_patch_status(patch, STATUS_FIXED)
                                         pcount['fixed'] += 1
                                         logger.logger.info('fixed patch %d' % patch.id)
                                 else:
-                                    update_patch_status(patch, fixed)
+                                    update_patch_status(patch, STATUS_FIXED)
                                     pcount['fixed'] += 1
                                     logger.logger.info('fixed patch %d' % patch.id)
                             else:
-                                update_patch_status(patch, fixed)
+                                update_patch_status(patch, STATUS_FIXED)
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
-                        elif patch.status.name == 'Sent':
-                            update_patch_status(patch, applied)
+                        elif patch.status == STATUS_SENT:
+                            update_patch_status(patch, STATUS_ACCEPTED)
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
-                    elif settings.PATCH_OBSOLETED_DAYS > 0:
-                        if patch.status.name != 'New':
+                    elif ob_days > 0:
+                        if patch.status != STATUS_NEW:
                             continue
                         times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
                         dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
                         delta = datetime.now() - dt
-                        if delta.days > settings.PATCH_OBSOLETED_DAYS:
-                            update_patch_status(patch, obsoleted)
+                        if delta.days > ob_days:
+                            update_patch_status(patch, STATUS_OBSOLETED)
                             pcount['skip'] += 1
                             logger.logger.info('skip patch %d' % patch.id)
 
-                logger.logger.info('End scan type %d' % test.get_type())
+                logger.info('End scan type %d' % test.get_type())
+                logs.logs = logger.getlog()
+                logs.save()
                 test.next_token()
 
-        for cocci in CocciReport.objects.all():
-            spfile = cocci.fullpath()
-            if not os.path.exists(spfile):
-                continue
-
-            rtype = Type.objects.get(id = (cocci.id + 10000))
-            if rtype.status == False:
-                continue
-
-            logger.logger.info('Starting update type %d' % rtype.id)
-            patchs = Report.objects.filter(Q(tag__repo = baserepo), Q(type = rtype),
-                                           Q(status__name = 'New') | Q(status__name = 'Patched') | Q(status__name = 'Sent'))
-            for patch in patchs:
-                if not patch.mglist is None and len(patch.mglist) != 0:
+        for dot in report_engine_list():
+            test = dot(repo.dirname(), logger.logger)
+            for i in range(test.tokens()):
+                rtype = None
+                try:
+                    rtype = Type.objects.filter(id = test.get_type())[0]
+                except:
+                    test.next_token()
+                    continue
+                if rtype.status == False:
+                    test.next_token()
                     continue
 
-                if may_reject_cleanup(patch.file):
-                    update_patch_status(patch, rejected)
-                    logger.logger.info('rejected patch %d' % patch.id)
-                    continue
-
-                if not os.path.exists(os.path.join(repo.dirname(), patch.file)):
-                    update_report_status(patch, removed)
-                    pcount['removed'] += 1
-                    logger.logger.info('removed patch %d' % patch.id)
-                    continue
+                logger.info('Starting update type %d' % test.get_type())
+                patchs = Report.objects.filter(Q(tag__repo = baserepo), Q(type = rtype),
+                                               Q(status = STATUS_NEW) | Q(status = STATUS_PATCHED) | Q(status = STATUS_SENT))
+                for patch in patchs:
+                    if not patch.mglist is None and len(patch.mglist) != 0:
+                        continue
     
-                if is_report_fixed(repo, cocci, spfile, patch.file) == True:
-                    if patch.status.name == 'New':
-                        update_report_status(patch, fixed)
-                        pcount['fixed'] += 1
-                        logger.logger.info('fixed patch %d' % patch.id)
-                    elif patch.status.name == 'Sent':
-                        update_report_status(patch, applied)
-                        pcount['applied'] += 1
-                        logger.logger.info('applied patch %d' % patch.id)
-                    elif patch.status.name == 'Patched':
-                        if patch.mergered != 0:
-                            mpatch = Report.objects.filter(id = patch.mergered)
-                            if len(mpatch) != 0:
-                                if mpatch[0].status.name == 'Sent':
-                                    update_report_status(patch, applied)
-                                    pcount['applied'] += 1
-                                    logger.logger.info('applied patch %d' % patch.id)
+                    if may_reject_cleanup(patch.file):
+                        update_patch_status(patch, STATUS_REJECTED)
+                        logger.logger.info('rejected patch %d' % patch.id)
+                        continue
+    
+                    if not os.path.exists(os.path.join(repo.dirname(), patch.file)):
+                        update_report_status(patch, STATUS_REMOVED)
+                        pcount['removed'] += 1
+                        logger.logger.info('removed patch %d' % patch.id)
+                        continue
+
+                    test.set_filename(patch.file)
+                    if test.should_report() == False:
+                        if patch.status == STATUS_NEW:
+                            update_report_status(patch, STATUS_FIXED)
+                            pcount['fixed'] += 1
+                            logger.logger.info('fixed patch %d' % patch.id)
+                        elif patch.status == STATUS_SENT:
+                            update_report_status(patch, STATUS_ACCEPTED)
+                            pcount['applied'] += 1
+                            logger.logger.info('applied patch %d' % patch.id)
+                        elif patch.status == STATUS_PATCHED:
+                            if patch.mergered != 0:
+                                mpatch = Report.objects.filter(id = patch.mergered)
+                                if len(mpatch) != 0:
+                                    if mpatch[0].status == STATUS_SENT:
+                                        update_report_status(patch, STATUS_ACCEPTED)
+                                        pcount['applied'] += 1
+                                        logger.logger.info('applied patch %d' % patch.id)
+                                    else:
+                                        update_report_status(patch, STATUS_FIXED)
+                                        pcount['fixed'] += 1
+                                        logger.logger.info('fixed patch %d' % patch.id)
                                 else:
-                                    update_report_status(patch, fixed)
+                                    update_report_status(patch, STATUS_FIXED)
                                     pcount['fixed'] += 1
                                     logger.logger.info('fixed patch %d' % patch.id)
                             else:
-                                update_report_status(patch, fixed)
+                                update_report_status(patch, STATUS_FIXED)
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
-                        else:
-                            update_report_status(patch, fixed)
-                            pcount['fixed'] += 1
-                            logger.logger.info('fixed patch %d' % patch.id)
-                elif settings.PATCH_OBSOLETED_DAYS > 0:
-                    if patch.status.name != 'New':
-                        continue
-                    times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
-                    dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
-                    delta = datetime.now() - dt
-                    if delta.days > settings.PATCH_OBSOLETED_DAYS:
-                        update_patch_status(patch, obsoleted)
-                        pcount['skip'] += 1
-                        logger.logger.info('skip patch %d' % patch.id)
-
-            logger.logger.info('End scan type %d' % rtype.id)
+                    elif ob_days > 0:
+                        if patch.status != STATUS_NEW:
+                            continue
+                        times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
+                        dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
+                        delta = datetime.now() - dt
+                        if delta.days > ob_days:
+                            update_patch_status(patch, STATUS_OBSOLETED)
+                            pcount['skip'] += 1
+                            logger.logger.info('skip patch %d' % patch.id)
+    
+                logger.info('End scan type %d' % rtype.id)
+                logs.logs = logger.getlog()
+                logs.save()
+                test.next_token()
 
         logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d, skip: %s' % (
                         pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'], pcount['skip'])

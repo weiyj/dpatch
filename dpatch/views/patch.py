@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -37,9 +37,12 @@ from time import gmtime, strftime
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
-from dpatch.models import GitRepo, GitTag, Patch, Status, Event, Type, ExceptFile
-from dpatch.patchformat import PatchFormat 
+from dpatch.models import GitRepo, GitTag, Patch, Event, Type, ExceptFile
+from dpatch.lib.common.patchformater import PatchFormater
+from dpatch.lib.common.patchparser import PatchParser
+from dpatch.lib.db.filemodule import register_module_name
 from dpatch.forms import PatchNewForm
+from dpatch.lib.common.status import *
 
 def get_request_paramter(request, key, default=None):
     if request.GET.has_key(key):
@@ -66,39 +69,23 @@ def execute_shell(args):
     #if shelllog.returncode != 0:
     return shelllog.returncode, shellOut
 
-def status_name(name):
-    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Obsoleted']:
-        return name.upper()
-    elif name == 'Accepted':
-        return 'APPLIED'
-    else:
-        return name
-
 def patchlist(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__lte = 10000):
         rtypes.append("%s=%s" % (rtype.name, rtype.id))
 
-    rstatus = []
-    for rt in Status.objects.all():
-        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
-        
     context = RequestContext(request)
     context['tag'] = tag_name
     context['repo'] = get_request_paramter(request, 'repo', '1')
     context['types'] = '|'.join(rtypes)
-    context['status'] = '|'.join(rstatus)
-    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    context['status'] = status_name_list([STATUS_PATCHED])
+    context['build'] = build_name_list()
     return render_to_response("patch/patchlist.html", context)
 
 def patch_list_version(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__lte = 10000):
         rtypes.append("%s=%s" % (rtype.name, rtype.id))
-
-    rstatus = []
-    for rt in Status.objects.all():
-        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
 
     rtagnames = []
     for rtag in GitTag.objects.filter(name__icontains = tag_name):
@@ -109,33 +96,11 @@ def patch_list_version(request, tag_name):
     context['tag'] = tag_name
     context['repo'] = get_request_paramter(request, 'repo', '1')
     context['types'] = '|'.join(rtypes)
-    context['status'] = '|'.join(rstatus)
+    context['status'] = status_name_list([STATUS_PATCHED])
     context['tagnames'] = '|'.join(rtagnames)
     context['byversion'] = True
-    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    context['build'] = build_name_list()
     return render_to_response("patch/patchlist.html", context)
-
-def html_patch_status(name):
-    if name == 'New':
-        return '<FONT COLOR="#000000">NEW</FONT>'
-    elif name == 'Fixed':
-        return '<FONT COLOR="#AAAAAA">FIXED</FONT>'
-    elif name == 'Removed':
-        return '<FONT COLOR="#AAAAAA">REMOVED</FONT>'
-    elif name == 'Sent':
-        return '<FONT COLOR="#0000FF">SENT</FONT>'
-    elif name == 'Merged':
-        return '<FONT COLOR="#AAAAAA">MERGED</FONT>'
-    elif name == 'Accepted':
-        return '<FONT COLOR="#00FF00">APPLIED</FONT>'
-    elif name == 'Rejected':
-        return '<FONT COLOR="#FF0000">REJECTED</FONT>'
-    elif name == 'Ignored':
-        return '<FONT COLOR="#AAAAAA">IGNORED</FONT>'
-    elif name == 'Obsoleted':
-        return '<FONT COLOR="#AAAAAA">OBSOLETED</FONT>'
-    else:
-        return name
 
 def patchfilter(pfilter):
     kwargs = {}
@@ -151,7 +116,7 @@ def patchfilter(pfilter):
         if key == 'type':
             kwargs.update({'type__id': value})
         elif key == 'status':
-            kwargs.update({'status__id': value})
+            kwargs.update({'status': value})
         elif key == 'file':
             kwargs.update({'file__icontains': value})
         elif key == 'build':
@@ -194,28 +159,26 @@ def patchlistdata(request, tag_name):
         
     for patch in patchset:
         action = ''
-        action += '<a href="#" class="detail" id="%s">Detail</a>' % patch.id
-        if request.user.is_authenticated() and patch.status.name == 'New':
+        action += '<a href="#" class="patch" id="%s">Patch</a>' % patch.id
+        if request.user.is_authenticated() and patch.status == STATUS_NEW:
             if patch.mglist is None or len(patch.mglist.strip()) == 0:
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
             if patch.build in [1, 3, 4]:
                 action += '<a href="#" class="send" id="%s">Send</a>' % patch.id
-        elif request.user.is_authenticated() and patch.status.name == 'Sent':
+        elif request.user.is_authenticated() and patch.status in [STATUS_SENT, STATUS_MARKED]:
             if patch.mglist is None or len(patch.mglist.strip()) == 0:
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
+        elif patch.status == STATUS_ACCEPTED and len(patch.commit) > 0:
+            url = "%s;a=commit;h=%s" % (repo[0].url, patch.commit)
+            url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+            action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
 
-        if patch.build == 0:
-            build = 'TBD'
-        elif patch.build == 1:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#0000FF">PASS</FONT></a>' % patch.id
-        elif patch.build == 2:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#FF0000">FAIL</FONT></a>' % patch.id
-        elif patch.build == 4:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#00FF00">WARN</FONT></a>' % patch.id
-        elif patch.build == 3:
-            build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
+        if patch.build in [BUILD_PASS, BUILD_FAIL, BUILD_WARN]:
+            build = '<a href="#" class="build" id="%s">%s</a>' % (patch.id, build_name_html(patch.build))
+        else:
+            build = build_name_html(patch.build)
 
         fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (patch.id, patch.file)
 
@@ -227,7 +190,7 @@ def patchlistdata(request, tag_name):
                 'title': html.escape(patch.title),
                 'date': patch.date.strftime("%Y-%m-%d"),
                 'type': patch.type.name,
-                'status': html_patch_status(patch.status.name),
+                'status': status_name_html(patch.status),
                 'build': build,
                 'action': action,
                 'tagname': patch.tag.name,
@@ -365,8 +328,7 @@ def patchsendwizardstep(request, patch_id):
             ctx += '<div id="steperrors"><font color=red>Your SMTP setting is not correctly!</font></div>'
             return HttpResponse(ctx)
 
-        sent = Status.objects.filter(name = 'Sent')[0]
-        patch.status = sent
+        patch.status = STATUS_SENT
         patch.save()
 
         ctx = '<pre>Patch has been sent succeed!</pre>'
@@ -378,46 +340,26 @@ def patchsendwizardstep(request, patch_id):
 
     return HttpResponse(ctx)
 
-def patch_format(patch):
-    user = patch.username()
-    email = patch.email()
-
-    ctx = "Content-Type: text/plain; charset=ISO-8859-1\n"
-    ctx += "Content-Transfer-Encoding: 7bit\n"
-    ctx += "From: %s <%s>\n" % (user, email)
-    ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    ctx += "Subject: %s\n" % patch.title
-    ctx += "%s\n" % patch.emails
-    #ctx += "From: %s <%s>\n\n" % (user, email)
-    ctx += "%s\n\n" % patch.desc
-    ctx += "Signed-off-by: %s <%s>\n" % (user, email)
-    if patch.diff == None or patch.diff.find('Acked-by: ') == -1:
-        ctx += "---\n"
-    ctx += "%s\n" % patch.diff
-
-    return ctx
-
 @login_required
 @csrf_exempt
 def patcheditsave(request, patch_id):
-    title = get_request_paramter(request, 'title')
-    desc = get_request_paramter(request, 'desc')
-    emails = get_request_paramter(request, 'emails')
-    diff = get_request_paramter(request, 'diff')
+    src = get_request_paramter(request, 'src')
+    parser = PatchParser(src)
+    parser.parser()
 
-    if title is None or len(title) == 0:
+    if len(parser.get_title()) == 0:
         logevent("EDIT: patch %s, ERROR: no title specified" % patch_id)
         return HttpResponse('EDIT ERROR: no patch title specified')
 
-    if desc is None or len(desc) == 0:
+    if len(parser.get_description()) == 0:
         logevent("EDIT: patch %s, ERROR: no desc specified" % patch_id)
         return HttpResponse('EDIT ERROR: no patch desc specified')
 
-    if emails is None or len(emails) == 0:
+    if len(parser.get_email_list()) == 0:
         logevent("EDIT: patch %s, ERROR: no emails specified" % patch_id)
         return HttpResponse('EDIT ERROR: no patch emails specified')
 
-    if diff is None or len(diff) == 0:
+    if len(parser.get_diff()) == 0:
         logevent("EDIT: patch %s, ERROR: no diff specified" % patch_id)
         return HttpResponse('EDIT ERROR: no patch diff specified')
 
@@ -426,14 +368,17 @@ def patcheditsave(request, patch_id):
         logevent("EDIT: patch %s, ERROR: id does not exists")
         return HttpResponse('EDIT ERROR: patch id %s does not exists' % patch_id)
 
-    patch[0].title = title
-    patch[0].desc = desc
-    patch[0].emails = emails
-    if patch[0].diff != diff:
-        patch[0].diff = diff
+    register_module_name(patch[0].file, patch[0].module, parser.get_module_name())
+
+    patch[0].title = parser.get_title_full()
+    patch[0].desc = parser.get_description()
+    patch[0].emails = parser.get_email_list()
+    patch[0].module = parser.get_module_name()
+    if patch[0].diff != parser.get_diff():
+        patch[0].diff = parser.get_diff()
         patch[0].build = 0
-        patch[0].status = Status.objects.get(name = 'New')
-    patch[0].content = patch_format(patch[0])
+        patch[0].status = STATUS_NEW
+    patch[0].content = src
     patch[0].save()
 
     logevent("EDIT: patch %s, SUCCEED" % patch_id, True)
@@ -538,15 +483,14 @@ def patchlistmerge(request):
             statline += ", %d deletions(-)" % stats[2]
 
     diffs = "%s\n%s\n%s" % ('\n'.join(fstats), statline, diffs)
-    status = Status.objects.filter(name = 'New')[0]
     patch = Patch(tag = tag, file = rdir + '/', diff = diffs,
-                  type = rtype, status = status, mglist = ','.join(ids))
+                  type = rtype, status = STATUS_NEW, mglist = ','.join(ids))
     patch.save()
 
     user = patch.username()
     email = patch.email()
 
-    formater = PatchFormat(tag.repo.dirname(), rdir, user, email,
+    formater = PatchFormater(tag.repo.dirname(), rdir, user, email,
                            rtype.ptitle, rtype.pdesc, diffs)
     patch.content = formater.format_patch()
     patch.title = formater.format_title()
@@ -791,7 +735,7 @@ def patch_fix(request, patch_id):
             email = patch.email()
             title = rtype.ptitle
             desc = rtype.pdesc
-            formater = PatchFormat(repo.dirname(), patch.file, user, email,
+            formater = PatchFormater(repo.dirname(), patch.file, user, email,
                                    title, desc, diff)
             patch.content = formater.format_patch()
             patch.title = formater.format_title()
@@ -799,7 +743,7 @@ def patch_fix(request, patch_id):
             patch.emails = formater.get_mail_list()
             if patch.diff != diff:
                 patch.diff = diff
-                patch.status = Status.objects.get(name = 'New')
+                patch.status = STATUS_NEW
                 patch.build = 0
             patch.save()
             return HttpResponse('FIX: patch %d, SUCCEED' % patch.id, True)
@@ -857,8 +801,7 @@ def patch_new(request):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
 
-        new = Status.objects.get(name = 'New')
-        patch = Patch(tag = rtags[0], type = rtypes[0], file = rfile, status = new, diff = '')
+        patch = Patch(tag = rtags[0], type = rtypes[0], file = rfile, status = STATUS_NEW, diff = '')
         if not os.path.exists(patch.sourcefile()):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
@@ -894,10 +837,8 @@ def patch_status(request):
             return HttpResponse('MARK ERROR: patch %s does not exists' % i)
         patchs.append(patch[0])
 
-    rstatus = get_object_or_404(Status, id=statusid)
-
     for patch in patchs:
-        patch.status = rstatus
+        patch.status = statusid
         patch.save()
         
         if patch.mglist is None or len(patch.mglist) == 0:
@@ -910,11 +851,11 @@ def patch_status(request):
             if len(p) == 0:
                 continue
 
-            p[0].status = rstatus
+            p[0].status = statusid
             p[0].save()
 
-    logevent("MARK: patch status [%s] %s, SUCCEED" % (pids, rstatus.name), True)
-    return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, rstatus.name))
+    logevent("MARK: patch status [%s] %s, SUCCEED" % (pids, statusid), True)
+    return HttpResponse('MARK SUCCEED: patch ids [%s] to %s' % (pids, statusid))
 
 @login_required
 def patch_build_all(request):

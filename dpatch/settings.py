@@ -4,12 +4,10 @@ import os
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
-COCCI_TIMEOUT = 30
-STATUS_BY_VERSION = True
-#UPDATE_DELTA_INTERVAL = False
-DELTA_UPDATE = False
-PATCH_OBSOLETED_DAYS = 0
-USING_COMMIT_SINGER = False
+ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+PACKAGE_DIR = os.path.dirname(ROOT_DIR)
+BIN_DIR = os.path.join(PACKAGE_DIR, 'bin')
+DATA_DIR = os.path.dirname(ROOT_DIR)
 
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),
@@ -17,15 +15,18 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
-PACKAGE_DIR = os.path.dirname(ROOT_DIR)
-BIN_DIR = os.path.join(PACKAGE_DIR, 'bin')
-DATA_DIR = os.path.dirname(ROOT_DIR)
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(DATA_DIR, 'database/sqlite.db'),                      # Or path to database file if using sqlite3.
+        'NAME': os.path.join(DATA_DIR, 'database/sqlite.db'), # Or path to database file if using sqlite3.
+        'USER': '',                      # Not used with sqlite3.
+        'PASSWORD': '',                  # Not used with sqlite3.
+        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    },
+    'olddb': {
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': os.path.join(DATA_DIR, 'database/sqlite.db.save'), # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -40,7 +41,8 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+#TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Asia/Shanghai'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
@@ -57,7 +59,7 @@ USE_I18N = True
 USE_L10N = True
 
 # If you set this to False, Django will not use timezone-aware datetimes.
-USE_TZ = True
+USE_TZ = False
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"

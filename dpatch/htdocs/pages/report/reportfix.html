@@ -2,30 +2,31 @@
 	#reportfix .reditor { 
 		margin: 0;
 		position: absolute;
-		top: 22;
+		top: 24;
 		bottom: 0;
 		left: 0;
 		right: 0;
 	}
 
 	#reportfix div.toptitle {
-		background:url(../images/bg_title.png) repeat-x left top;
+		background: rgba(0, 0, 0, 0.02);
 		position: absolute;
 		top: 0;
 		left: 0;
 		right: 0;
 		height: 21px;
-		padding:0;
+		padding: 2px 0px 0 6px;
 		border-bottom: solid 1px #CBCBCB;
 		font-size: 14px;
 		font-weight: bold;
+		color: #555;
 		vertical-align: middle;
 		margin: 0;
 	}
 
 	#reportfix div.logtip {
 		position: absolute;
-		border: solid 1px #CBCBCB;
+		border-bottom: solid 1px #CBCBCB;
 		height: 100px;
 		display:none;
 		overflow-y:auto;
@@ -57,12 +58,12 @@
 				if ($(this).data("show") == true) {
 					$('#log').css("display", "none");
 					$('#tip').html("<U>REPORT&gt;&gt;</U>")
-					$('#reditor').css("top", "22");
+					$('#reditor').css("top", "24");
 					$(this).data("show", false);
 				} else {
 					$('#log').css("display", "block");
 					$('#tip').html("<U>REPORT&lt;&lt;</U>")
-					$('#reditor').css("top", "124");
+					$('#reditor').css("top", "123");
 					$(this).data("show", true);
 				}
 			});

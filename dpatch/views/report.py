@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -37,9 +37,12 @@ from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from time import gmtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Report, Status, Event, Type, ExceptFile
-from dpatch.patchformat import PatchFormat 
+from dpatch.models import GitRepo, GitTag, Report, Event, Type, ExceptFile
+from dpatch.lib.common.patchformater import PatchFormater
+from dpatch.lib.common.patchparser import PatchParser
+from dpatch.lib.db.filemodule import register_module_name
 from dpatch.forms import ReportNewForm
+from dpatch.lib.common.status import *
 
 def get_request_paramter(request, key, default=None):
     if request.GET.has_key(key):
@@ -52,39 +55,23 @@ def logevent(event, status = False):
     evt = Event(event = event, status = status)
     evt.save()
 
-def status_name(name):
-    if name in ['New', 'Fixed', 'Removed', 'Sent', 'Merged', 'Rejected', 'Patched', 'Ignored', 'Obsoleted']:
-        return name.upper()
-    elif name == 'Accepted':
-        return 'APPLIED'
-    else:
-        return name
-
 def report_list(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__gte = 10000):
         rtypes.append("%s=%s" % (rtype.name, rtype.id))
 
-    rstatus = []
-    for rt in Status.objects.all():
-        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
-
     context = RequestContext(request)
     context['tag'] = tag_name
     context['repo'] = get_request_paramter(request, 'repo', '1')
     context['types'] = '|'.join(rtypes)
-    context['status'] = '|'.join(rstatus)
-    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    context['status'] = status_name_list()
+    context['build'] = build_name_list()
     return render_to_response("report/reportlist.html", context)
 
 def report_list_version(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__gte = 10000):
         rtypes.append("%s=%s" % (rtype.name, rtype.id))
-
-    rstatus = []
-    for rt in Status.objects.all():
-        rstatus.append("%s=%s" %(status_name(rt.name), rt.id))
 
     rtagnames = []
     for rtag in GitTag.objects.filter(name__icontains = tag_name):
@@ -95,35 +82,11 @@ def report_list_version(request, tag_name):
     context['tag'] = tag_name
     context['repo'] = get_request_paramter(request, 'repo', '1')
     context['types'] = '|'.join(rtypes)
-    context['status'] = '|'.join(rstatus)
+    context['status'] = status_name_list()
     context['tagnames'] = '|'.join(rtagnames)
     context['byversion'] = True
-    context['build'] = 'PASS=1|FAIL=2|WARN=4|SKIP=3|TBD=0'
+    context['build'] = build_name_list()
     return render_to_response("report/reportlist.html", context)
-
-def html_report_status(name):
-    if name == 'New':
-        return '<FONT COLOR="#000000">NEW</FONT>'
-    elif name == 'Fixed':
-        return '<FONT COLOR="#AAAAAA">FIXED</FONT>'
-    elif name == 'Removed':
-        return '<FONT COLOR="#AAAAAA">REMOVED</FONT>'
-    elif name == 'Patched':
-        return '<FONT COLOR="#0000AA">PATCHED</FONT>'
-    elif name == 'Sent':
-        return '<FONT COLOR="#0000FF">SENT</FONT>'
-    elif name == 'Merged':
-        return '<FONT COLOR="#AAAAAA">MERGED</FONT>'
-    elif name == 'Accepted':
-        return '<FONT COLOR="#00FF00">APPLIED</FONT>'
-    elif name == 'Rejected':
-        return '<FONT COLOR="#FF0000">REJECTED</FONT>'
-    elif name == 'Ignored':
-        return '<FONT COLOR="#AAAAAA">IGNORED</FONT>'
-    elif name == 'Obsoleted':
-        return '<FONT COLOR="#AAAAAA">OBSOLETED</FONT>'
-    else:
-        return name
 
 def reportfilter(pfilter):
     kwargs = {}
@@ -139,7 +102,7 @@ def reportfilter(pfilter):
         if key == 'type':
             kwargs.update({'type__id': value})
         elif key == 'status':
-            kwargs.update({'status__id': value})
+            kwargs.update({'status': value})
         elif key == 'file':
             kwargs.update({'file__icontains': value})
         elif key == 'build':
@@ -181,10 +144,10 @@ def report_list_data(request, tag_name):
     for report in reportset:
         action = ''
         action += '<a href="#" class="detail" id="%s">Log</a>' % report.id
-        if report.status.name == 'New':
+        if report.status == STATUS_NEW:
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
-        elif report.status.name == 'Patched':
+        elif report.status == STATUS_PATCHED:
             action = ''
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
@@ -193,25 +156,24 @@ def report_list_data(request, tag_name):
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
                 if report.build in [1, 3, 4]:
                     action += '<a href="#" class="send" id="%s">Send</a>' % report.id
-        elif report.status.name == 'Sent':
+        elif report.status == STATUS_SENT:
             if request.user.is_authenticated():
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % report.id
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
+        elif report.status == STATUS_ACCEPTED and len(report.commit) > 0:
+            url = "%s;a=commit;h=%s" % (repo[0].url, report.commit)
+            url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+            action = '<a href="#" class="patch" id="%s">Patch</a>' % report.id
+            action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
         else:
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
 
-        if report.build == 0:
-            build = 'TBD'
-        elif report.build == 1:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#0000FF">PASS</FONT></a>' % report.id
-        elif report.build == 2:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#FF0000">FAIL</FONT></a>' % report.id
-        elif report.build == 4:
-            build = '<a href="#" class="build" id="%s"><FONT COLOR="#00FF00">WARN</FONT></a>' % report.id
-        elif report.build == 3:
-            build = '<FONT COLOR="#AAAAAA">SKIP</FONT>'
+        if report.build in [BUILD_PASS, BUILD_FAIL, BUILD_WARN]:
+            build = '<a href="#" class="build" id="%s">%s</a>' % (report.id, build_name_html(report.build))
+        else:
+            build = build_name_html(report.build)
 
         fileinfo = '<a href="#" class="fileinfo" id="%s">%s</a>' % (report.id, report.file)
 
@@ -223,7 +185,7 @@ def report_list_data(request, tag_name):
                 'title': html.escape(report.title),
                 'date': report.date.strftime("%Y-%m-%d"),
                 'type': report.type.name,
-                'status': html_report_status(report.status.name),
+                'status': status_name_html(report.status),
                 'build': build,
                 'action': action,
                 'tagname': report.tag.name,
@@ -276,25 +238,6 @@ def _get_diff_and_revert(repo, fname):
     os.system("cd %s ; git diff %s | patch -p1 -R > /dev/null" % (repo, fname))
     return diffOut
 
-def report_format(patch):
-    user = patch.username()
-    email = patch.email()
-
-    ctx = "Content-Type: text/plain; charset=ISO-8859-1\n"
-    ctx += "Content-Transfer-Encoding: 7bit\n"
-    ctx += "From: %s <%s>\n" % (user, email)
-    ctx += "Date: %s\n" % strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
-    ctx += "Subject: %s\n" % patch.title
-    ctx += "%s\n" % patch.emails
-    #ctx += "From: %s <%s>\n\n" % (user, email)
-    ctx += "%s\n\n" % patch.desc
-    ctx += "Signed-off-by: %s <%s>\n" % (user, email)
-    if patch.diff == None or patch.diff.find('Acked-by: ') == -1:
-        ctx += "---\n"
-    ctx += "%s\n" % patch.diff
-
-    return ctx
-
 @login_required
 @csrf_exempt
 def report_new(request):
@@ -313,8 +256,7 @@ def report_new(request):
             logevent("NEW: report , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: report, ERROR: type id %s does not exists' % typeid)
 
-        new = Status.objects.get(name = 'New')
-        report = Report(tag = rtags[0], type = rtypes[0], file = rfile, status = new, diff = '')
+        report = Report(tag = rtags[0], type = rtypes[0], file = rfile, status = STATUS_NEW, diff = '')
         if not os.path.exists(report.sourcefile()):
             logevent("NEW: report , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: report, ERROR: type id %s does not exists' % typeid)
@@ -335,10 +277,14 @@ def report_new(request):
 def report_edit(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     if request.method == "POST":
-        title = get_request_paramter(request, 'title')
-        desc = get_request_paramter(request, 'desc')
-        emails = get_request_paramter(request, 'emails')
-        diff = get_request_paramter(request, 'diff')
+        src = get_request_paramter(request, 'src')
+        parser = PatchParser(src)
+        parser.parser()
+
+        title = parser.get_title()
+        desc = parser.get_description()
+        emails = parser.get_email_list()
+        diff = parser.get_diff()
     
         if title is None or len(title) == 0:
             logevent("EDIT: report %s, ERROR: no title specified" % report_id)
@@ -356,15 +302,18 @@ def report_edit(request, report_id):
             logevent("EDIT: report %s, ERROR: no diff specified" % report_id)
             return HttpResponse('EDIT ERROR: no report diff specified')
 
-        report.title = title
+        register_module_name(report.file, report.module, parser.get_module_name())
+
+        report.title = parser.get_title_full()
         report.desc = desc
         report.emails = emails
+        report.module = parser.get_module_name()
         if report.diff != diff:
             report.build = 0
             report.diff = diff
-            report.status = Status.objects.get(name = 'Patched')
+            report.status = STATUS_PATCHED
 
-        report.content = report_format(report)
+        report.content = src
         report.save()
 
         logevent("EDIT: report %s, SUCCEED" % report_id, True)
@@ -401,13 +350,11 @@ def report_fix(request, report_id):
             srcfile.close()
             diff = _get_diff_and_revert(repo.dirname(), report.file)
 
-            patched = Status.objects.get(name = 'Patched')
-
             user = report.username()
             email = report.email()
             title = rtype.ptitle
             desc = rtype.pdesc
-            formater = PatchFormat(repo.dirname(), report.file, user, email,
+            formater = PatchFormater(repo.dirname(), report.file, user, email,
                                    title, desc, diff)
             report.content = formater.format_patch()
             report.title = formater.format_title()
@@ -415,7 +362,7 @@ def report_fix(request, report_id):
             report.emails = formater.get_mail_list()
             report.diff = diff
             report.build = 0
-            report.status = patched
+            report.status = STATUS_PATCHED
             report.save()
             return HttpResponse('FIX: report %d, SUCCEED' % report.id, True)
         except:
@@ -669,8 +616,7 @@ def report_sendwizard_step(request, report_id):
             ctx += '<div id="steperrors"><font color=red>Your SMTP setting is not correctly!</font></div>'
             return HttpResponse(ctx)
 
-        sent = Status.objects.filter(name = 'Sent')[0]
-        report.status = sent
+        report.status = STATUS_SENT
         report.save()
 
         ctx = '<pre>Patch has been sent succeed!</pre>'
@@ -734,10 +680,8 @@ def report_status(request):
             return HttpResponse('MARK ERROR: report %s does not exists' % i)
         reports.append(report[0])
 
-    rstatus = get_object_or_404(Status, id=statusid)
-
     for report in reports:
-        report.status = rstatus
+        report.status = statusid
         report.save()
         
         if report.mglist is None or len(report.mglist) == 0:
@@ -750,11 +694,11 @@ def report_status(request):
             if len(r) == 0:
                 continue
 
-            r[0].status = rstatus
+            r[0].status = statusid
             r[0].save()
 
-    logevent("MARK: report status [%s] %s, SUCCEED" % (rids, rstatus.name), True)
-    return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, rstatus.name))
+    logevent("MARK: report status [%s] %s, SUCCEED" % (rids, statusid), True)
+    return HttpResponse('MARK SUCCEED: report ids [%s] to %s' % (rids, statusid))
 
 @login_required
 def report_build_status(request):
@@ -873,15 +817,14 @@ def report_merge(request):
             statline += ", %d deletions(-)" % stats[2]
 
     diffs = "%s\n%s\n%s" % ('\n'.join(fstats), statline, diffs)
-    status = Status.objects.filter(name = 'Patched')[0]
     report = Report(tag = tag, file = rdir + '/', diff = diffs, reportlog = logs,
-                  type = rtype, status = status, mglist = ','.join(ids))
+                  type = rtype, status = STATUS_PATCHED, mglist = ','.join(ids))
     report.save()
 
     user = report.username()
     email = report.email()
 
-    formater = PatchFormat(tag.repo.dirname(), rdir, user, email,
+    formater = PatchFormater(tag.repo.dirname(), rdir, user, email,
                            rtype.ptitle, rtype.pdesc, diffs)
     report.content = formater.format_patch()
     report.title = formater.format_title()

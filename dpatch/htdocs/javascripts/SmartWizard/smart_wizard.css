@@ -10,10 +10,10 @@
   position:relative;
   display:block;
   margin:0;
-  padding:0;
+  padding:0 8px;
   border: 0px solid #CCC;
   overflow:visible;
-  float:left;
+  float:left !important;
   width:780px;
 }
 .swMain .stepContainer {
@@ -89,7 +89,7 @@
   list-style: none;
   padding: 0px;  
   margin: 10px 0;      
-  clear: both;
+  /* clear: both; */
   border: 0px solid #CCCCCC;    
   background: transparent; /*#EEEEEE */
 }
@@ -101,7 +101,7 @@
   padding-left:3px;
   padding-right: 3px;
   border: 0px solid #E0E0E0;      
-  float: left;
+  float: left !important;
 }
 /* Anchor Element Style */
 .swMain ul.anchor li a {

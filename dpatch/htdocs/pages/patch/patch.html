@@ -1,12 +1,3 @@
-<div id='patch' style="float:right;position:absolute;top:0px;background-color:#FFF;filter: alpha(opacity=30);">
-	<pre class="brush: diff">{{ patchctx }}</pre>
+<div id='patchshow' style="float:right;position:absolute;top:0px;background-color:#FFF;filter: alpha(opacity=30);">
+	<pre>{{ patchctx }}</pre>
 </div>
-
-<script type="text/javascript">
-	(function($) {
-		$(document).ready(function () {
-			SyntaxHighlighter.all();
-			SyntaxHighlighter.highlight();
-		});
-	})(jQuery);
-</script>

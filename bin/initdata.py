@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -20,7 +20,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import sys
-from dpatch.models import GitRepo, Status, Type
+from dpatch.models import GitRepo, Type
 
 def main(args):
     if GitRepo.objects.filter(name = 'linux.git').count() == 0:
@@ -34,12 +34,6 @@ def main(args):
                        name = 'linux-next.git', user = 'Wei Yongjun', email = 'yongjun_wei@trendmicro.com.cn',
                        status = True)
         repo.save()
-
-    for s in ['New', 'Sent', 'Merged', 'Accepted', 'Rejected', 'Fixed', 'Removed', 'Patched', 'Ignored', 'Obsoleted']:
-        if Status.objects.filter(name = s).count() > 0:
-            continue
-        status = Status(name = s)
-        status.save()
 
     types = [{'id': 1000,
               'name': 'checkversion',

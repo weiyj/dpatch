@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -23,6 +23,8 @@ import os
 import tarfile
 import tempfile
 import subprocess
+import urllib
+import urlparse
 
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -33,7 +35,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils import simplejson
 from time import gmtime, strftime
 
-from dpatch.models import CocciEngine, CocciReport, Type, Event, Patch, Report, ExceptFile, GitRepo, GitCommit
+from dpatch.lib.common.cocciformater import CocciFormater
+from dpatch.models import CocciPatchEngine, CocciReportEngine, Type, Event, Patch, Report, ExceptFile, GitRepo, GitCommit
 from dpatch.forms import ExceptFileForm
 
 def get_request_paramter(request, key):
@@ -93,7 +96,7 @@ def semantic_edit(request, cocci_id):
         if fixed is None:
             fixed = ''
 
-        coccis = CocciEngine.objects.filter(id = cocci_id)
+        coccis = CocciPatchEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             logevent("EDIT: coccinelle semantic, ERROR: id %s does not exists" % cocci_id)
             return HttpResponse('EDIT ERROR: semantic id %s does not exists' % cocci_id)
@@ -112,11 +115,9 @@ def semantic_edit(request, cocci_id):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        spctx = engine.rawformat(title, desc, einfo)
         try:
-            cocci = open(engine.fullpath(), "w")
-            cocci.write(spctx)
-            cocci.close()
+            fmt = CocciFormater(title, desc, content, rtype.type, options, fixed, einfo)
+            fmt.save(engine.fullpath())
             if ofname != engine.fullpath() and os.path.exists(ofname):
                 os.unlink(ofname)
         except:
@@ -124,7 +125,7 @@ def semantic_edit(request, cocci_id):
             return HttpResponse('EDIT ERROR: can not write file %s' % engine.fullpath())
 
         engine.save()
-    
+
         rtype.name = name
         rtype.ptitle = title
         rtype.pdesc = desc
@@ -133,7 +134,7 @@ def semantic_edit(request, cocci_id):
         logevent("EDIT: coccinelle semantic, SUCCEED: type id %s" % rtype.id, True)
         return HttpResponse('EDIT: coccinelle semantic, SUCCEED: type id %s' % cocci_id)
     else:
-        coccis = CocciEngine.objects.filter(id = cocci_id)
+        coccis = CocciPatchEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             engine = None
             rtype = None
@@ -146,7 +147,7 @@ def semantic_edit(request, cocci_id):
         return render_to_response("engine/semanticedit.html", context)
 
 def semantic_detail(request, cocci_id):
-    coccis = CocciEngine.objects.filter(id = cocci_id)
+    coccis = CocciPatchEngine.objects.filter(id = cocci_id)
     if len(coccis) == 0:
         return ""
     cocci = coccis[0]
@@ -170,7 +171,7 @@ def semantic_delete(request):
     ids = pids.split(',')
     coccis = []
     for i in ids:
-        cocci = CocciEngine.objects.filter(id = i)
+        cocci = CocciPatchEngine.objects.filter(id = i)
         if len(cocci) == 0:
             logevent("DELETE: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
             return HttpResponse('DELETE ERROR: id %s does not exists' % i)
@@ -236,7 +237,7 @@ def semantic_new(request):
             fixed = ''
 
         fname = '%s.cocci' % name.strip()
-        engine = CocciEngine(file = fname, content = content, options = options, fixed = fixed.strip())
+        engine = CocciPatchEngine(file = fname, content = content, options = options, fixed = fixed.strip())
         if os.path.exists(engine.fullpath()):
             logevent("NEW: coccinelle semantic, ERROR: name %s already exists" % name)
             return HttpResponse('NEW ERROR: semantic name %s already exists' % name)
@@ -261,30 +262,61 @@ def semantic_new(request):
         context = RequestContext(request)
         return render_to_response("engine/semanticedit.html", context)
 
+def semantic_filter(pfilter):
+    kwargs = {}
+
+    if pfilter is None or len(pfilter) == 0:
+        return kwargs
+
+    params = urlparse.parse_qs(urllib.unquote(pfilter))
+    for key in params:
+        if len(params[key]) == 0:
+            continue
+        value = params[key][0]
+        if key == 'type':
+            kwargs.update({'type': value})
+        elif key == 'status':
+            kwargs.update({'status': value})
+        elif key == 'name':
+            kwargs.update({'name__icontains': value})
+        elif key == 'title':
+            kwargs.update({'title__icontains': value})
+    return kwargs
+
 def semantic_list(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
+    pfilter = get_request_paramter(request, 'filter')
 
-    coccis = {'page': page, 'total': CocciEngine.objects.all().count(), 'rows': [] }
     rstart = rp * (page - 1)
     rend = rp * page
-    for cocci in CocciEngine.objects.all()[rstart:rend]:
-        rtype = Type.objects.get(id = cocci.id + 3000)
+
+    kwargs = semantic_filter(pfilter)
+    rtypecnt = Type.objects.filter(id__gt = 3000, id__lt = 10000, **kwargs).count()
+    rtypeset = Type.objects.filter(id__gt = 3000, id__lt = 10000, **kwargs)[rstart:rend]
+    coccis = {'page': page, 'total': rtypecnt, 'rows': [] }
+    for rtype in rtypeset:
         if rtype.status == False:
-            status = '<a href="#" class="status" id="%s">Disabled</a>' % rtype.id
+            status = '<a href="#" class="status" id="%s">DISABLED</a>' % rtype.id
         else:
-            status = '<a href="#" class="status" id="%s">Enabled</a>' % rtype.id
+            status = '<a href="#" class="status" id="%s">ENABLED</a>' % rtype.id
 
-        action = '<a href="#" class="detail" id="%s">Detail</a>' % cocci.id
+        action = '<a href="#" class="detail" id="%s">Detail</a>' % (rtype.id - 3000)
         if request.user.is_authenticated():
-            action += '<a href="#" class="edit" id="%s">Edit</a>' % cocci.id
+            action += '<a href="#" class="edit" id="%s">Edit</a>' % (rtype.id - 3000)
 
+        if rtype.type == 1:
+            stype = 'BUGFIX'
+        else:
+            stype = 'CLENAUP'
+            
         coccis['rows'].append({
-            'id': cocci.id,
+            'id': rtype.id - 3000,
             'cell': {
-                'id': cocci.id,
-                'file': cocci.file,
+                'id': rtype.id - 3000,
+                'type': stype,
                 'status': status,
+                'flags': rtype.flags,
                 'name': rtype.name,
                 'title': rtype.ptitle,
                 'desc': rtype.pdesc,
@@ -303,14 +335,9 @@ def rewrite_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        #if len(einfo) > 0:
-        spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
-        try:
-            cocci = open(cocci.fullpath(), "w")
-            cocci.write(spctx)
-            cocci.close()
-        except:
-            pass
+        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content, rtype.type,
+                            cocci.options, cocci.fixed, exceptinfo = [])
+        fmt.save(cocci.fullpath())
 
 @login_required
 @csrf_exempt
@@ -346,7 +373,7 @@ def semantic_export(request):
 
     files = []
     for cid in cids.split(','):
-        cocci = CocciEngine.objects.filter(id = cid)
+        cocci = CocciPatchEngine.objects.filter(id = cid)
         if len(cocci) == 0:
             logevent("EXPORT: coccinelle semantic [%s], ERROR: id %s does not exists" % (cids, cid))
             return HttpResponse('EXPORT ERROR: id %s does not exists' % cid)
@@ -368,7 +395,7 @@ def semantic_export(request):
 
 def semantic_export_all(request):
     files = []
-    for cocci in CocciEngine.objects.all():
+    for cocci in CocciPatchEngine.objects.all():
         rewrite_engine(cocci)
         files.append(cocci.fullpath())
 
@@ -395,7 +422,7 @@ def semantic_deltascan(request):
     ids = pids.split(',')
     coccis = []
     for i in ids:
-        cocci = CocciEngine.objects.filter(id = i)
+        cocci = CocciPatchEngine.objects.filter(id = i)
         if len(cocci) == 0:
             logevent("DELTASCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
             return HttpResponse('DELTASCAN ERROR: id %s does not exists' % i)
@@ -415,10 +442,9 @@ def semantic_deltascan(request):
                     gcommit.commit = repo.commit
                     gcommit.save()
 
-                if repo.delta == False:
-                    if GitCommit.objects.filter(repo = repo, type = rtype).count() == 0:
-                        gcommit = GitCommit(repo = repo, type = rtype, commit = repo.commit)
-                        gcommit.save()
+                if GitCommit.objects.filter(repo = repo, type = rtype).count() == 0:
+                    gcommit = GitCommit(repo = repo, type = rtype, commit = repo.commit)
+                    gcommit.save()
 
             if commit != None:
                 rtype.commit = commit
@@ -437,7 +463,7 @@ def semantic_fullscan(request):
     ids = pids.split(',')
     coccis = []
     for i in ids:
-        cocci = CocciEngine.objects.filter(id = i)
+        cocci = CocciPatchEngine.objects.filter(id = i)
         if len(cocci) == 0:
             logevent("FULLSCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
             return HttpResponse('FULLSCAN ERROR: id %s does not exists' % i)
@@ -449,7 +475,7 @@ def semantic_fullscan(request):
             rtype = rtypes[0]
             commit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
 
-            for repo in GitRepo.objects.filter(delta = False):
+            for repo in GitRepo.objects.all():
                 for gcommit in GitCommit.objects.filter(repo = repo, type = rtype):
                     gcommit.commit = commit
                     gcommit.save()
@@ -470,7 +496,7 @@ def semantic_move_to_report(request):
     ids = sids.split(',')
     coccis = []
     for i in ids:
-        cocci = CocciEngine.objects.filter(id = i)
+        cocci = CocciPatchEngine.objects.filter(id = i)
         if len(cocci) == 0:
             logevent("MOVE: coccinelle semantic [%s], ERROR: id %s does not exists" % (sids, i))
             return HttpResponse('MOVE ERROR: id %s does not exists' % i)
@@ -484,7 +510,7 @@ def semantic_move_to_report(request):
             patchs = Patch.objects.filter(type = rtype)
             efiles = ExceptFile.objects.filter(type = rtype)
 
-            ncocci = CocciReport(file = cocci.file, options = cocci.options, content = cocci.content)
+            ncocci = CocciReportEngine(file = cocci.file, options = cocci.options, content = cocci.content)
             ncocci.save()
             rewrite_report_engine(ncocci)
 
@@ -564,7 +590,7 @@ def exceptfile_new(request):
         einfo.save()
 
         if int(typeid) > 3000:
-            coccis = CocciEngine.objects.filter(id = int(typeid) - 3000)
+            coccis = CocciReportEngine.objects.filter(id = int(typeid) - 3000)
             if len(coccis) > 0:
                 rewrite_engine(coccis[0])
 
@@ -595,7 +621,7 @@ def exceptfile_delete(request):
         typeid = einfo.type.id
         einfo.delete()
         if typeid > 3000:
-            coccis = CocciEngine.objects.filter(id = typeid - 3000)
+            coccis = CocciReportEngine.objects.filter(id = typeid - 3000)
             if len(coccis) > 0:
                 rewrite_engine(coccis[0])
 
@@ -609,39 +635,45 @@ def report_semantic(request):
 def report_semantic_list(request):
     page = int(get_request_paramter(request, 'page'))
     rp = int(get_request_paramter(request, 'rp'))
+    pfilter = get_request_paramter(request, 'filter')
 
     rstart = rp * (page - 1)
     rend = rp * page
 
-    coccis = {'page': 1, 'total': 0, 'rows': [] }
-    coccicnt = CocciReport.objects.all().count()
-
-    for cocci in CocciReport.objects.all()[rstart:rend]:
-        rtype = Type.objects.get(id = cocci.id + 10000)
+    kwargs = semantic_filter(pfilter)
+    rtypecnt = Type.objects.filter(id__gt = 10000, id__lt = 20000, **kwargs).count()
+    rtypeset = Type.objects.filter(id__gt = 10000, id__lt = 20000, **kwargs)[rstart:rend]
+    coccis = {'page': page, 'total': rtypecnt, 'rows': [] }
+    for rtype in rtypeset:
         if rtype.status == False:
-            status = '<a href="#" class="status" id="%s">Disabled</a>' % rtype.id
+            status = '<a href="#" class="status" id="%s">DISABLED</a>' % rtype.id
         else:
-            status = '<a href="#" class="status" id="%s">Enabled</a>' % rtype.id
+            status = '<a href="#" class="status" id="%s">ENABLED</a>' % rtype.id
 
-        action = '<a href="#" class="detail" id="%s">Detail</a>' % cocci.id
+        action = '<a href="#" class="detail" id="%s">Detail</a>' % (rtype.id - 10000)
         if request.user.is_authenticated():
-            action += '<a href="#" class="edit" id="%s">Edit</a>' % cocci.id
+            action += '<a href="#" class="edit" id="%s">Edit</a>' % (rtype.id - 10000)
+
+        if rtype.type == 1:
+            stype = 'BUGFIX'
+        else:
+            stype = 'CLENAUP'
 
         coccis['rows'].append({
-            'id': cocci.id,
+            'id': (rtype.id - 10000),
             'cell': {
-                'id': cocci.id,
-                'file': cocci.file,
+                'id': (rtype.id - 10000),
                 'status': status,
                 'name': rtype.name,
                 'title': rtype.ptitle,
+                'type': stype,
+                'flags': '-', #rtype.flags,
                 'desc': rtype.pdesc,
                 'options': '-',
                 'action': action,
         }}) # comment
 
     coccis['page'] = page
-    coccis['total'] = coccicnt
 
     return HttpResponse(simplejson.dumps(coccis))
 
@@ -675,7 +707,7 @@ def report_semantic_new(request):
             options = ''
 
         fname = '%s.cocci' % name.strip()
-        engine = CocciReport(file = fname, content = content, options = options)
+        engine = CocciReportEngine(file = fname, content = content, options = options)
         if os.path.exists(engine.fullpath()):
             logevent("NEW: coccinelle report semantic, ERROR: name %s already exists" % name)
             return HttpResponse('NEW ERROR: semantic name %s already exists' % name)
@@ -710,7 +742,7 @@ def report_semantic_delete(request):
     ids = pids.split(',')
     coccis = []
     for i in ids:
-        cocci = CocciReport.objects.filter(id = i)
+        cocci = CocciReportEngine.objects.filter(id = i)
         if len(cocci) == 0:
             logevent("DELETE: coccinelle report semantic [%s], ERROR: id %s does not exists" % (pids, i))
             return HttpResponse('DELETE ERROR: id %s does not exists' % i)
@@ -771,7 +803,7 @@ def report_semantic_edit(request, cocci_id):
         if options is None:
             options = ''
 
-        coccis = CocciReport.objects.filter(id = cocci_id)
+        coccis = CocciReportEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             logevent("EDIT: coccinelle report semantic, ERROR: id %s does not exists" % cocci_id)
             return HttpResponse('EDIT ERROR: semantic id %s does not exists' % cocci_id)
@@ -789,11 +821,9 @@ def report_semantic_edit(request, cocci_id):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        spctx = engine.rawformat(title, desc, einfo)
         try:
-            cocci = open(engine.fullpath(), "w")
-            cocci.write(spctx)
-            cocci.close()
+            fmt = CocciFormater(title, desc, content, rtype.type, options, '', einfo)
+            fmt.save(engine.fullpath())
             if ofname != engine.fullpath() and os.path.exists(ofname):
                 os.unlink(ofname)
         except:
@@ -810,7 +840,7 @@ def report_semantic_edit(request, cocci_id):
         logevent("EDIT: coccinelle report semantic, SUCCEED: type id %s" % rtype.id, True)
         return HttpResponse('EDIT: coccinelle semantic, SUCCEED: type id %s' % cocci_id)
     else:
-        coccis = CocciReport.objects.filter(id = cocci_id)
+        coccis = CocciReportEngine.objects.filter(id = cocci_id)
         if len(coccis) == 0:
             engine = None
             rtype = None
@@ -823,7 +853,7 @@ def report_semantic_edit(request, cocci_id):
         return render_to_response("engine/semanticedit.html", context)
 
 def report_semantic_detail(request, cocci_id):
-    coccis = CocciReport.objects.filter(id = cocci_id)
+    coccis = CocciReportEngine.objects.filter(id = cocci_id)
     if len(coccis) == 0:
         return ""
     cocci = coccis[0]
@@ -873,14 +903,9 @@ def rewrite_report_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        #if len(einfo) > 0:
-        spctx = cocci.rawformat(rtype.ptitle, rtype.pdesc, einfo)
-        try:
-            cocci = open(cocci.fullpath(), "w")
-            cocci.write(spctx)
-            cocci.close()
-        except:
-            pass
+        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content, rtype.type,
+                            cocci.options, '', exceptinfo = [])
+        fmt.save(cocci.fullpath())
 
 def report_semantic_export(request):
     cids = get_request_paramter(request, 'ids')
@@ -889,7 +914,7 @@ def report_semantic_export(request):
 
     files = []
     for cid in cids.split(','):
-        cocci = CocciReport.objects.filter(id = cid)
+        cocci = CocciReportEngine.objects.filter(id = cid)
         if len(cocci) == 0:
             logevent("EXPORT: coccinelle semantic [%s], ERROR: id %s does not exists" % (cids, cid))
             return HttpResponse('EXPORT ERROR: id %s does not exists' % cid)
@@ -911,7 +936,7 @@ def report_semantic_export(request):
 
 def report_semantic_export_all(request):
     files = []
-    for cocci in CocciReport.objects.all():
+    for cocci in CocciReportEngine.objects.all():
         rewrite_report_engine(cocci)
         files.append(cocci.fullpath())
 
@@ -927,3 +952,77 @@ def report_semantic_export_all(request):
 
     logevent("EXPORT: coccinelle report semantic all, SUCCEED", True)
     return response
+
+@login_required
+@csrf_exempt
+def report_semantic_deltascan(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('DELTASCAN ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciReportEngine.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("DELTASCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
+            return HttpResponse('DELTASCAN ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 10000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+            commit = None
+
+            for repo in GitRepo.objects.all():
+                if commit is None:
+                    commit = repo.commit
+
+                for gcommit in GitCommit.objects.filter(repo = repo, type = rtype):
+                    gcommit.commit = repo.commit
+                    gcommit.save()
+
+                if GitCommit.objects.filter(repo = repo, type = rtype).count() == 0:
+                    gcommit = GitCommit(repo = repo, type = rtype, commit = repo.commit)
+                    gcommit.save()
+
+            if commit != None:
+                rtype.commit = commit
+                rtype.save()
+
+    logevent("DELTASCAN: coccinelle semantic [%s], SUCCEED" % pids, True)
+    return HttpResponse('DELTASCAN SUCCEED: report engine ids [%s]' % pids)
+
+@login_required
+@csrf_exempt
+def report_semantic_fullscan(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('FULLSCAN ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    coccis = []
+    for i in ids:
+        cocci = CocciReportEngine.objects.filter(id = i)
+        if len(cocci) == 0:
+            logevent("FULLSCAN: coccinelle semantic [%s], ERROR: id %s does not exists" % (pids, i))
+            return HttpResponse('FULLSCAN ERROR: id %s does not exists' % i)
+        coccis.append(cocci[0])
+
+    for cocci in coccis:
+        rtypes = Type.objects.filter(id = cocci.id + 10000)
+        if len(rtypes) != 0:
+            rtype = rtypes[0]
+            commit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
+
+            for repo in GitRepo.objects.all():
+                for gcommit in GitCommit.objects.filter(repo = repo, type = rtype):
+                    gcommit.commit = commit
+                    gcommit.save()
+
+            rtype.commit = commit
+            rtype.save()
+
+    logevent("FULLSCAN: coccinelle semantic [%s], SUCCEED" % pids, True)
+    return HttpResponse('FULLSCAN SUCCEED: report engine ids [%s]' % pids)

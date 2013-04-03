@@ -1,16 +1,16 @@
 #!/usr/bin/python
 #
-# Dailypatch - automated kernel patch create engine
-# Copyright (C) 2012 Wei Yongjun <weiyj.lk@gmail.com>
+# DailyPatch - Automated Linux Kernel Patch Generate Engine
+# Copyright (C) 2012, 2013 Wei Yongjun <weiyj.lk@gmail.com>
 #
-# This file is part of the Dailypatch package.
+# This file is part of the DailyPatch package.
 #
-# Dailypatch is free software; you can redistribute it and/or modify
+# DailyPatch is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# Dailypatch is distributed in the hope that it will be useful,
+# DailyPatch is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -20,147 +20,145 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os
-import re
 import sys
-import subprocess
 
-from time import gmtime, strftime
-from django.conf import settings
+from time import localtime, strftime
 
-from dpatch.models import GitRepo, GitTag, Type, Status, CocciReport, ExceptFile, Report, ScanLog
-from logger import MyLogger
+from dpatch.models import GitRepo, GitTag, GitCommit, Type, ExceptFile, Report, ScanLog
+from dpatch.lib.common.logger import MyLogger
+from dpatch.lib.common.gittree import GitTree
+from dpatch.lib.engine.manager import report_engine_list
+from dpatch.lib.common.utils import is_source_file
+from dpatch.lib.common.status import *
 
-def error(logger, msg):
-    if logger != None:
-        logger.logger.error(msg)
+def checkreport(repo, rtag, flists):
+    git = GitTree(repo.name, repo.dirname(), repo.url, repo.commit, repo.stable)
+    count = 0
+    scaninfo = []
 
-def info(logger, msg):
-    if logger != None:
-        logger.logger.info(msg)
+    logs = ScanLog(reponame = repo.name, tagname = rtag.name,
+                   starttime = strftime("%Y-%m-%d %H:%M:%S", localtime()),
+                   desc = 'Processing, please wait...')
+    logs.save()
+    logger = MyLogger()
+    logger.info('%d Files changed.' % len(flists))
 
-def warning(logger, msg):
-    if logger != None:
-        logger.logger.info(msg)
+    for dot in report_engine_list():
+        scount = 0
+        test = dot(repo.dirname(), logger.logger)
+        for i in range(test.tokens()):
+            rtype = None
+            try:
+                rtype = Type.objects.filter(id = test.get_type())[0]
+            except:
+                test.next_token()
+                continue
+            if rtype.status == False:
+                test.next_token()
+                continue
 
-def execute_shell(args):
-    if isinstance(args, basestring):
-        shelllog = subprocess.Popen(args, shell=True, stdout=subprocess.PIPE)
-    else:
-        shelllog = subprocess.Popen(args, stdout=subprocess.PIPE)
-    shellOut = shelllog.communicate()[0]
+            logger.logger.info('Starting scan type %d' % test.get_type())
+            cmts = GitCommit.objects.filter(repo = repo, type = rtype)
+            if len(cmts) == 0:
+                cmt = GitCommit(repo = repo, type = rtype)
+                cmt.save()
+            else:
+                cmt = cmts[0]
 
-    lines = shellOut.split("\n")
-    lines = lines[0:-1]
+            rflists = flists
+            if repo.delta == False:
+                oldcommit = cmt.commit
+                if oldcommit != repo.commit:
+                    if git.is_linux_next():
+                        oldcommit = git.get_stable()
+                    rflists = git.get_changelist(oldcommit, repo.commit, None, True)
+                else:
+                    rflists = flists
 
-    return lines
+            exceptfiles = []
+            for fn in ExceptFile.objects.filter(type = rtype):
+                exceptfiles.append(fn.file)
 
-def commit_from_repo(repo):
-    commits = execute_shell('cd %s; git log -n 1 --pretty=format:%%H%%n' % repo.dirname())
-    return commits[-1]
 
-def repo_get_changelist(repo, scommit, ecommit):
-    if len(scommit) == 0 or scommit is None:
-        scommit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
-    lines = execute_shell('cd %s; git diff --name-only %s...%s' % (repo.dirname(), scommit, ecommit))
-    return lines
+            rcount = 0
+            for fname in rflists:
+                if is_source_file(fname) == False:
+                    continue
 
-def is_source_file(sfile):
-    if re.search(r"\.c$", sfile) != None:
-        return True
-    if re.search(r"\.h$", sfile) != None:
-        return True
-    return False
+                if exceptfiles.count(fname) != 0:
+                    continue
+    
+                reports = Report.objects.filter(file = fname, type = rtype)
+                if not os.path.exists(os.path.join(repo.dirname(), fname)):
+                    for r in reports:
+                        if r.status in [STATUS_NEW, STATUS_PATCHED]:
+                            r.status = STATUS_REMOVED
+                            r.save()
+                    continue
 
-def checkreport(repo, rtag, cocci, flists, logger):
-    spfile = cocci.fullpath()
-    if not os.path.exists(spfile):
-        print('sp_file %s does not exists' % spfile)
-        return 0
-
-    rtype = Type.objects.filter(id = (cocci.id + 10000))[0]
-    if rtype.status == False:
-        return 0
-
-    info(logger, 'Starting scan type %d' % rtype.id)
-
-    new = Status.objects.filter(name = 'New')[0]
-    fixed = Status.objects.filter(name = 'Fixed')[0]
-    removed = Status.objects.filter(name = 'Removed')[0]
-    applied = Status.objects.filter(name = 'Accepted')[0]
-
-    exceptfiles = []
-    for fn in ExceptFile.objects.filter(type = rtype):
-        exceptfiles.append(fn.file)
-
-    # allow full scan the first repo
-    if repo.delta == False and rtype.commit == '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2':
-        flists = repo_get_changelist(repo, rtype.commit, repo.commit)
-
-    rcount = 0
-    for fname in flists:
-        if is_source_file(fname) == False:
-            continue
-
-        if exceptfiles.count(fname) != 0:
-            continue
-
-        reports = Report.objects.filter(file = fname, type = rtype)
-        if not os.path.exists(os.path.join(repo.dirname(), fname)):
-            for r in reports:
-                if r.status.name == 'New' or r.status.name == 'Patched':
-                    r.status = removed
-                    r.save()
-            continue
-
-        args = '/usr/bin/spatch %s -I %s -timeout %d -very_quiet -sp_file %s %s' % (cocci.options,
-                        os.path.join(repo.dirname(), 'include'), settings.COCCI_TIMEOUT, 
-                        spfile, os.path.join(repo.dirname(), fname))
-
-        reportlog = execute_shell(args)
-        if len(reportlog) == 0:
-            for r in reports:
-                if r.status.name == 'New' or r.status.name == 'Patched':
-                    if r.mergered == 0:
-                        r.status = fixed
-                        r.save()
-                    else:
-                        mreport = Report.objects.filter(id = r.mergered)
-                        if len(mreport) != 0:
-                            if mreport[0].status.name == 'Sent':
-                                mreport[0].status = applied
-                                r.status = applied
+                test.set_filename(fname)
+                should_report = test.should_report()
+                if should_report is False:
+                    for r in reports:
+                        if r.status in [STATUS_NEW, STATUS_PATCHED]:
+                            if r.mergered == 0:
+                                r.status = STATUS_FIXED
+                                r.save()
                             else:
-                                mreport[0].status = fixed
-                                r.status = fixed
-                            mreport[0].save()
-                        else:
-                            r.status = fixed
-                        r.save()
-                elif r.status.name == 'Sent':
-                    r.status = applied
-                    r.save()
-            continue
+                                mreport = Report.objects.filter(id = r.mergered)
+                                if len(mreport) != 0:
+                                    if mreport[0].status in [STATUS_SENT]:
+                                        mreport[0].status = STATUS_ACCEPTED
+                                        r.status = STATUS_ACCEPTED
+                                    else:
+                                        mreport[0].status = STATUS_FIXED
+                                        r.status = STATUS_FIXED
+                                    mreport[0].save()
+                                else:
+                                    r.status = STATUS_FIXED
+                                r.save()
+                        elif r.status in [STATUS_SENT]:
+                            r.status = STATUS_ACCEPTED
+                            r.save()
+                    continue
 
-        count = 0
-        for r in reports:
-            if r.status.name in ['New', 'Patched', 'Sent']:
-                count += 1
+                count = 0
+                for r in reports:
+                    if r.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
+                        count += 1
 
-        if count > 0:
-            continue
+                if count > 0:
+                    continue
 
-        report = Report(tag = rtag, file = fname, type = rtype, 
-                        status = new, reportlog = '\n'.join(reportlog))
-        report.title = rtype.ptitle
-        report.desc = rtype.pdesc
-        report.save()
-        rcount += 1
+                text = test.get_report()
+                report = Report(tag = rtag, file = fname, type = rtype, 
+                                status = STATUS_NEW, reportlog = '\n'.join(text))
+                report.title = rtype.ptitle
+                report.desc = rtype.pdesc
+                report.save()
+                rcount += 1
+                scount += 1
 
-    rtype.commit = repo.commit
-    rtype.save()
-    info(logger, 'End scan type %d, report %d' % (rtype.id, rcount))
+            cmt.commit = repo.commit
+            cmt.save()
+            rtype.commit = repo.commit
+            rtype.save()
 
-    return rcount
+            logger.info('End scan type %d, report %d' % (rtype.id, rcount))
+            logs.logs = logger.getlog()
+            logs.save()
+            test.next_token()
+
+        count += scount
+        scaninfo.append("%s: %d" % (test.name(), scount))
+
+    scaninfo.append("total report: %d" % (count))
+    logs.desc = ', '.join(scaninfo)
+    logs.endtime = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    logs.logs = logger.getlog()
+    logs.save()
+
+    return count
 
 def main(args):
     for repo in GitRepo.objects.filter(status = True):
@@ -175,40 +173,16 @@ def main(args):
             continue
 
         flists = rtag.flist.split(',')
-        if repo.name == 'linux-next.git' and settings.DELTA_UPDATE:
-            nflists = list(set(filter(lambda x : flists.count(x) != 1, flists)))
-            if len(nflists) == 0:
-                continue
-            flists = nflists
-
-        logger = MyLogger()
-        logs = ScanLog(reponame = repo.name, tagname = rtag.name,
-                       starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
-                       desc = 'Processing, please wait...')
-        logs.save()
-
-        print "Check Report for repo %s" % os.path.basename(repo.url)
-        rcount = 0
-
-        info(logger, 'File changes:')
-        info(logger, '=' * 40)
-        info(logger, '%s' % '\n'.join(flists))
-        info(logger, '=' * 40)
 
         rtag.running = True
         rtag.save()
 
-        for cocci in CocciReport.objects.all():
-            rcount += checkreport(repo, rtag, cocci, flists, logger)
+        print "Check Report for repo %s" % os.path.basename(repo.url)
+        rcount = checkreport(repo, rtag, flists)
 
         rtag.rptotal += rcount
         rtag.running = False
         rtag.save()
-
-        logs.desc = 'coccinelle engine report: %d, total: %d' % (rcount, rcount)
-        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        logs.logs = logger.getlog()
-        logs.save()
 
         print "Total Report %d" % rcount
 
