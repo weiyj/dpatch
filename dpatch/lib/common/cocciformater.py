@@ -20,22 +20,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 class CocciFormater(object):
-    def __init__(self, title, desc, content, ctype, options, fixed, exceptinfo = []):
+    def __init__(self, title, desc, content, options, fixed, exceptinfo = []):
         self._title = title
         self._desc = desc
         self._content= content
-        self._type = ctype
         self._options = options
         self._fixed = fixed
         self._exceptinfo = exceptinfo
 
     def format(self):
         spctx = '/// %s\n' % self._title
-        spctx += '///\n'
-        if self._type == 0:
-            spctx += '/// Type: cleanup\n'
-        else:
-            spctx += '/// Type: bugfix\n'
         spctx += '///\n'
         if len(self._options) > 0:
             spctx += '/// Options: %s\n' % self._options

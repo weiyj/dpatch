@@ -116,7 +116,7 @@ def semantic_edit(request, cocci_id):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
         try:
-            fmt = CocciFormater(title, desc, content, rtype.type, options, fixed, einfo)
+            fmt = CocciFormater(title, desc, content, options, fixed, einfo)
             fmt.save(engine.fullpath())
             if ofname != engine.fullpath() and os.path.exists(ofname):
                 os.unlink(ofname)
@@ -335,7 +335,7 @@ def rewrite_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content, rtype.type,
+        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content,
                             cocci.options, cocci.fixed, exceptinfo = [])
         fmt.save(cocci.fullpath())
 
@@ -822,7 +822,7 @@ def report_semantic_edit(request, cocci_id):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
         try:
-            fmt = CocciFormater(title, desc, content, rtype.type, options, '', einfo)
+            fmt = CocciFormater(title, desc, content, options, '', einfo)
             fmt.save(engine.fullpath())
             if ofname != engine.fullpath() and os.path.exists(ofname):
                 os.unlink(ofname)
@@ -903,7 +903,7 @@ def rewrite_report_engine(cocci):
         for efile in ExceptFile.objects.filter(type = rtype):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
-        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content, rtype.type,
+        fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content,
                             cocci.options, '', exceptinfo = [])
         fmt.save(cocci.fullpath())
 
