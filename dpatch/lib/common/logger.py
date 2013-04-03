@@ -39,7 +39,7 @@ class MyLogger:
         logfile = open(self._filename, "r")
         lines = logfile.readlines()
         logfile.close()
-        return '\n'.join(lines)
+        return ''.join(lines)
 
     def error(self, msg):
         self.logger.error(msg)
