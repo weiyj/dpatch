@@ -78,6 +78,8 @@ def may_reject_cleanup(filename):
 
 def main(args):
     for patch in Patch.objects.filter(commit = '', status = STATUS_ACCEPTED):
+        if not os.path.exists(os.path.join(patch.tag.repo.dirname(), patch.file)):
+            continue
         ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', patch.title).strip()
         ptitle = re.sub('^.*:', '', ptitle).strip()
         cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
@@ -91,6 +93,8 @@ def main(args):
             patch.save()
 
     for report in Report.objects.filter(commit = '', status = STATUS_ACCEPTED):
+        if not os.path.exists(os.path.join(patch.tag.repo.dirname(), patch.file)):
+            continue
         ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', report.title).strip()
         ptitle = re.sub('^.*:', '', ptitle).strip()
         cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
@@ -103,13 +107,9 @@ def main(args):
             report.commit = commit
             report.save()
 
-    baserepo = None
     ob_days = read_config('patch.status.obsoleted_days', 0)
 
     for repo in GitRepo.objects.filter(status = True):
-        if baserepo is None:
-            baserepo = repo
-
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
                        starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
@@ -143,8 +143,12 @@ def main(args):
 
                 logger.info('Starting update type %d' % test.get_type())
 
-                patchs = Patch.objects.filter(Q(tag__repo = baserepo), Q(type = rtype),
-                                              Q(status = STATUS_NEW) | Q(status = STATUS_SENT))
+                if repo.name == 'linux-next.git':
+                    patchs = Patch.objects.filter(Q(type = rtype), Q(status = STATUS_NEW) | Q(status = STATUS_SENT))
+                else:
+                    patchs = Patch.objects.filter(Q(tag__repo = repo), Q(type = rtype),
+                                                  Q(status = STATUS_NEW) | Q(status = STATUS_SENT))
+
                 for patch in patchs:
                     if not patch.mglist is None and len(patch.mglist) != 0:
                         continue
@@ -217,8 +221,11 @@ def main(args):
                     continue
 
                 logger.info('Starting update type %d' % test.get_type())
-                patchs = Report.objects.filter(Q(tag__repo = baserepo), Q(type = rtype),
-                                               Q(status = STATUS_NEW) | Q(status = STATUS_PATCHED) | Q(status = STATUS_SENT))
+                if repo.name == 'linux-next.git':
+                    patchs = Report.objects.filter(Q(type = rtype), Q(status = STATUS_NEW) | Q(status = STATUS_PATCHED) | Q(status = STATUS_SENT))
+                else:
+                    patchs = Report.objects.filter(Q(tag__repo = repo), Q(type = rtype),
+                                                   Q(status = STATUS_NEW) | Q(status = STATUS_PATCHED) | Q(status = STATUS_SENT))
                 for patch in patchs:
                     if not patch.mglist is None and len(patch.mglist) != 0:
                         continue
