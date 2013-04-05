@@ -109,12 +109,12 @@ class PatchFormater(object):
         for m in lists:
             # skip User <mail> (commit_signer:1/15=7%)
             if re.search('\(commit_signer:', m) != None:
-                csm = re.sub('\([^\(]*\)$', '', m)
+                csm = re.sub('\([^>]*\)$', '', m)
                 if len(commit_signer) == 0:
                     commit_signer = csm
                 commit_signer_list.append(csm)
                 continue
-            m = re.sub('\([^\(]*\)$', '', m).strip()
+            m = re.sub('\([^>]*\)$', '', m).strip()
             if re.search(r'<.*>', m) != None:
                 mailto.append(m)
             elif re.search('linux-kernel@vger.kernel.org', m) != None:
