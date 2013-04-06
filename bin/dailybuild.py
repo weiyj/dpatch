@@ -176,6 +176,11 @@ def main(args):
                 if os.path.exists(os.path.join(repo.builddir(), '.git/rebase-apply')):
                     execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
     
+                objfile = "%s.o" % patch.file[:-2]
+                if patch.type.name == 'static_function' or patch.type.name == 'static_variable':
+                    ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
+                    buildlog += log
+
                 ret, log = execute_shell_log("cd %s; git am %s" % (repo.builddir(), fname), logger)
                 buildlog += '# git am %s\n' % os.path.basename(fname)
                 buildlog += log
@@ -186,7 +191,6 @@ def main(args):
                     patch.save()
                     continue
 
-                objfile = "%s.o" % patch.file[:-2]
                 if patch.file.find('tools/') == 0:
                     dname = os.path.dirname(patch.file)
                     while len(dname) != 0 and not os.path.exists(os.path.join(repo.builddir(), dname, 'Makefile')):
