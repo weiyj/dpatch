@@ -217,7 +217,7 @@ class PatchFormater(object):
                     print lastfun
             elif line.find('-') == 0:
                 line = re.sub("-", '', line).strip()
-                if re.search('\w+\s*\(\w+\s+\w+', line):
+                if re.search('\w+\s*\(\w+\s+\w+', line) or re.search('\w+\s+\w+\s*\(', line):
                     line = re.sub('\(.*', '', line).strip()
                     if len(line) != 0:
                         fun = line.split(' ')[-1]
