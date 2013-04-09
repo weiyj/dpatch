@@ -41,6 +41,7 @@ from dpatch.models import GitRepo, GitTag, Patch, Event, Type, ExceptFile
 from dpatch.lib.common.patchformater import PatchFormater
 from dpatch.lib.common.patchparser import PatchParser
 from dpatch.lib.db.filemodule import register_module_name
+from dpatch.lib.engine.manager import patch_engine_list
 from dpatch.forms import PatchNewForm
 from dpatch.lib.common.status import *
 
@@ -801,12 +802,35 @@ def patch_new(request):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
 
-        patch = Patch(tag = rtags[0], type = rtypes[0], file = rfile, status = STATUS_NEW, diff = '')
+        rtype = rtypes[0]
+        patch = Patch(tag = rtags[0], type = rtype, file = rfile, status = STATUS_NEW, diff = '')
         if not os.path.exists(patch.sourcefile()):
             logevent("NEW: patch , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: patch, ERROR: type id %s does not exists' % typeid)
         patch.save()
-        
+
+        for dot in patch_engine_list():
+            test = dot(rtags[0].repo.dirname())
+            for i in range(test.tokens()):
+                if test.get_type() != rtype.id:
+                    test.next_token()
+                    continue
+                test.set_filename(rfile)
+                if test.should_patch():
+                    text = test.get_patch()
+                    patch.diff = text
+                    user = patch.username()
+                    email = patch.email()
+                    formater = PatchFormater(rtags[0].repo.dirname(), rfile, user, email,
+                                             rtype.ptitle, rtype.pdesc, text)
+                    patch.content = formater.format_patch()
+                    patch.title = formater.format_title()
+                    patch.desc = formater.format_desc()
+                    patch.emails = formater.get_mail_list()
+                    patch.module = formater.get_module()
+                    patch.save()
+                break
+
         rtags[0].total += 1
         rtags[0].save()
 
