@@ -82,9 +82,9 @@ class PatchParser(object):
                 self._title = re.sub('^.*:', '', line).strip()
                 self._module = re.sub(':[^:]*$', '', line).strip()
                 continue
-            if re.search('To: [^<]*<[^@]+@[^>]+>', line):
+            if re.search('To: [^<]*<[^@]+@[^>]+>', line) or re.search('To: [^@]+@.*', line):
                 self._emails = line
-                if re.search('To: [^<]*<[^@]+@[^>]+>,', line):
+                if re.search('To: [^<]*<[^@]+@[^>]+>,', line) or re.search('To: [^@]+@.*', line):
                     start_mail = True
                 continue
             if re.search('Cc: [^@]+@.*', line):
