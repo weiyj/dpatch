@@ -31,8 +31,8 @@ from dpatch.lib.common.gittree import GitTree
 from dpatch.lib.engine.manager import patch_engine_list
 from dpatch.lib.common.utils import is_source_file
 from dpatch.lib.common.patchformater import PatchFormater
+from dpatch.lib.common.flags import TYPE_SCAN_NEXT_ONLY, TYPE_CHANGE_DATE_CHECK
 from dpatch.lib.common.status import *
-from dpatch.lib.common.const import TYPE_SCAN_NEXT_ONLY
 
 def check_patch(repo, git, rtag, flists, commit):
     count = 0
@@ -66,7 +66,7 @@ def check_patch(repo, git, rtag, flists, commit):
             if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0 and not git.is_linux_next():
                 test.next_token()
                 continue
-                
+
             cmts = GitCommit.objects.filter(repo = repo, type = rtype)
             if len(cmts) == 0:
                 cmt = GitCommit(repo = repo, type = rtype)
@@ -144,6 +144,11 @@ def check_patch(repo, git, rtag, flists, commit):
 
                 if should_patch == True and len(rpatchs) == 0:
                     text = test.get_patch()
+
+                    if (rtype.flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
+                        if git.is_change_obsoleted(sfile, text) is True:
+                            continue
+
                     patch = Patch(tag = rtag, file = sfile, type = rtype, 
                                   status = STATUS_NEW, diff = text)
                     patch.save()

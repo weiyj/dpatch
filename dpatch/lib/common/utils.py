@@ -51,3 +51,17 @@ def execute_shell_full(args):
     lines = shellOut.split("\n")
 
     return lines
+
+def find_remove_lines(diff):
+    if diff is None:
+        return []
+    is_source = False
+    lines = []
+    for line in diff.split("\n"):
+        if is_source is False:
+            if re.search('@@[^@]*@@', line):
+                is_source = True
+            continue
+        if line.find('-') == 0 and re.search('\w+', line):
+            lines.append(line[1:])
+    return lines

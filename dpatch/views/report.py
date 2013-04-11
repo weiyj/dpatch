@@ -26,6 +26,7 @@ import subprocess
 import urllib
 import urlparse
 import tempfile
+import cgi
 
 from django.conf import settings
 from django.shortcuts import render_to_response, get_object_or_404
@@ -41,6 +42,7 @@ from dpatch.models import GitRepo, GitTag, Report, Event, Type, ExceptFile
 from dpatch.lib.common.patchformater import PatchFormater
 from dpatch.lib.common.patchparser import PatchParser
 from dpatch.lib.db.filemodule import register_module_name
+from dpatch.lib.common.utils import find_remove_lines
 from dpatch.forms import ReportNewForm
 from dpatch.lib.common.status import *
 
@@ -636,13 +638,15 @@ def report_format_gitinfo(repo, gitlog):
     lines = gitlog.split("\n")
     fileinfos = []
     for line in lines:
+        if line.find('||||') == -1:
+            continue
         subflds = line.split('||||')
         commit = subflds[-1]
         title = subflds[-2]
         line = '%s  %-20s' % (subflds[0], subflds[1])
         url = "%s;a=commit;h=%s" % (repo.url, commit)
         url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
-        fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, title))
+        fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, cgi.escape(title)))
 
     return '\n'.join(fileinfos)
 
@@ -658,6 +662,15 @@ def report_fileinfo(request, report_id):
     ret, gitlog = execute_shell("cd %s; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --scm" % (rdir, report.file))
     fileinfo += '\n\n# ./scripts/get_maintainer.pl -f %s --scm\n' % report.file    
     fileinfo += gitlog
+    if report.status in [STATUS_PATCHED, STATUS_SENT]:
+        count = 0
+        for line in find_remove_lines(report.diff):
+            ret, gitlog = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:'%%ci||||%%an||||%%s||||%%H' %s" % (rdir, line, report.file))
+            fileinfo += '\n# git log -n 1 -S \'%s\' %s\n' % (cgi.escape(line), report.file)
+            fileinfo += report_format_gitinfo(report.tag.repo, gitlog)
+            count += 1
+            if count > 4:
+                break
     return HttpResponse('<pre>%s</pre>' % fileinfo)
     
 @login_required

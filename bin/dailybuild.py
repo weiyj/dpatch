@@ -27,6 +27,7 @@ from time import gmtime, strftime
 
 from dpatch.models import GitRepo, Patch, Report, ScanLog
 from dpatch.lib.common.logger import MyLogger
+from dpatch.lib.common.flags import TYPE_BUILD_SPARSE_CHECK
 from dpatch.lib.common.status import *
 
 def execute_shell(args, logger = None):
@@ -177,7 +178,7 @@ def main(args):
                     execute_shell("cd %s; rm -rf .git/rebase-apply" % repo.builddir())
     
                 objfile = "%s.o" % patch.file[:-2]
-                if patch.type.name == 'static_function' or patch.type.name == 'static_variable':
+                if patch.type.flags & TYPE_BUILD_SPARSE_CHECK:
                     buildlog += '# make C=2 %s\n' % objfile
                     ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
                     buildlog += log
@@ -256,7 +257,13 @@ def main(args):
                         if buildlog.find("Run 'make oldconfig' to update configuration.") != -1:
                             os.system("cd %s; make allmodconfig" % repo.builddir())
                         continue
-    
+
+                if patch.type.flags & TYPE_BUILD_SPARSE_CHECK:
+                    buildlog += '# make C=2 %s\n' % objfile
+                    ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
+                    buildlog += log
+                    buildlog += '\n'
+
                 pcount['pass'] += 1
                 if buildlog.find(': warning: ') != -1:
                     patch.build = 4

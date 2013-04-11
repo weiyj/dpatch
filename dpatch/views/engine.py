@@ -36,6 +36,7 @@ from django.utils import simplejson
 from time import gmtime, strftime
 
 from dpatch.lib.common.cocciformater import CocciFormater
+from dpatch.lib.common.flags import flags_name
 from dpatch.models import CocciPatchEngine, CocciReportEngine, Type, Event, Patch, Report, ExceptFile, GitRepo, GitCommit
 from dpatch.forms import ExceptFileForm
 
@@ -316,7 +317,7 @@ def semantic_list(request):
                 'id': rtype.id - 3000,
                 'type': stype,
                 'status': status,
-                'flags': rtype.flags,
+                'flags': flags_name(rtype.flags),
                 'name': rtype.name,
                 'title': rtype.ptitle,
                 'desc': rtype.pdesc,
@@ -667,7 +668,7 @@ def report_semantic_list(request):
                 'name': rtype.name,
                 'title': rtype.ptitle,
                 'type': stype,
-                'flags': '-', #rtype.flags,
+                'flags': flags_name(rtype.flags),
                 'desc': rtype.pdesc,
                 'options': '-',
                 'action': action,

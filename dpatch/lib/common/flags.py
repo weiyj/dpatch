@@ -19,11 +19,18 @@
 # along with Patchwork; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CHECK_VERSION_TYPE = 1000
-CHECK_RELEASE_TYPE = 1100
-CHECK_INCLUDE_TYPE = 2000
-CHECK_CPATCH_TYPE = 3000
-CHECK_CREPORT_TYPE = 10000
+TYPE_SCAN_NEXT_ONLY = 0x01
+TYPE_CHANGE_DATE_CHECK = 0x02
+TYPE_BUILD_SPARSE_CHECK = 0x04
 
-ENGINE_TYPE_CLEANUP = 0
-ENGINE_TYPE_BUGFIX = 1
+def flags_name(flags):
+    flagname = []
+    if (flags & TYPE_SCAN_NEXT_ONLY) == TYPE_SCAN_NEXT_ONLY:
+        flagname.append('NEXT_ONLY')
+    if (flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
+        flagname.append('DATE_CHK')
+    if (flags & TYPE_BUILD_SPARSE_CHECK) == TYPE_BUILD_SPARSE_CHECK:
+        flagname.append('SPARSE_CHK')
+    if len(flagname):
+        return '|'.join(flagname)
+    return '-'

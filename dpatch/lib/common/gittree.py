@@ -25,6 +25,8 @@ import datetime
 
 from utils import execute_shell
 from time import localtime, time, strftime
+from utils import find_remove_lines
+from dpatch.lib.db.sysconfig import read_config
 
 class GitTree(object):
     def __init__(self, name, dpath, url, commit, stable = None):
@@ -123,3 +125,16 @@ class GitTree(object):
                 scommit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
             lines = execute_shell('cd %s; git diff --name-only %s...%s' % (self._dpath, scommit, ecommit))
             return lines
+
+    def is_change_obsoleted(self, fname, diff):
+        dates = []
+        days = read_config('patch.obsoleted.days', 30)
+        for line in find_remove_lines(diff):
+            dates = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:format:%%ci%%n %s" % (self._dpath, line, fname))
+            if len(dates) == 0:
+                continue
+            dt = datetime.datetime.strptime(' '.join(dates[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
+            delta = datetime.datetime.now() - dt
+            if delta.days < days:
+                return False
+        return True
