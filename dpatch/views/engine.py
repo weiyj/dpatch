@@ -337,7 +337,7 @@ def rewrite_engine(cocci):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
         fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content,
-                            cocci.options, cocci.fixed, exceptinfo = [])
+                            cocci.options, cocci.fixed, einfo)
         fmt.save(cocci.fullpath())
 
 @login_required
@@ -905,7 +905,7 @@ def rewrite_report_engine(cocci):
             einfo.append({'file': efile.file, 'reason': efile.reason})
 
         fmt = CocciFormater(rtype.ptitle, rtype.pdesc, cocci.content,
-                            cocci.options, '', exceptinfo = [])
+                            cocci.options, '', einfo)
         fmt.save(cocci.fullpath())
 
 def report_semantic_export(request):

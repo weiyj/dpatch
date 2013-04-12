@@ -130,7 +130,7 @@ class GitTree(object):
         dates = []
         days = read_config('patch.obsoleted.days', 30)
         for line in find_remove_lines(diff):
-            dates = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:format:%%ci%%n %s" % (self._dpath, line, fname))
+            dates = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:%%ci%%n %s" % (self._dpath, line, fname))
             if len(dates) == 0:
                 continue
             dt = datetime.datetime.strptime(' '.join(dates[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
