@@ -41,8 +41,9 @@ from time import gmtime, strftime
 from dpatch.models import GitRepo, GitTag, Report, Event, Type, ExceptFile
 from dpatch.lib.common.patchformater import PatchFormater
 from dpatch.lib.common.patchparser import PatchParser
-from dpatch.lib.db.filemodule import register_module_name
 from dpatch.lib.common.utils import find_remove_lines
+from dpatch.lib.db.filemodule import register_module_name
+from dpatch.lib.engine.manager import report_engine_list
 from dpatch.forms import ReportNewForm
 from dpatch.lib.common.status import *
 
@@ -262,7 +263,22 @@ def report_new(request):
         if not os.path.exists(report.sourcefile()):
             logevent("NEW: report , ERROR: type id %s does not exists" % typeid)
             return HttpResponse('NEW: report, ERROR: type id %s does not exists' % typeid)
+        report.title = rtypes[0].ptitle
+        report.desc = rtypes[0].pdesc
         report.save()
+
+        for dot in report_engine_list():
+            test = dot(rtags[0].repo.dirname())
+            for i in range(test.tokens()):
+                if test.get_type() != rtypes[0].id:
+                    test.next_token()
+                    continue
+                test.set_filename(rfile)
+                if test.should_report():
+                    text = test.get_report()
+                    report.reportlog = '\n'.join(text)
+                    report.save()
+                break
 
         rtags[0].rptotal += 1
         rtags[0].save()
