@@ -839,8 +839,10 @@ def patch_new(request):
         logevent("NEW: patch for %s, SUCCEED: new id %s" % (rfile, patch.id), True)
         return HttpResponse('NEW: patch for file, SUCCEED')
     else:
+        repoid = int(get_request_paramter(request, 'repo', '1'))
+        tagname = get_request_paramter(request, 'tag')
         context = RequestContext(request)
-        context['form'] = PatchNewForm()
+        context['form'] = PatchNewForm(repoid, tagname)
         return render_to_response("patch/patchnew.html", context)
 
 @login_required

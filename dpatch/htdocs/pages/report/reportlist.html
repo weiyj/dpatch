@@ -82,7 +82,7 @@
 		}
 
 		function doReportNew() {
-			ajaxShowDialog('#reportnew', 'GET', "/report/new/", {})
+			ajaxShowDialog('#reportnew', 'GET', "/report/new/?repo={{repo}}&tag={{tag}}", {})
 		}
 
 		function doReportDelete() {

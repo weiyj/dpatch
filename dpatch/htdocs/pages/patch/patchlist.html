@@ -63,7 +63,7 @@
 		}
 
 		function doPatchNew() {
-			ajaxShowDialog('#patchnew', 'GET', "/patch/new/", {})
+			ajaxShowDialog('#patchnew', 'GET', "/patch/new/?repo={{repo}}&tag={{tag}}", {})
 		}
 
 		function doPatchMerge() {

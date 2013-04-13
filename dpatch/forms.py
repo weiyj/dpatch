@@ -21,7 +21,7 @@
 
 from django import forms
 
-from dpatch.models import ExceptFile, Patch, Report, Type
+from dpatch.models import ExceptFile, Patch, Report, Type, GitTag
 
 class GitRepoForm(forms.Form):
     name = forms.CharField(max_length = 30)
@@ -39,15 +39,17 @@ class PatchNewForm(forms.ModelForm):
         model = Patch
         fields = ['tag', 'type', 'file']
 
-    def __init__(self, **kwargs):
+    def __init__(self, repoid, tagname, **kwargs):
         super(PatchNewForm, self).__init__(**kwargs)
         self.fields['type'].queryset = Type.objects.filter(id__lte = 10000)
+        self.fields['tag'].queryset = GitTag.objects.filter(repo__id = repoid, name__icontains = tagname)
 
 class ReportNewForm(forms.ModelForm):
     class Meta:
         model = Report
         fields = ['tag', 'type', 'file']
 
-    def __init__(self, **kwargs):
+    def __init__(self, repoid, tagname, **kwargs):
         super(ReportNewForm, self).__init__(**kwargs)
         self.fields['type'].queryset = Type.objects.filter(id__gt = 10000)
+        self.fields['tag'].queryset = GitTag.objects.filter(repo__id = repoid, name__icontains = tagname)

@@ -286,8 +286,10 @@ def report_new(request):
         logevent("NEW: report for %s, SUCCEED: new id %s" % (rfile, report.id), True)
         return HttpResponse('NEW: report for file, SUCCEED')
     else:
+        repoid = int(get_request_paramter(request, 'repo', '1'))
+        tagname = get_request_paramter(request, 'tag')
         context = RequestContext(request)
-        context['form'] = ReportNewForm()
+        context['form'] = ReportNewForm(repoid, tagname)
         return render_to_response("report/reportnew.html", context)
 
 @login_required
