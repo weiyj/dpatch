@@ -320,7 +320,7 @@ class PatchFormater(object):
         if not os.path.isdir(self._fullpath()):
             mnames = Module.objects.filter(file = self._fname)
             if len(mnames) != 0:
-                self._module = mnames[0]
+                self._module = mnames[0].name
                 return self._module
         return self._guest_module_name()
 
