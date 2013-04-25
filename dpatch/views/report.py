@@ -686,7 +686,7 @@ def report_fileinfo(request, report_id):
     ret, gitlog = execute_shell("cd %s; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --scm" % (rdir, report.file))
     fileinfo += '\n\n# ./scripts/get_maintainer.pl -f %s --scm\n' % report.file    
     fileinfo += gitlog
-    if report.status in [STATUS_PATCHED, STATUS_SENT]:
+    if report.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
         count = 0
         for line in find_remove_lines(report.diff):
             ret, gitlog = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:'%%ci||||%%an||||%%s||||%%H' %s" % (rdir, line, report.file))
