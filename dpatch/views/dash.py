@@ -24,7 +24,8 @@ from django.http import HttpResponse
 from django.utils import simplejson
 from django.template import RequestContext
 
-from dpatch.models import GitRepo, GitTag, Type, Patch, ScanLog
+from dpatch.models import GitRepo, GitTag, Type, Patch, Report, ScanLog
+from dpatch.lib.common.status import STATUS_ACCEPTED
 
 def patch_status(request, repo_id):
     context = RequestContext(request)
@@ -53,7 +54,8 @@ def patch_by_tag(request, repo_id):
         return HttpResponse(simplejson.dumps(tags))
 
     for tag in GitTag.objects.filter(repo = repos[0]):
-        tags.append({'name': tag.name, 'total': tag.total})
+        pcnt = Patch.objects.filter(tag = tag, status = STATUS_ACCEPTED).exclude(commit = '').count()
+        tags.append({'name': tag.name, 'total': tag.total, 'applied': pcnt})
 
     return HttpResponse(simplejson.dumps(tags))
 

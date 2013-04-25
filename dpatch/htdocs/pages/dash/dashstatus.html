@@ -127,13 +127,21 @@
 					}
 				},
 				legend: {
-					enabled: false
+					layout: 'vertical',
+					align: 'right',
+					verticalAlign: 'top',
+					x: 0,
+					y: 0,
+					borderWidth: 0
 				},
 				exporting: {
 					enabled: false
 				},
 				series: [{
-					name: 'Patchs',
+					name: 'PATCHS',
+					data: []
+				}, {
+					name: 'APPLIED',
 					data: []
 				}]
 			}
@@ -185,14 +193,16 @@
 			}, "json");
 
 			jQuery.get('/dashboard/patch/tags/{{repo}}/', null, function(jsondata, state, xhr) {
-				categories = [], sdata = []
+				categories = [], sdata = [], adata = [];
 				for (i = 0; i < jsondata.length; i++) {
-					raw = jsondata[i]
-					categories.push(raw['name'])
-					sdata.push(raw['total'])
+					raw = jsondata[i];
+					categories.push(raw['name']);
+					sdata.push(raw['total']);
+					adata.push(raw['applied']);
 				}
 				lineopts.xAxis.categories = categories;
 				lineopts.series[0].data = sdata;
+				lineopts.series[1].data = adata;
 				var linechart = new Highcharts.Chart(lineopts);
 			}, "json");
 
