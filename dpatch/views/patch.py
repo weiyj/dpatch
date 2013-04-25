@@ -75,7 +75,10 @@ def execute_shell(args):
 def patchlist(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__lte = 10000):
-        rtypes.append("%s=%s" % (rtype.name, rtype.id))
+        if len(rtype.name) > 30:
+            rtypes.append("%s=%s" % (rtype.name[:30], rtype.id))
+        else:
+            rtypes.append("%s=%s" % (rtype.name, rtype.id))
 
     context = RequestContext(request)
     context['tag'] = tag_name
@@ -88,7 +91,10 @@ def patchlist(request, tag_name):
 def patch_list_version(request, tag_name):
     rtypes = []
     for rtype in Type.objects.filter(id__lte = 10000):
-        rtypes.append("%s=%s" % (rtype.name, rtype.id))
+        if len(rtype.name) > 30:
+            rtypes.append("%s=%s" % (rtype.name[:30], rtype.id))
+        else:
+            rtypes.append("%s=%s" % (rtype.name, rtype.id))
 
     rtagnames = []
     for rtag in GitTag.objects.filter(name__icontains = tag_name):
