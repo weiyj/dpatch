@@ -303,6 +303,12 @@ function SmartWizard(target, options) {
 
     SmartWizard.prototype.goForward = function(){
         var nextStepIdx = this.curStepIdx + 1;
+        var curStep = this.steps.eq(this.curStepIdx);
+        if($.isFunction(this.options.onValidateStep)) {
+            if(!this.options.onValidateStep.call(this, $(curStep))){
+              return false;
+            }
+        }
         if (this.steps.length <= nextStepIdx){
             if (! this.options.cycleSteps){
                 return false;
@@ -442,6 +448,7 @@ $.fn.smartWizard.defaults = {
     labelFinish:'Finish',
     noForwardJumping: false,
     ajaxType: "POST",
+    onValidateStep: null, // triggers before leaving a step
     onLeaveStep: null, // triggers when leaving a step
     onShowStep: null,  // triggers when showing a step
     onFinish: null  // triggers when Finish button is clicked
