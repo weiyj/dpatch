@@ -688,7 +688,10 @@ def report_fileinfo(request, report_id):
     fileinfo += gitlog
     if report.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
         count = 0
-        for line in find_remove_lines(report.diff):
+        diff = report.diff
+        if report.status == STATUS_NEW:
+            diff = report.reportlog
+        for line in find_remove_lines(diff):
             ret, gitlog = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:'%%ci||||%%an||||%%s||||%%H' %s" % (rdir, line, report.file))
             fileinfo += '\n# git log -n 1 -S \'%s\' %s\n' % (cgi.escape(line), report.file)
             fileinfo += report_format_gitinfo(report.tag.repo, gitlog)
