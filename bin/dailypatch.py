@@ -32,6 +32,7 @@ from dpatch.lib.engine.manager import patch_engine_list
 from dpatch.lib.common.utils import is_source_file
 from dpatch.lib.common.patchformater import PatchFormater
 from dpatch.lib.common.flags import TYPE_SCAN_NEXT_ONLY, TYPE_CHANGE_DATE_CHECK
+from dpatch.lib.db.sysconfig import read_config
 from dpatch.lib.common.status import *
 
 def check_patch(repo, git, rtag, flists, commit):
@@ -47,6 +48,11 @@ def check_patch(repo, git, rtag, flists, commit):
     #logger.logger.info('=' * 40)
     #logger.logger.info('%s' % '\n'.join(flists))
     #logger.logger.info('=' * 40)
+
+    sche_weekend_only = read_config('patch.schedule.weekend.only', True)
+    sche_weekend_limit = read_config('patch.schedule.weekend.limit', 600)
+    sche_weekend_delta = read_config('patch.schedule.weekend.delta', 90)
+    weekday = datetime.datetime.now().weekday()
 
     for dot in patch_engine_list():
         scount = 0
@@ -66,6 +72,15 @@ def check_patch(repo, git, rtag, flists, commit):
             if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0 and not git.is_linux_next():
                 test.next_token()
                 continue
+
+            if rtype.type == 0 and sche_weekend_only is True and len(flists) > sche_weekend_limit and weekday < 5:
+                # if we does not have a patch for this cleanup type in
+                # sche_weekend_limit days, schedule scan only on weekend
+                stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
+                if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
+                    test.next_token()
+                    logger.info('Delay scan type %d to weekend' % test.get_type())
+                    continue
 
             cmts = GitCommit.objects.filter(repo = repo, type = rtype)
             if len(cmts) == 0:
