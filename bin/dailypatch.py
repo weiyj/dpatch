@@ -52,6 +52,7 @@ def check_patch(repo, git, rtag, flists, commit):
     sche_weekend_only = read_config('patch.schedule.weekend.only', True)
     sche_weekend_limit = read_config('patch.schedule.weekend.limit', 600)
     sche_weekend_delta = read_config('patch.schedule.weekend.delta', 90)
+    sche_obsolete_skip = read_config('patch.schedule.obsolete.skip', False)
     weekday = datetime.datetime.now().weekday()
 
     for dot in patch_engine_list():
@@ -161,6 +162,9 @@ def check_patch(repo, git, rtag, flists, commit):
                     text = test.get_patch()
 
                     if (rtype.flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
+                        if git.is_change_obsoleted(sfile, text) is True:
+                            continue
+                    elif rtype.type == 0 and sche_obsolete_skip is True:
                         if git.is_change_obsoleted(sfile, text) is True:
                             continue
 
