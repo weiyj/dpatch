@@ -26,11 +26,11 @@ TYPE_BUILD_SPARSE_CHECK = 0x04
 def flags_name(flags):
     flagname = []
     if (flags & TYPE_SCAN_NEXT_ONLY) == TYPE_SCAN_NEXT_ONLY:
-        flagname.append('NEXT_ONLY')
+        flagname.append('NO')
     if (flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
-        flagname.append('DATE_CHK')
+        flagname.append('DC')
     if (flags & TYPE_BUILD_SPARSE_CHECK) == TYPE_BUILD_SPARSE_CHECK:
-        flagname.append('SPARSE_CHK')
+        flagname.append('SC')
     if len(flagname):
         return '|'.join(flagname)
     return '-'
