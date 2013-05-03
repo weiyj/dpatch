@@ -49,7 +49,7 @@ def check_patch(repo, git, rtag, flists, commit):
     #logger.logger.info('%s' % '\n'.join(flists))
     #logger.logger.info('=' * 40)
 
-    sche_weekend_only = read_config('patch.schedule.weekend.only', True)
+    sche_weekend_enable = read_config('patch.schedule.weekend.enable', True)
     sche_weekend_limit = read_config('patch.schedule.weekend.limit', 600)
     sche_weekend_delta = read_config('patch.schedule.weekend.delta', 90)
     sche_obsolete_skip = read_config('patch.schedule.obsolete.skip', False)
@@ -74,7 +74,7 @@ def check_patch(repo, git, rtag, flists, commit):
                 test.next_token()
                 continue
 
-            if rtype.type == 0 and sche_weekend_only is True and len(flists) > sche_weekend_limit and weekday < 5:
+            if rtype.type == 0 and sche_weekend_enable is True and len(flists) > sche_weekend_limit and weekday < 5:
                 # if we does not have a patch for this cleanup type in
                 # sche_weekend_limit days, schedule scan only on weekend
                 stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
