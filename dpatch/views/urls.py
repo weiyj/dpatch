@@ -158,6 +158,9 @@ urlpatterns += patterns('dpatch.views.admin',
 
     url(r'^sysadmin/gitemail/$', 'git_email'),
     url(r'^sysadmin/gitemail/test/$', 'git_email_test'),
+
+    url(r'^sysadmin/sysconfig/$', 'sys_config'),
+    url(r'^sysadmin/sysconfig/list/$', 'sys_config_list'),
 )
 
 urlpatterns += patterns('dpatch.views.dash',

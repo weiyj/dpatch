@@ -32,7 +32,7 @@ from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
-from dpatch.models import GitRepo, Event
+from dpatch.models import GitRepo, Event, SysConfig
 
 def logevent(event, status = False):
     evt = Event(event = event, status = status)
@@ -321,3 +321,32 @@ def git_email_test(request):
         context = RequestContext(request)
         context['from'] = execute_shell('git config sendemail.from')
         return render_to_response("admin/gitemailtest.html", context)
+
+def sys_config(request):
+    context = RequestContext(request)
+    return render_to_response("admin/sysconfig.html", context)
+
+def sys_config_list(request):
+    page = int(request.GET.get('page', '1'))
+    rp = int(request.GET.get('rp', '15'))
+
+    settings = {'page': 1, 'total': 0, 'rows': [] }
+    for config in SysConfig.objects.all():
+        settings['rows'].append({
+            'id': config.id,
+            'cell': {
+                'id': config.id,
+                'name': config.name,
+                'value': config.value,
+        }}) # comment
+
+    if rp * page > len(settings['rows']):
+        end = len(settings['rows'])
+    else:
+        end = rp * page
+    start = rp * (page - 1)
+    settings['page'] = page
+    settings['total'] = len(settings['rows'])
+    settings['rows'] = settings['rows'][start:end]
+
+    return HttpResponse(simplejson.dumps(settings))

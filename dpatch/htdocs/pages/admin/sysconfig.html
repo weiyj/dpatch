@@ -1,0 +1,63 @@
+<div id="settings"></div>
+{% if user.is_authenticated %}
+<div id="dialognew" title="New System Config" style="display:none">
+<div id="dialogedit" title="Edit System Config" style="display:none">
+{% endif %}
+<script language="JavaScript" type="text/javascript" src="/javascripts/flexigrid/flexigrid.js"></script>
+<script language="JavaScript" type="text/javascript" src="/javascripts/jquery.blockUI.js"></script>
+
+<script type="text/javascript">
+	(function($) {
+		$(document).ready(function () {
+{% if user.is_authenticated %}
+			function onGridLoadSuccess(grid) {
+			}
+{% endif %}
+
+			$('#settings').flexigrid({
+				height : 'auto',
+				showToggleBtn: false,
+				title: 'System Config',
+				url: '/sysadmin/sysconfig/list',
+				method: 'GET',
+				colModel : [ { display: 'ID', name : 'id', width : 45, align: 'center'},
+				             { display: 'NAME', name : 'name', width : 360, align: 'left'},
+				             { display: 'VALUE', name : 'value', width : 600, align: 'left'},],
+				usepager: true,
+{% if user.is_authenticated %}
+				showCheckbox: true,/*
+				buttons : [ { name : 'Add', bclass : 'add', onpress: onSysConfigNew },
+				            { name : 'Delete', bclass : 'delete', onpress: onSysConfigDelete},
+				            { separator : true } ],*/
+{% else %}
+				showCheckbox: false,
+{% endif %}
+				onSuccess: onGridLoadSuccess
+			});
+
+{% if user.is_authenticated %}
+			function getGridSelected() {
+				var ids = [];
+				$('#settings tr.trSelected').each( function(){
+					id = $(this).find("td:eq(2)").eq(0).text();
+				   	ids.push(id);
+				});
+				return ids;
+			}
+
+			function onSysConfigDelete() {
+				var ids = getGridSelected();
+				if (ids.length < 1) {
+					alert('DELETE ERROR: at least one row must be selected!');
+					return;
+				}
+				showModelDialog("/sysadmin/sysconfig/delete/", {'ids': ids.join()}, 'GET', '#repos');
+			}
+
+			function onSysConfigNew() {				
+				ajaxShowDialog("#dialognew", "GET", "/sysadmin/sysconfig/add/", {})
+			}
+{% endif %}
+		});
+	})(jQuery);
+</script>
