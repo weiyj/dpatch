@@ -79,8 +79,8 @@ def check_patch(repo, git, rtag, flists, commit):
                 # sche_weekend_limit days, schedule scan only on weekend
                 stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
                 if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
-                    test.next_token()
                     logger.info('Delay scan type %d to weekend' % test.get_type())
+                    test.next_token()
                     continue
 
             cmts = GitCommit.objects.filter(repo = repo, type = rtype)
