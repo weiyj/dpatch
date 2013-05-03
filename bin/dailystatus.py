@@ -125,6 +125,9 @@ def main(args):
             if rtotal != tag.rptotal:
                 tag.rptotal = rtotal
                 tag.save()
+            if tag.running is True:
+                tag.running = False
+                tag.save()
 
         pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
         for dot in patch_engine_list():

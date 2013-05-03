@@ -22,6 +22,16 @@
 BIN_DIR=`dirname $0`
 DAILYPATCH_BASE=`readlink -e $BIN_DIR/../`
 
+LOCKF="$BIN_DIR/dpatch.pid"
+if [ -f $LOCKF ]; then
+	OPID=`cat $LOCKF`
+	ps -p $OPID > /dev/null
+	if [ $? -eq 0 ]; then
+		exit 1
+	fi
+fi
+echo $$ > $LOCKF
+
 PYTHONPATH="$DAILYPATCH_BASE/" \
         DJANGO_SETTINGS_MODULE=dpatch.settings \
         "$DAILYPATCH_BASE/bin/dailypatch.py"
@@ -37,5 +47,7 @@ PYTHONPATH="$DAILYPATCH_BASE/" \
 PYTHONPATH="$DAILYPATCH_BASE/" \
         DJANGO_SETTINGS_MODULE=dpatch.settings \
         "$DAILYPATCH_BASE/bin/dailybuild.py"
+
+unlink $LOCKF
 
 exit 0
