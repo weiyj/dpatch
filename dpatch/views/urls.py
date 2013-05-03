@@ -118,6 +118,7 @@ urlpatterns += patterns('dpatch.views.engine',
     url(r'^engine/cocci/fullscan/$', 'semantic_fullscan'),
     url(r'^engine/cocci/move/$', 'semantic_move_to_report'),
     url(r'^engine/type/(?P<type_id>\d+)/enable/$', 'enabletype'),
+    url(r'^engine/type/(?P<type_id>\d+)/switchtype/$', 'engine_switch_type'),
 
     url(r'^engine/cocci/report/$', 'report_semantic'),
     url(r'^engine/cocci/report/list/$', 'report_semantic_list'),

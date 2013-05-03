@@ -50,7 +50,20 @@
 						error: function(xhr, status, throwerr){
 						}
 					});
-					return True;
+					return true;
+				});
+				$("#semantics .type").click(function () {
+					id = $(this).attr('id');
+					$.ajax({
+						type: "GET",
+						url: '/engine/type/' + id + '/switchtype/',
+						success: function(data){
+							$('#semantics').flexReload();
+						},
+						error: function(xhr, status, throwerr){
+						}
+					});
+					return true;
 				});
 			}
 

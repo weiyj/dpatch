@@ -307,9 +307,9 @@ def semantic_list(request):
             action += '<a href="#" class="edit" id="%s">Edit</a>' % (rtype.id - 3000)
 
         if rtype.type == 1:
-            stype = 'BUGFIX'
+            stype = '<a href="#" class="type" id="%s">BUGFIX</a>' % rtype.id
         else:
-            stype = 'CLENAUP'
+            stype = '<a href="#" class="type" id="%s">CLENAUP</a>' % rtype.id
             
         coccis['rows'].append({
             'id': rtype.id - 3000,
@@ -656,9 +656,9 @@ def report_semantic_list(request):
             action += '<a href="#" class="edit" id="%s">Edit</a>' % (rtype.id - 10000)
 
         if rtype.type == 1:
-            stype = 'BUGFIX'
+            stype = '<a href="#" class="type" id="%s">BUGFIX</a>' % rtype.id
         else:
-            stype = 'CLENAUP'
+            stype = '<a href="#" class="type" id="%s">CLENAUP</a>' % rtype.id
 
         coccis['rows'].append({
             'id': (rtype.id - 10000),
@@ -1027,3 +1027,15 @@ def report_semantic_fullscan(request):
 
     logevent("FULLSCAN: coccinelle semantic [%s], SUCCEED" % pids, True)
     return HttpResponse('FULLSCAN SUCCEED: report engine ids [%s]' % pids)
+
+def engine_switch_type(request, type_id):
+    rtype = Type.objects.filter(id = type_id)
+    if len(rtype) == 0:
+        return HttpResponse('TYPE: ERROR: type id %s does not exists' % type_id)
+
+    if rtype[0].type > 0:
+        rtype[0].type = 0
+    else:
+        rtype[0].type += 1
+    rtype[0].save()
+    return HttpResponse('TYPE: CHANGE SUCCEED: type id %s' % type_id)
