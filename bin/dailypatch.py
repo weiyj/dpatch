@@ -120,6 +120,10 @@ def check_patch(repo, git, rtag, flists, commit):
                 if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_REJECTED).count() > 0:
                     continue
 
+                # treat patch marked with Applied and commit is '' as EXISTS patch
+                if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_ACCEPTED, commit = '').count() > 0:
+                    continue
+
                 patchs = Patch.objects.filter(file = sfile, type = rtype)
                 rpatchs = []
                 for p in patchs:
