@@ -23,7 +23,7 @@ import os
 import sys
 import subprocess
 
-from time import gmtime, strftime
+from time import localtime, strftime
 
 from dpatch.models import GitRepo, Patch, Report, ScanLog
 from dpatch.lib.common.logger import MyLogger
@@ -118,7 +118,7 @@ def main(args):
 
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
-                       starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+                       starttime = strftime("%Y-%m-%d %H:%M:%S", localtime()),
                        desc = 'Building, please wait...')
         logs.save()
 
@@ -380,7 +380,7 @@ def main(args):
 
         logs.desc = 'build patch: %d, pass: %d fail:%d, build report: %s, pass: %d, fail: %s' \
                     % (pcount['total'], pcount['pass'], pcount['fail'], rcount['total'], rcount['pass'], rcount['fail'])
-        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", localtime())
         logs.logs = logger.getlog()
         logs.save()
 
