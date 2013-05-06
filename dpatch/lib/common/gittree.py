@@ -113,6 +113,8 @@ class GitTree(object):
         return date
 
     def get_changelist(self, scommit, ecommit, update, delta = False):
+        if scommit == ecommit and len(scommit) != 0:
+            return []
         if self.is_linux_next() and delta is False:
             if not isinstance(update, datetime.datetime):
                 stime = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 2 * 24 * 60 * 60))
