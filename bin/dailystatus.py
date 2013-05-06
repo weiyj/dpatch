@@ -24,7 +24,7 @@ import re
 import sys
 import subprocess
 
-from time import gmtime, strftime
+from time import localtime, strftime
 from datetime import datetime
 
 from django.db.models import Q
@@ -112,7 +112,7 @@ def main(args):
     for repo in GitRepo.objects.filter(status = True):
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
-                       starttime = strftime("%Y-%m-%d %H:%M:%S", gmtime()),
+                       starttime = strftime("%Y-%m-%d %H:%M:%S", localtime()),
                        desc = 'Processing, please wait...')
         logs.save()
 
@@ -292,7 +292,7 @@ def main(args):
 
         logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d, skip: %s' % (
                         pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'], pcount['skip'])
-        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        logs.endtime = strftime("%Y-%m-%d %H:%M:%S", localtime())
         logs.logs = logger.getlog()
         logs.save()
 
