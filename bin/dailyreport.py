@@ -122,12 +122,12 @@ def checkreport(repo, rtag, flists):
                             r.save()
                     continue
 
-                count = 0
+                lcount = 0
                 for r in reports:
                     if r.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
-                        count += 1
+                        lcount += 1
 
-                if count > 0:
+                if lcount > 0:
                     continue
 
                 text = test.get_report()
