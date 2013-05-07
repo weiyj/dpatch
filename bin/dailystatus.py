@@ -82,6 +82,8 @@ def main(args):
             continue
         ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', patch.title).strip()
         ptitle = re.sub('^.*:', '', ptitle).strip()
+        if len(ptitle) > 2:
+            ptitle = ptitle[1:]
         cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
         for line in execute_shell_full(cmds)[::-1]:
             if line.find(ptitle) == -1:
@@ -97,6 +99,8 @@ def main(args):
             continue
         ptitle = re.sub('Subject: \[PATCH[^\]]*]', '', report.title).strip()
         ptitle = re.sub('^.*:', '', ptitle).strip()
+        if len(ptitle) > 2:
+            ptitle = ptitle[1:]
         cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
         for line in execute_shell_full(cmds)[::-1]:
             if line.find(ptitle) == -1:
