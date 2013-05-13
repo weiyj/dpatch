@@ -168,8 +168,9 @@ def check_patch(repo, git, rtag, flists, commit):
                     if (rtype.flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
                         if git.is_change_obsoleted(sfile, text) is True:
                             continue
-                    elif rtype.type == 0 and sche_obsolete_skip is True:
+                    elif rtype.id > 3000 and rtype.type == 0 and sche_obsolete_skip is True:
                         if git.is_change_obsoleted(sfile, text) is True:
+                            logger.logger.info('skip obsoleted file %s, type %d' % (sfile, rtype.id))
                             continue
 
                     patch = Patch(tag = rtag, file = sfile, type = rtype, 
