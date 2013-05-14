@@ -386,6 +386,7 @@ def report_fix(request, report_id):
             report.title = formater.format_title()
             report.desc = formater.format_desc()
             report.emails = formater.get_mail_list()
+            report.module = formater.get_module()
             report.diff = diff
             report.build = 0
             report.status = STATUS_PATCHED
