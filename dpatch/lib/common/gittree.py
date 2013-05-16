@@ -90,6 +90,11 @@ class GitTree(object):
         if re.search(r'-rc\d+$', tag) != None:
             tag = re.sub('-rc\d+$', '', tag)
             if tags.count(tag) > 0:
+                atags = tag.split('.')
+                if int(atags[-1]) % 10 == 9:
+                    ntag = "%s.%d-rc1" % ('.'.join(atags[:-1]), int(atags[-1]) + 1)
+                    if tags.count(ntag) > 0:
+                        return ntag
                 return tag
         return tags[-1]
 
