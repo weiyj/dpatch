@@ -77,15 +77,17 @@ class CheckIncludeEngine(PatchEngine):
             if line.find("#include") != -1:
                 if depth == 0:
                     inclist.append(line)
-                elif inlineinc[depth-1].count(line) != 0:
+                elif inlineinc[-1].count(line) != 0:
                     inclist.append(line)
                 else:
-                    inlineinc[depth-1].append(line)
+                    inlineinc[-1].append(line)
             elif line.find("#ifndef") != -1 or line.find("#ifdef") != -1 or line.find("#if") != -1:
                 depth += 1
                 inlineinc.append([])
             elif line.find("#else") != -1:
-                inlineinc[depth-1] = []
+                if depth == 0:
+                    continue
+                inlineinc[-1] = []
             elif line.find("#endif") != -1:
                 depth -= 1
                 if depth >= 0:
