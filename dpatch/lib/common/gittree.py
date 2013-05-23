@@ -86,17 +86,23 @@ class GitTree(object):
         if not os.path.exists(self._dpath):
             return None
         tags = execute_shell('cd %s; git tag' % self._dpath)
-        tag = tags[-1]
-        if re.search(r'-rc\d+$', tag) != None:
-            tag = re.sub('-rc\d+$', '', tag)
+
+        stag = tags[-1]
+        if re.search(r'-rc\d+$', stag) != None:
+            tag = re.sub('-rc\d+$', '', stag)
             if tags.count(tag) > 0:
-                atags = tag.split('.')
-                if int(atags[-1]) % 10 == 9:
-                    ntag = "%s.%d-rc1" % ('.'.join(atags[:-1]), int(atags[-1]) + 1)
-                    if tags.count(ntag) > 0:
-                        return ntag
-                return tag
-        return tags[-1]
+                stag = tag
+
+        for ltag in tags[::-1]:
+            if re.search(r'v\d.\d\d+', ltag) != None:
+                lversions = re.sub('-rc\d+$', '', ltag).split('.')
+                sversions = re.sub('-rc\d+$', '', stag).split('.')
+                if lversions[0] != sversions[0] or int(sversions[-1]) > int(lversions[-1]):
+                    return stag
+                else:
+                    return ltag
+
+        return stag
 
     def get_stable(self):
         if self._ncommit is None:
