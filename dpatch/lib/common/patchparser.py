@@ -79,8 +79,12 @@ class PatchParser(object):
             if re.search('Subject: \[PATCH', line):
                 self._ftitle = re.sub('Subject:', '', line).strip()
                 line = re.sub('Subject: \[PATCH[^\]]*]', '', line).strip()
-                self._title = re.sub('^.*:', '', line).strip()
-                self._module = re.sub(':[^:]*$', '', line).strip()
+                if re.match('\w+\s*:\s*\w+\s*-', line):
+                    self._title = re.sub('^.*-', '', line).strip()
+                    self._module = re.match('\w+\s*:\s*\w+\s*-', line).group(0).strip()
+                else:
+                    self._title = re.sub('^.*:', '', line).strip()
+                    self._module = re.sub(':[^:]*$', '', line).strip()
                 continue
             if re.search('To: [^<]*<[^@]+@[^>]+>', line) or re.search('To: [^@]+@.*', line):
                 self._emails = line

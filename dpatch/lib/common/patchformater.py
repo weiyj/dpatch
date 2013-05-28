@@ -65,7 +65,10 @@ class PatchFormater(object):
         module = ''
         for m in lists:
             if m.find(":") != -1:
-                mname = re.sub(':[^:]*$', "", m).strip()
+                if re.match('\w+\s*:\s*\w+\s*-', m):
+                    mname = re.match('\w+\s*:\s*\w+\s*-', m).group(0).strip()
+                else:
+                    mname = re.sub(':[^:]*$', "", m).strip()
                 # start with 'Merge ....'
                 if mname.find('Merge ') != -1:
                     continue
@@ -290,14 +293,18 @@ class PatchFormater(object):
         title = self._format_value(self._title)
 
         target = os.path.basename(self._repo)
+        if len(self._module) > 1 and self._module[-1] == '-':
+            seq = ''
+        else:
+            seq = ':'
         if title.find('[PATCH') != -1:
             return title
         elif target == 'linux':
-            return '[PATCH] %s: %s' % (self._module, title)
+            return '[PATCH] %s%s %s' % (self._module, seq, title)            
         elif target == 'linux-next':
-            return '[PATCH -next] %s: %s' % (self._module, title)
+            return '[PATCH -next] %s%s %s' % (self._module, seq, title)
         else:
-            return '[PATCH %s] %s: %s' % (target, self._module, title)
+            return '[PATCH %s] %s%s %s' % (target, self._module, seq, title)
 
     def format_desc(self):
         return self._format_value(self._desc)
