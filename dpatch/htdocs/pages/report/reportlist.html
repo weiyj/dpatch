@@ -117,6 +117,16 @@
 			showModelDialog("/report/build/all/", {'repo': '{{repo}}'}, 'GET', '#reportlist');
 		}
 
+		function onReportStable() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('STABLE: at least one row must be selected!');
+			} else {
+				showModelDialog("/report/stable/", {'ids': ids.join()}, 'GET', '#reportlist');
+			}			
+		}
+
 		function onReportSpecialFile() {
 			var ids = getGridSelected();
 			
@@ -191,11 +201,15 @@
 				            { name : 'Merge', bclass : 'merge', onpress : doReportMerge },
 				            { name : 'Unmerge', bclass : 'unmerge', onpress : doReportUnMerge },
 				            { separator : true },
-				            { name : 'Export Patch', bclass : 'export', onpress: onReportExport },
-				            { name : 'Export Patch All', bclass : 'export', onpress: onReportExportAll },
+				            { name : 'Export', bclass : 'export', onpress: onReportExport },
+				            { name : 'Export All', bclass : 'export', onpress: onReportExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onReportBuild },
 				            { separator : true },
+{% if repo != "1" %}
+				            { separator : true },
+				            { name : 'Stable', bclass : 'export', onpress: onReportStable },
+{% endif %}
 				            { name : 'Special File', bclass : 'export', onpress: onReportSpecialFile },
 				            { separator : true },
 				            { name : 'Status', bclass : 'export', values: "{{ status }}", onpress: onReportMarkStatus },

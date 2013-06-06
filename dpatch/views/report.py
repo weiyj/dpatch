@@ -958,3 +958,32 @@ def report_special(request):
 
     logevent("SPECIAL: report [%s], SUCCEED" % pids, True)
     return HttpResponse('SPECIAL SUCCEED: patch ids [%s]' % pids)
+
+@login_required
+def report_stable(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('STABLE ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("STABLE: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('STABLE ERROR: patch %s does not exists' % i)
+        reports.append(report[0])
+
+    for report in reports:
+        ntag = GitTag.objects.filter(name = report.tag.name, repo__id = 1)
+        if len(ntag) == 0:
+            continue
+        report.tag.rptotal = report.tag.rptotal - 1
+        report.tag.save()
+        report.tag = ntag[0]
+        report.save()
+        report.tag.rptotal = report.tag.rptotal + 1
+        report.tag.save()
+
+    logevent("STABLE: patch [%s], SUCCEED" % pids, True)
+    return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)

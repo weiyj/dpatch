@@ -970,3 +970,32 @@ def patch_fileinfo(request, patch_id):
                 break
 
     return HttpResponse('<pre>%s</pre>' % fileinfo)
+
+@login_required
+def patch_stable(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('STABLE ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("STABLE: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('STABLE ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    for patch in patchs:
+        ntag = GitTag.objects.filter(name = patch.tag.name, repo__id = 1)
+        if len(ntag) == 0:
+            continue
+        patch.tag.total = patch.tag.total - 1
+        patch.tag.save()
+        patch.tag = ntag[0]
+        patch.save()
+        patch.tag.total = patch.tag.total + 1
+        patch.tag.save()
+
+    logevent("STABLE: patch [%s], SUCCEED" % pids, True)
+    return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)

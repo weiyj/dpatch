@@ -517,7 +517,7 @@ def semantic_move_to_report(request):
 
             rtype.id = ncocci.id + 10000
             rtype.save()
-                
+
             # move patchs owner by this type
             for patch in patchs:
                 report = Report(tag = patch.tag, type = rtype, status = patch.status,

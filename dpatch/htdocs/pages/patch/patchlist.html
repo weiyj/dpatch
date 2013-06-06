@@ -129,6 +129,15 @@
 			showModelDialog("/patch/build/all/", {'repo': '{{repo}}'}, 'GET', '#patchlist');
 		}
 
+		function onPatchStable() {
+			var ids = getGridSelected();
+			if (ids.length < 1) {
+				alertBox("STABLE ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/patch/stable/", {'ids': ids.join()}, 'GET', '#patchlist');
+			}
+		}
+
 		function onPatchMarkStatus(name, div, value) {
 			var ids = getGridSelected();
 
@@ -197,6 +206,10 @@
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
+{% if repo != "1" %}
+				            { separator : true },
+				            { name : 'Stable', bclass : 'export', onpress: onPatchStable },
+{% endif %}
 				            { separator : true },
 				            { name : 'Special File', bclass : 'export', onpress: onSpecialFile },
 				            { separator : true },
