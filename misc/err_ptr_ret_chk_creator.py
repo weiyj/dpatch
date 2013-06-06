@@ -106,6 +106,12 @@ def main(args):
 ///\n'
 
     funcs = []
+    skiplist = ['rfkill_alloc', 'clk_get', 'clk_register', 'clk_register_fixed_rate',
+                'rpcauth_create', 'vb2_dma_contig_init_ctx', 'of_clk_get',
+                'arm_iommu_create_mapping', 'devm_regulator_get',
+                'platform_device_register_full', 'anon_inode_getfile',
+                'of_clk_get_by_name', 'sock_alloc_file', 'skb_mac_gso_segment']
+
     for sfile in _execute_shell("find %s -type f" % kdir)[0:-1]:
         if not is_source_file(sfile):
             continue
@@ -116,7 +122,9 @@ def main(args):
                 continue
             if funcs.count(line) != 0:
                 continue
-            if funcs in ['rfkill_alloc']:
+            if line in skiplist:
+                continue
+            if line.find('debugfs_create') != -1:
                 continue
             funcs.append(line)
     print '@@\n\
