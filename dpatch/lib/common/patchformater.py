@@ -65,7 +65,7 @@ class PatchFormater(object):
         module = ''
         for m in lists:
             if m.find(":") != -1:
-                if re.match('\w+\s*:\s*\w+\s*-', m):
+                if re.match('\w+\s*:\s*\w+\s*- ', m):
                     mname = re.match('\w+\s*:\s*\w+\s*-', m).group(0).strip()
                 else:
                     mname = re.sub(':[^:]*$', "", m).strip()
