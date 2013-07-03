@@ -234,6 +234,68 @@ class PatchFormater(object):
                     
         return funcname
 
+    def _guest_struct_name(self):
+        structnames = []
+        if self._content is None:
+            return structnames
+
+        wname = None
+        for line in self._content.split('\n'):
+            line = line.strip()
+            if re.search('struct\s+\w+\s+\w+\s*=\s*{', line):
+                structname = re.search('struct\s+\w+', line).group(0).strip()
+                if re.match(r"^@@[^@]*@@", line):
+                    wname = structname
+                elif structnames.count(structname) == 0:
+                    wname = None
+                    structnames.append(structname)
+            elif re.match(r"^@@[^@]*@@", line):
+                if not wname is None:
+                    structnames.append(wname)
+                wname = None
+
+        if not wname is None:
+            structnames.append(wname)
+
+        return structnames
+
+    def _guest_field_name(self):
+        fields = []
+        if self._content is None:
+            return fields
+
+        for line in self._content.split('\n'):
+            line = line.strip()
+            if re.match(r"@@[^@]*@@", line):
+                continue
+            if re.search('^\+\s*.\w+\s+=\s+[^,]+,', line):
+                field = re.search('\s*.\w+\s+', line).group(0).strip()
+                if fields.count(field) == 0:
+                    fields.append(field)
+
+        return fields
+
+    def _guest_new_field_name(self):
+        fields = []
+        if self._content is None:
+            return fields
+
+        oldfields = []
+        for line in self._content.split('\n'):
+            line = line.strip()
+            if re.match(r"@@[^@]*@@", line):
+                continue
+            if re.search('^-\s*.\w+\s+=\s+[^,]+,', line) or re.search('^-\s*.\w+\s+=\s+[^,]+$', line):
+                field = re.search('\s*.\w+\s+', line).group(0).strip()
+                if oldfields.count(field) == 0:
+                    oldfields.append(field)
+            if re.search('^\+\s*.\w+\s+=\s+[^,]+,', line):
+                field = re.search('\s*.\w+\s+', line).group(0).strip()
+                if fields.count(field) == 0:
+                    fields.append(field)
+
+        return filter(lambda x : oldfields.count(x) == 0, fields)
+
     def _guest_variable_name(self):
         types = ['struct', 'int', 'long', 'char', 'unsigned', 'u64', 'u32', 'size_t']
         varname = []
@@ -286,6 +348,18 @@ class PatchFormater(object):
                     value = re.sub(r'{{\s*variable\s*}}', ', '.join(varnames), value)
                 else:
                     value = re.sub(r'{{\s*variable\s*}}', '', value)                    
+
+            if re.search(r'{{\s*struct\s*}}', value):
+                structs = self._guest_struct_name()
+                value = re.sub(r'{{\s*struct\s*}}', ', '.join(structs), value)
+
+            if re.search(r'{{\s*field\s*}}', value):
+                fields = self._guest_field_name()
+                value = re.sub(r'{{\s*field\s*}}', ', '.join(fields), value)
+
+            if re.search(r'{{\s*newfield\s*}}', value):
+                fields = self._guest_new_field_name()
+                value = re.sub(r'{{\s*newfield\s*}}', ', '.join(fields), value)
 
         return value
 
