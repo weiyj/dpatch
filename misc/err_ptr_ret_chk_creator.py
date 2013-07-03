@@ -110,7 +110,8 @@ def main(args):
                 'rpcauth_create', 'vb2_dma_contig_init_ctx', 'of_clk_get',
                 'arm_iommu_create_mapping', 'devm_regulator_get',
                 'platform_device_register_full', 'anon_inode_getfile',
-                'of_clk_get_by_name', 'sock_alloc_file', 'skb_mac_gso_segment']
+                'of_clk_get_by_name', 'sock_alloc_file', 'skb_mac_gso_segment',
+                'get_fb_info']
 
     for sfile in _execute_shell("find %s -type f" % kdir)[0:-1]:
         if not is_source_file(sfile):
