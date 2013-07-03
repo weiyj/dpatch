@@ -100,6 +100,9 @@ class GitTree(object):
                 if lversions[0] != sversions[0] or int(sversions[-1]) > int(lversions[-1]):
                     return stag
                 else:
+                    tag = re.sub('-rc\d+$', '', ltag)
+                    if tags.count(tag) > 0:
+                        ltag = tag
                     return ltag
 
         return stag
