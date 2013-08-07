@@ -217,7 +217,6 @@ class PatchFormater(object):
                     if re.match(r".*:$", fun):
                         continue
                     lastfun = fun
-                    print lastfun
             elif line.find('-') == 0:
                 line = re.sub("-", '', line).strip()
                 if re.search('\w+\s*\(\w+\s+\w+', line) or re.search('\w+\s+\w+\s*\(', line):
@@ -251,11 +250,13 @@ class PatchFormater(object):
                     structnames.append(structname)
             elif re.match(r"^@@[^@]*@@", line):
                 if not wname is None:
-                    structnames.append(wname)
+                    if structnames.count(wname) == 0:
+                        structnames.append(wname)
                 wname = None
 
         if not wname is None:
-            structnames.append(wname)
+            if structnames.count(wname) == 0:
+                structnames.append(wname)
 
         return structnames
 

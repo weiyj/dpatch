@@ -975,7 +975,7 @@ def report_stable(request):
         reports.append(report[0])
 
     for report in reports:
-        ntag = GitTag.objects.filter(name = report.tag.name, repo__id = 1)
+        ntag = GitTag.objects.filter(repo__id = 1).order_by("-id")
         if len(ntag) == 0:
             continue
         report.tag.rptotal = report.tag.rptotal - 1

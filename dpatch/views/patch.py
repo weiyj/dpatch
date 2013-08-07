@@ -987,7 +987,7 @@ def patch_stable(request):
         patchs.append(patch[0])
 
     for patch in patchs:
-        ntag = GitTag.objects.filter(name = patch.tag.name, repo__id = 1)
+        ntag = GitTag.objects.filter(repo__id = 1).order_by("-id")
         if len(ntag) == 0:
             continue
         patch.tag.total = patch.tag.total - 1
