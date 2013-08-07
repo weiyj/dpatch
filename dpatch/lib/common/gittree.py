@@ -129,13 +129,19 @@ class GitTree(object):
     def get_changelist(self, scommit, ecommit, update, delta = False):
         if scommit == ecommit and len(scommit) != 0:
             return []
-        if self.is_linux_next() and delta is False:
-            if not isinstance(update, datetime.datetime):
-                stime = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 2 * 24 * 60 * 60))
+        dateusing = read_config('git.diff.using.datetime', False)
+        if self.is_linux_next():
+            if dateusing is True and delta is False:
+                if not isinstance(update, datetime.datetime):
+                    stime = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 2 * 24 * 60 * 60))
+                else:
+                    stime = update# - datetime.timedelta(days=2)
+                lines = execute_shell('cd %s; git log --after="%s" --name-only --format="%%" | sort -u | grep "\w"' % (self._dpath, stime))
+                return lines
             else:
-                stime = update# - datetime.timedelta(days=2)
-            lines = execute_shell('cd %s; git log --after="%s" --name-only --format="%%" | sort -u | grep "\w"' % (self._dpath, stime))
-            return lines
+                scommit = self.get_stable()
+                lines = execute_shell('cd %s; git diff --name-only %s...%s' % (self._dpath, scommit, ecommit))
+                return lines
         else:
             if len(scommit) == 0 or scommit is None:
                 scommit = '1da177e4c3f41524e886b7f1b8a0c1fc7321cac2'
