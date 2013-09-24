@@ -111,7 +111,8 @@ def main(args):
                 'arm_iommu_create_mapping', 'devm_regulator_get',
                 'platform_device_register_full', 'anon_inode_getfile',
                 'of_clk_get_by_name', 'sock_alloc_file', 'skb_mac_gso_segment',
-                'get_fb_info']
+                'get_fb_info', 'unpack_dfa', 'select_bad_process', 'perf_init_event',
+                'debugfs_rename']
 
     for sfile in _execute_shell("find %s -type f" % kdir)[0:-1]:
         if not is_source_file(sfile):
