@@ -56,7 +56,11 @@ def patchstatus(request):
                     rtag[tag.repo.name]['total'] += tag.total
 
         context = RequestContext(request)
-        context['tags'] = tags
+        limit = read_config('ui.main.showitems', len(tags))
+        if len(tags) > limit:
+            context['tags'] = tags[0:limit]
+        else:
+            context['tags'] = tags
         return render_to_response("patch/statusbyversion.html", context)
     else:
         tags = GitTag.objects.filter(Q(total__gt=0) | Q(running=True)).order_by("-id")
@@ -86,7 +90,11 @@ def reportstatus(request):
                     rtag[tag.repo.name]['rptotal'] += tag.rptotal
 
         context = RequestContext(request)
-        context['tags'] = tags
+        limit = read_config('ui.main.showitems', len(tags))
+        if len(tags) > limit:
+            context['tags'] = tags[0:limit]
+        else:
+            context['tags'] = tags
         return render_to_response("report/statusbyversion.html", context)
     else:
         tags = GitTag.objects.filter(Q(rptotal__gt=0) | Q(running=True)).order_by("-id")
