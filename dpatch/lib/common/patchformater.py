@@ -106,7 +106,9 @@ class PatchFormater(object):
         commit_signer_list = []
         _re_list = [{'cc': ['linux-wireless@vger.kernel.org', 'linux-bluetooth@vger.kernel.org'],
                      'rmto': ['David S. Miller <davem@davemloft.net>', '"David S. Miller" <davem@davemloft.net>'],
-                     'rmcc': ['netdev@vger.kernel.org']}]
+                     'rmcc': ['netdev@vger.kernel.org']},
+                    {'cc': ['devicetree@vger.kernel.org'], 'rmto': [],
+                     'rmcc': ['devicetree@vger.kernel.org']}]
 
         lists = execute_shell("cd %s ; /usr/bin/perl ./scripts/get_maintainer.pl -f %s --remove-duplicates --nogit" % (self._repo, self._fname))
         for m in lists:
