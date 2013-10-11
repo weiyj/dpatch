@@ -65,3 +65,14 @@ def find_remove_lines(diff):
         if line.find('-') == 0 and re.search('\w+', line):
             lines.append(line[1:])
     return lines
+
+def commit_url(url, commit):
+    _weburl = url
+    if url.find('gitorious.org') != -1:
+        _weburl = re.sub(".git$", '', url)
+        _weburl = "%s/commits/%s" % (_weburl, commit)
+        _weburl = re.sub("git://", "https://", _weburl)
+    else:
+        _weburl = "%s;a=commit;h=%s" % (url, commit)
+        _weburl = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", _weburl)
+    return _weburl

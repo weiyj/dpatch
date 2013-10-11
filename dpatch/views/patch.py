@@ -43,7 +43,7 @@ from dpatch.lib.common.patchformater import PatchFormater
 from dpatch.lib.common.patchparser import PatchParser
 from dpatch.lib.db.filemodule import register_module_name
 from dpatch.lib.engine.manager import patch_engine_list
-from dpatch.lib.common.utils import find_remove_lines
+from dpatch.lib.common.utils import find_remove_lines, commit_url
 from dpatch.forms import PatchNewForm
 from dpatch.lib.common.status import *
 
@@ -941,8 +941,7 @@ def patch_format_gitinfo(repo, gitlog):
         commit = subflds[-1]
         title = subflds[-2]
         line = '%s  %-20s' % (subflds[0], subflds[1])
-        url = "%s;a=commit;h=%s" % (repo.url, commit)
-        url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+        url = commit_url(repo.url, commit)
         fileinfos.append('%s <a href="%s" target="__blank">%s</a>' % (line, url, cgi.escape(title)))
 
     return '\n'.join(fileinfos)
