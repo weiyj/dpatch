@@ -44,11 +44,11 @@ class GitTree(object):
             return False
 
     def _get_remote_master(self):
-        _rfile = re.sub('git://git.kernel.org', 'http://www.kernel.org', self._url)
-        _rfile = _rfile + '/refs/heads/master'
-        _tfile = "/tmp/%s-master--" % re.sub('\.', '-', self._name)
-        execute_shell('wget -O %s %s --no-check-certificate' % (_tfile, _rfile))
-        commits = execute_shell('cat %s; unlink %s' % (_tfile, _tfile))
+        #_rfile = re.sub('git://git.kernel.org', 'http://www.kernel.org', self._url)
+        #_rfile = _rfile + '/refs/heads/master'
+        #_tfile = "/tmp/%s-master--" % re.sub('\.', '-', self._name)
+        #execute_shell('wget -O %s %s --no-check-certificate' % (_tfile, _rfile))
+        commits = execute_shell("git ls-remote -h %s master | awk '{print $1;}'" % self._url)
         if len(commits) == 0:
             return None
         return commits[0]
@@ -109,8 +109,22 @@ class GitTree(object):
 
     def get_stable(self):
         if self._ncommit is None:
-            commits = execute_shell('cd %s ; cat .git/refs/remotes/origin/stable' % self._dpath)
-            self._ncommit = commits[0]
+            if os.path.exists(os.path.join(self._dpath, '.git/refs/remotes/origin/stable')):
+                commits = execute_shell('cd %s ; cat .git/refs/remotes/origin/stable' % self._dpath)
+                self._ncommit = commits[0]
+            else:
+                logcmd = "git log --author='Linus Torvalds' --pretty='format:%%H %%s' -n 20"
+                for line in execute_shell("cd %s ; %s" % (self._dpath, logcmd)):
+                    _commit = line.split(' ')
+                    if len(_commit) < 2:
+                        continue
+                    if _commit[1] == 'Merge' or _commit[1] == 'Linux':
+                        self._ncommit = _commit[0]
+                        # fake a stable to make build happy
+                        fp = open(os.path.join(self._dpath, '.git/refs/remotes/origin/stable'), "w")
+                        fp.write(self._ncommit)
+                        fp.close()
+                        break
         return self._ncommit
 
     def _get_date_zone(self, data):
