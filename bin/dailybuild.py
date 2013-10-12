@@ -64,10 +64,19 @@ def commit_from_repo(repo):
     return commits[-1]
 
 def is_linux_next_update(repo):
-    ret, commits = execute_shell('diff %s/.git/refs/remotes/origin/stable %s/.git/refs/remotes/stable' % (repo.dirname(), repo.builddir()))
+    ret, commits = execute_shell('diff %s/.git/refs/remotes/origin/master %s/.git/refs/remotes/origin/master' % (repo.dirname(), repo.builddir()))
     return ret
 
 def get_linux_next_stable(repo):
+    logcmd = "git log --author='Linus Torvalds' --pretty='format:%%H %%s' -n 20"
+    ret, lines = execute_shell("cd %s ; %s" % (repo.builddir(), logcmd))
+    for line in lines:
+        _commit = line.split(' ')
+        if len(_commit) < 2:
+            continue
+        if _commit[1] == 'Merge' or _commit[1] == 'Linux':
+            return _commit[0]
+
     ret, commits = execute_shell('cd %s; cat .git/refs/remotes/stable' % (repo.builddir()))
     return commits[0]
 
