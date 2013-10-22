@@ -109,11 +109,13 @@ class GitTree(object):
 
     def get_stable(self):
         if self._ncommit is None:
-            if os.path.exists(os.path.join(self._dpath, '.git/refs/remotes/origin/stable')):
-                commits = execute_shell('cd %s ; cat .git/refs/remotes/origin/stable' % self._dpath)
-                self._ncommit = commits[0]
-            else:
-                logcmd = "git log --author='Linus Torvalds' --pretty='format:%%H %%s' -n 20"
+            #if os.path.exists(os.path.join(self._dpath, '.git/refs/remotes/origin/stable')):
+            #    commits = execute_shell('cd %s ; cat .git/refs/remotes/origin/stable' % self._dpath)
+            #    self._ncommit = commits[0]
+            #else:
+            if True:
+                logcmd = "git log --author='Linus Torvalds' --pretty='format:%H %s' -n 50"
+                #print execute_shell("cd %s ; %s" % (self._dpath, logcmd))
                 for line in execute_shell("cd %s ; %s" % (self._dpath, logcmd)):
                     _commit = line.split(' ')
                     if len(_commit) < 2:
