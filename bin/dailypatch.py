@@ -101,6 +101,13 @@ def check_patch(repo, git, rtag, flists, commit):
             else:
                 rflists = flists
 
+            if rtype.type == 0 and sche_weekend_enable is True and len(rflists) > sche_weekend_limit and weekday < 5:
+                stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
+                if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
+                    logger.info('Delay scan type %d to weekend' % test.get_type())
+                    test.next_token()
+                    continue
+
             logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
 
             exceptfiles = []
