@@ -219,7 +219,7 @@ class PatchFormater(object):
                     if re.match(r".*:$", fun):
                         continue
                     lastfun = fun
-            elif line.find('-') == 0:
+            elif line.find('-') == 0 and line[-1] != ';':
                 line = re.sub("-", '', line).strip()
                 if re.search('\w+\s*\(\w+\s+\w+', line) or re.search('\w+\s+\w+\s*\(', line):
                     line = re.sub('\(.*', '', line).strip()
