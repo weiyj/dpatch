@@ -24,8 +24,8 @@ import os
 from enginebase import EngineBase
 
 class ReportEngine(EngineBase):
-    def __init__(self, repo, logger = None):
-        EngineBase.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        EngineBase.__init__(self, repo, logger, build)
 
     def name(self):
         return 'undefined report engine'

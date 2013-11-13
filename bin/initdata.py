@@ -46,7 +46,11 @@ def main(args):
              {'id': 2000,
               'name': 'checkinclude',
               'title': 'remove duplicated include from {{file}}',
-              'desc': 'Remove duplicated include.'},]
+              'desc': 'Remove duplicated include.'},
+             {'id': 2900,
+              'name': 'checksparse',
+              'title': 'fix sparse warnings',
+              'desc': 'Fix sparse warnings.'},]
 
     for t in types:
         if Type.objects.filter(name = t['name']).count() > 0:

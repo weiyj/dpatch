@@ -22,10 +22,11 @@
 from checkversion import CheckVersionEngine
 from checkinclude import CheckIncludeEngine
 from checkrelease import CheckReleaseEngine
+from checksparse import CheckSparseEngine
 from checkcoccinelle import CheckCocciPatchEngine, CheckCocciReportEngine
 
 def patch_engine_list():
-    return [CheckVersionEngine, CheckReleaseEngine, CheckIncludeEngine, CheckCocciPatchEngine]
+    return [CheckVersionEngine, CheckReleaseEngine, CheckIncludeEngine, CheckCocciPatchEngine, CheckSparseEngine]
 
 def report_engine_list():
     return [CheckCocciReportEngine]

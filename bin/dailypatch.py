@@ -57,7 +57,7 @@ def check_patch(repo, git, rtag, flists, commit):
 
     for dot in patch_engine_list():
         scount = 0
-        test = dot(repo.dirname(), logger.logger)
+        test = dot(repo.dirname(), logger.logger, repo.builddir())
         for i in range(test.tokens()):
             rtype = None
             try:
@@ -187,8 +187,13 @@ def check_patch(repo, git, rtag, flists, commit):
                     # format patch and cache to patch
                     user = patch.username()
                     email = patch.email()
-                    formater = PatchFormater(repo.dirname(), sfile, user, email,
-                                             rtype.ptitle, rtype.pdesc, text)
+                    desc = test.get_patch_description()
+                    title = test.get_patch_title()
+                    if desc is None:
+                        desc = rtype.pdesc
+                    if title is None:
+                        title = rtype.ptitle
+                    formater = PatchFormater(repo.dirname(), sfile, user, email, title, desc, text)
                     patch.content = formater.format_patch()
                     patch.title = formater.format_title()
                     patch.desc = formater.format_desc()
@@ -233,6 +238,11 @@ def main(args):
                 rtag.flist = ''
                 rtag.save()
             continue
+
+        # update build tree
+        _burl = "file://%s" % repo.dirname()
+        buildgit = GitTree(repo.name, repo.builddir(), _burl, repo.commit, repo.stable)
+        buildgit.update()
 
         # the tag name after git pull
         ntag = git.get_tag()

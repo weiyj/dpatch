@@ -22,8 +22,9 @@
 import os
 
 class EngineBase(object):
-    def __init__(self, repo, logger = None):
+    def __init__(self, repo, logger = None, build = None):
         self._repo = repo
+        self._build = build
         self._fname = None
         self._type = 0
         self._token = 0
@@ -66,6 +67,9 @@ class EngineBase(object):
 
     def _get_file_path(self):
         return os.path.join(self._repo, self._fname)
+
+    def _get_build_path(self):
+        return os.path.join(self._build, self._fname)
 
     def _read_from_file(self):
         if not os.path.exists(self._get_file_path()):

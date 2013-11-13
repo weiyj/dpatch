@@ -28,8 +28,8 @@ from patchengine import PatchEngine
 from dpatch.lib.common.const import CHECK_INCLUDE_TYPE
 
 class CheckIncludeEngine(PatchEngine):
-    def __init__(self, repo, logger = None):
-        PatchEngine.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        PatchEngine.__init__(self, repo, logger, build)
         self._content = []
         self._type = CHECK_INCLUDE_TYPE
         self._mvlist = []

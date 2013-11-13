@@ -25,8 +25,8 @@ import subprocess
 from enginebase import EngineBase
 
 class PatchEngine(EngineBase):
-    def __init__(self, repo, logger = None):
-        EngineBase.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        EngineBase.__init__(self, repo, logger, build)
 
     def name(self):
         return 'undefined patch engine'
@@ -49,13 +49,13 @@ class PatchEngine(EngineBase):
         return patch
 
     def _get_patch_title(self):
-        return "undefined patch title"
+        return None
 
     def get_patch_title(self):
         return self._get_patch_title()
 
     def _get_patch_description(self):
-        return "undefined patch description"
+        return None
 
     def get_patch_description(self):
         return self._get_patch_description()

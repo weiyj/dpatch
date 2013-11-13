@@ -742,8 +742,14 @@ def patch_fix(request, patch_id):
 
             user = patch.username()
             email = patch.email()
-            title = rtype.ptitle
-            desc = rtype.pdesc
+            if re.search(r'{{[^}]*}}', rtype.ptitle):
+                title = rtype.ptitle
+            else:
+                title = patch.title
+            if re.search(r'{{[^}]*}}', rtype.pdesc):
+                desc = rtype.pdesc
+            else:
+                desc = patch.desc
             formater = PatchFormater(repo.dirname(), patch.file, user, email,
                                    title, desc, diff)
             patch.content = formater.format_patch()

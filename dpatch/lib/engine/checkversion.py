@@ -25,8 +25,8 @@ from patchengine import PatchEngine
 from dpatch.lib.common.const import CHECK_VERSION_TYPE
 
 class CheckVersionEngine(PatchEngine):
-    def __init__(self, repo, logger = None):
-        PatchEngine.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        PatchEngine.__init__(self, repo, logger, build)
         self._content = []
         self._nochk_files = ["include/linux/version.h"]
         self._included = False

@@ -32,8 +32,8 @@ from dpatch.lib.common.const import CHECK_CPATCH_TYPE
 from dpatch.lib.common.const import CHECK_CREPORT_TYPE
 
 class CheckCocciPatchEngine(PatchEngine):
-    def __init__(self, repo, logger = None):
-        PatchEngine.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        PatchEngine.__init__(self, repo, logger, build)
         self._type = CHECK_CPATCH_TYPE
         self._diff = []
         self._coccis = CocciPatchEngine.objects.all()
@@ -116,8 +116,8 @@ class CheckCocciPatchEngine(PatchEngine):
         return False
 
 class CheckCocciReportEngine(ReportEngine):
-    def __init__(self, repo, logger = None):
-        ReportEngine.__init__(self, repo, logger)
+    def __init__(self, repo, logger = None, build = None):
+        ReportEngine.__init__(self, repo, logger, build)
         self._type = CHECK_CREPORT_TYPE
         self._coccis = CocciReportEngine.objects.all()
         self._diff = []
