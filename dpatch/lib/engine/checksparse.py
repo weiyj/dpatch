@@ -121,7 +121,7 @@ class CheckSparseEngine(PatchEngine):
         _nr = int(a[1])
         _sym = re.sub("'", "", a[-1].strip().split(' ')[1])
         if _nr < 5:
-            continue
+            return
         _inlines = self._execute_shell("sed -n '%d,%dp' %s" % (_nr -4, _nr + 4, self._get_build_path()))
         if re.search('%s\s*\(' % _sym, _inlines[4]):
             _fix = False
