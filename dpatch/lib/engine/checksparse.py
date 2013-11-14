@@ -42,7 +42,7 @@ class CheckSparseEngine(PatchEngine):
             shelllog = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         shellOut = shelllog.communicate()[0]
 
-        if shelllog.returncode != 0:
+        if shelllog.returncode != 0 and len(shellOut) > 0:
             self.warning(shellOut)
 
         lines = shellOut.split("\n")
@@ -94,7 +94,7 @@ class CheckSparseEngine(PatchEngine):
             else:
                 _desc += '\n' + line
 
-        _desc += '\n'
+        #_desc += '\n'
 
         return _desc
 
@@ -120,7 +120,8 @@ class CheckSparseEngine(PatchEngine):
             return
         _nr = int(a[1])
         _sym = re.sub("'", "", a[-1].strip().split(' ')[1])
-        
+        if _nr < 5:
+            continue
         _inlines = self._execute_shell("sed -n '%d,%dp' %s" % (_nr -4, _nr + 4, self._get_build_path()))
         if re.search('%s\s*\(' % _sym, _inlines[4]):
             _fix = False
@@ -144,7 +145,11 @@ class CheckSparseEngine(PatchEngine):
         a = line.split(':')
         if len(a) < 5:
             return False
-        self._execute_shell("sed -i '%ss/\([^0-9]\)0\([^0-9]\)/\\1NULL\\2/' %s" % (a[1], self._get_build_path()))
+        # E == 0 => !E sed -e '%ss/\([^ \(]*\)\s*==\s*0\([^0-9]\)/!\\1\\2/'
+        self._execute_shell("sed -i '%ss/\([^ \(]*\)\s*==\s*0\([^0-9]\)/!\\1\\2/' %s" % (a[1], self._get_build_path()))
+        # E != 0 => E sed -e '%ss/\s*!=\s*0\([^0-9]\)/\\1/'
+        self._execute_shell("sed -i '%ss/\s*!=\s*0\([^0-9]\)/\\1/' %s" % (a[1], self._get_build_path()))
+        #self._execute_shell("sed -i '%ss/\([^0-9]\)0\([^0-9]\)/\\1NULL\\2/' %s" % (a[1], self._get_build_path()))
         return True
 
     def _modify_source_file(self):
