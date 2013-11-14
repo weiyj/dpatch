@@ -135,7 +135,7 @@ def main(args):
 
         pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
         for dot in patch_engine_list():
-            test = dot(repo.dirname(), logger.logger)
+            test = dot(repo.dirname(), logger.logger, repo.builddir())
             for i in range(test.tokens()):
                 rtype = None
                 try:
@@ -215,7 +215,7 @@ def main(args):
                 test.next_token()
 
         for dot in report_engine_list():
-            test = dot(repo.dirname(), logger.logger)
+            test = dot(repo.dirname(), logger.logger, repo.builddir())
             for i in range(test.tokens()):
                 rtype = None
                 try:
