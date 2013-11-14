@@ -45,7 +45,7 @@ def checkreport(repo, rtag, flists):
 
     for dot in report_engine_list():
         scount = 0
-        test = dot(repo.dirname(), logger.logger)
+        test = dot(repo.dirname(), logger.logger, repo.builddir())
         for i in range(test.tokens()):
             rtype = None
             try:

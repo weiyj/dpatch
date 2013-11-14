@@ -824,7 +824,7 @@ def patch_new(request):
         patch.save()
 
         for dot in patch_engine_list():
-            test = dot(rtags[0].repo.dirname())
+            test = dot(rtags[0].repo.dirname(), None, rtags[0].repo.builddir())
             for i in range(test.tokens()):
                 if test.get_type() != rtype.id:
                     test.next_token()
@@ -835,8 +835,14 @@ def patch_new(request):
                     patch.diff = text
                     user = patch.username()
                     email = patch.email()
+                    desc = test.get_patch_description()
+                    title = test.get_patch_title()
+                    if desc is None:
+                        desc = rtype.pdesc
+                    if title is None:
+                        title = rtype.ptitle
                     formater = PatchFormater(rtags[0].repo.dirname(), rfile, user, email,
-                                             rtype.ptitle, rtype.pdesc, text)
+                                             title, desc, text)
                     patch.content = formater.format_patch()
                     patch.title = formater.format_title()
                     patch.desc = formater.format_desc()
