@@ -149,7 +149,8 @@ class CheckSparseEngine(PatchEngine):
         self._execute_shell("sed -i '%ss/\([^ \(]*\)\s*==\s*0\([^0-9]\)/!\\1\\2/' %s" % (a[1], self._get_build_path()))
         # E != 0 => E sed -e '%ss/\s*!=\s*0\([^0-9]\)/\\1/'
         self._execute_shell("sed -i '%ss/\s*!=\s*0\([^0-9]\)/\\1/' %s" % (a[1], self._get_build_path()))
-        #self._execute_shell("sed -i '%ss/\([^0-9]\)0\([^0-9]\)/\\1NULL\\2/' %s" % (a[1], self._get_build_path()))
+        # return 0 => return NULL
+        self._execute_shell("sed -i '%ss/\([^0-9]\)0\([^0-9]\)/\\1NULL\\2/' %s" % (a[1], self._get_build_path()))
         return True
 
     def _modify_source_file(self):
