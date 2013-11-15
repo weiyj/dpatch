@@ -2,8 +2,8 @@
 
 Summary: Automated Linux Kernel Patch Generate Engine
 Name: dpatch
-Version: 0.8
-Release: 0%{?dist}
+Version: 0.9
+Release: 5%{?dist}
 License: GPLv2
 Group: System Environment/Base
 URL: https://github.com/weiyj/dpatch

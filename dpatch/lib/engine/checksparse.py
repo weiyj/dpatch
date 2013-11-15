@@ -109,6 +109,10 @@ class CheckSparseEngine(PatchEngine):
         self._execute_shell("sed -i '%ds/^/static /' %s" % (_nr, self._get_build_path()))
         return True
 
+    def _make_line_static_indent(self, _nr):
+        self._execute_shell("sed -i -e '%ds/^\(\s*\)/\\1       /' -e '%ds/        /\t/' %s" % (_nr, _nr, self._get_build_path()))
+        return True
+
     def _is_symbol_not_declared(self, line):
         if re.search("symbol '\w+' was not declared", line):
             return True
@@ -131,6 +135,12 @@ class CheckSparseEngine(PatchEngine):
                     self._make_line_static(_nr - i)
                     _fix = True
                     break
+            if not re.search('\)\s*$', _inlines[4]):
+                for i in [1, 2, 3, 4]:
+                    line = _inlines[4 + i]
+                    self._make_line_static_indent(_nr + i)
+                    if re.search('\)\s*$', line):
+                        break
             if _fix is False:
                 self._make_line_static(_nr)
         else:
