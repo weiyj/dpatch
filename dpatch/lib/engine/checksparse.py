@@ -118,6 +118,33 @@ class CheckSparseEngine(PatchEngine):
             return True
         return False
 
+    def _is_fake_symbol_not_declared(self, line, sym = None, fread = True):
+        if fread is True:
+            a = line.split(':')
+            if len(a) < 5:
+                return True
+            _nr = a[1]
+            _sym = re.sub("'", "", a[-1].strip().split(' ')[1])
+            _inlines = self._execute_shell("sed -n '%s,1p' %s" % (_nr, self._get_build_path()))
+            _line = _inlines[0]
+        else:
+            _line = line
+            _sym = sym
+        if re.search('^static ', _line) or re.search('\s+static\s+', _line):
+            if not fread is None:
+                self.warning('FAKE WARNING: %s\n  %s' % (line, _line))
+            return True
+        if re.search('^__weak ', _line) or re.search('\s+__weak\s+', _line):
+            if not fread is None:
+                self.warning('FAKE WARNING: %s\n  %s' % (line, _line))
+            return True
+        _cmd = "grep -r 'EXPORT_SYMBOL(%s)' %s > /dev/null" % (_sym, self._get_build_path())
+        if subprocess.call(_cmd, shell=True) == 0:
+            if not fread is None:
+                self.warning('FAKE WARNING: %s\n  %s  ==> EXPORT_SYMBOL(%s)' % (line, _line, _sym))
+            return True
+        return False
+
     def _fix_symbol_not_declared(self, line):
         a = line.split(':')
         if len(a) < 5:
@@ -127,6 +154,8 @@ class CheckSparseEngine(PatchEngine):
         if _nr < 5:
             return
         _inlines = self._execute_shell("sed -n '%d,%dp' %s" % (_nr -4, _nr + 4, self._get_build_path()))
+        if self._is_fake_symbol_not_declared(_inlines[4], _sym, False):
+            return
         if re.search('%s\s*\(' % _sym, _inlines[4]):
             _fix = False
             for i in [0, 1, 2, 3]:
@@ -194,8 +223,9 @@ class CheckSparseEngine(PatchEngine):
         args = "cd %s; make C=2 %s | grep '^%s'" % (self._build, _objname, self._fname)
         self._diff = self._execute_shell(args)
         for line in self._diff:
-            if self._is_symbol_not_declared(line): 
-                return True
+            if self._is_symbol_not_declared(line):
+                if not self._is_fake_symbol_not_declared(line):
+                    return True
             elif self._is_plain_integer_as_null(line):
                 return True
         return False
@@ -211,7 +241,7 @@ class CheckSparseEngine(PatchEngine):
 
 if __name__ == "__main__":
     repo = "/pub/scm/build/linux-test"
-    files = ['drivers/usb/gadget/zero.h', 'net/netfilter/nft_lookup.c']
+    files = ['net/ipv4/tcp_output.c', 'drivers/pci/msi.c', 'drivers/pci/pci.c']
 
     count = 0
     for sfile in files:
