@@ -138,7 +138,7 @@ class CheckSparseEngine(PatchEngine):
             if not fread is None:
                 self.warning('FAKE WARNING: %s\n  %s' % (line, _line))
             return True
-        _cmd = "grep -r 'EXPORT_SYMBOL(%s)' %s > /dev/null" % (_sym, self._get_build_path())
+        _cmd = "grep -r 'EXPORT_SYMBOL\w*(%s)' %s > /dev/null" % (_sym, self._get_build_path())
         if subprocess.call(_cmd, shell=True) == 0:
             if not fread is None:
                 self.warning('FAKE WARNING: %s\n  %s  ==> EXPORT_SYMBOL(%s)' % (line, _line, _sym))
@@ -175,6 +175,25 @@ class CheckSparseEngine(PatchEngine):
         else:
             self._make_line_static(_nr)
 
+    def _is_unused_variable(self, line):
+        if re.search("warning: unused variable ", line):
+            return True
+        return False
+
+    def _fix_unused_variable(self, line):
+        a = line.split(':')
+        if len(a) < 4:
+            return []
+        _nr = int(a[1])
+        _sym = re.sub("'", "", a[-1].strip().split(' ')[2])
+        line = self._execute_shell("sed -n '%d,1p' %s" % (_nr, self._get_build_path()))[0]
+        if line.find(',') != -1:
+            self._execute_shell("sed -i '%ds/\(\w\)%s, /\\1/' %s" % (_nr, _sym, self._get_build_path()))
+            self._execute_shell("sed -i '%ds/, %s\(\w\)/\\1/' %s" % (_nr, _sym, self._get_build_path()))
+            return []
+        else:
+            return [_nr]
+
     def _is_plain_integer_as_null(self, line):
         if re.search("Using plain integer as NULL pointer", line):
             return True
@@ -193,11 +212,16 @@ class CheckSparseEngine(PatchEngine):
         return True
 
     def _modify_source_file(self):
+        _rmlines = []
         for line in self._diff:
             if self._is_symbol_not_declared(line): 
                 self._fix_symbol_not_declared(line)
             elif self._is_plain_integer_as_null(line):
                 self._fix_plain_integer_as_null(line)
+            elif self._is_unused_variable(line):
+                _rmlines.extend(self._fix_unused_variable(line))
+        for _nr in sorted(_rmlines, reverse = True):
+            self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
 
     def _is_buildable(self):
         _objname = re.sub("\.c$", ".o", self._fname)
@@ -227,6 +251,8 @@ class CheckSparseEngine(PatchEngine):
                 if not self._is_fake_symbol_not_declared(line):
                     return True
             elif self._is_plain_integer_as_null(line):
+                return True
+            elif self._is_unused_variable(line):
                 return True
         return False
 
