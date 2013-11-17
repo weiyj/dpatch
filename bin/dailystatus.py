@@ -86,7 +86,10 @@ def main(args):
             ptitle = ptitle[1:]
         cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
         for line in execute_shell_full(cmds)[::-1]:
-            if line.find(ptitle) == -1:
+            if line.fine('|') == -1:
+                continue
+            rtitle = line.split('|')[1]
+            if line.upper().find(ptitle.upper()) == -1 and ptitle.upper().find(rtitle.upper()) == -1:
                 continue
             commit = line.split('|')[0]
             if Patch.objects.filter(commit = commit).count() != 0:
