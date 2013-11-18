@@ -149,6 +149,8 @@ def check_patch(repo, git, rtag, flists, commit):
                 # if the same file has a patch for this type, ignore it
                 # because the last patch does not accepted
                 should_patch = test.should_patch()
+                if test.has_error():
+                    continue
                 if len(rpatchs) != 0 and should_patch == False:
                     for p in rpatchs:
                         if p.status == STATUS_SENT:

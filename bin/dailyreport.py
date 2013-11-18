@@ -98,6 +98,8 @@ def checkreport(repo, rtag, flists):
 
                 test.set_filename(fname)
                 should_report = test.should_report()
+                if test.has_error():
+                    continue
                 if should_report is False:
                     for r in reports:
                         if r.status in [STATUS_NEW, STATUS_PATCHED]:

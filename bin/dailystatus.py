@@ -176,7 +176,10 @@ def main(args):
                         logger.logger.info('removed patch %d' % patch.id)
                         continue
 
-                    if test.should_patch() == False:
+                    should_patch = test.should_patch()
+                    if test.has_error():
+                        continue
+                    if should_patch == False:
                         if patch.status == STATUS_NEW:
                             if patch.mergered != 0:
                                 mpatch = Patch.objects.filter(id = patch.mergered)
@@ -252,7 +255,10 @@ def main(args):
                         continue
 
                     test.set_filename(patch.file)
-                    if test.should_report() == False:
+                    should_report = test.should_report()
+                    if test.has_error():
+                        continue
+                    if should_report == False:
                         if patch.status == STATUS_NEW:
                             update_report_status(patch, STATUS_FIXED)
                             pcount['fixed'] += 1

@@ -53,6 +53,12 @@ class CheckSparseEngine(PatchEngine):
     def name(self):
         return 'check sparse'
 
+    def has_error(self):
+        for line in self._diff:
+            if re.search('\s+Error\s+\d', line):
+                return True
+        return False
+
     def _get_patch_title(self):
         _cnt = {'total': 0, 'symbol': 0, 'null': 0, 'unused': 0}
         title = 'fix sparse warning'

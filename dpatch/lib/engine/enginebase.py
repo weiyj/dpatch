@@ -46,6 +46,9 @@ class EngineBase(object):
     def set_token(self, token):
         self._token = token
 
+    def has_error(self):
+        return False
+
     def get_type(self):
         return self._type
 
