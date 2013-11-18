@@ -104,6 +104,9 @@ class CheckSparseEngine(PatchEngine):
 
         return _desc
 
+    def _is_skip_type_list(self):
+        return False
+
     def _is_symbol_function(self, nr, sym):
         _lines = self._execute_shell("sed -n '%s,1p' %s" % (nr, self._get_build_path()))
         _line = _lines[0]
@@ -144,7 +147,9 @@ class CheckSparseEngine(PatchEngine):
             if not fread is None:
                 self.warning('FAKE WARNING: %s\n  %s' % (line, _line))
             return True
-        if re.search('^EXPORT_SYMBOL\w*(', _line):
+        if re.search('\(\s*weak\s*\)', _line):
+            return True
+        if re.search('^EXPORT_SYMBOL\w*\(', _line):
             return True
         _cmd = "grep -r 'EXPORT_SYMBOL\w*(%s)' %s > /dev/null" % (_sym, self._get_build_path())
         if subprocess.call(_cmd, shell=True) == 0:
@@ -262,6 +267,8 @@ class CheckSparseEngine(PatchEngine):
                 return True
             elif self._is_unused_variable(line):
                 return True
+            elif self._is_skip_type_list(line):
+                return False
         return False
 
     def _revert_soure_file(self):
@@ -275,7 +282,7 @@ class CheckSparseEngine(PatchEngine):
 
 if __name__ == "__main__":
     repo = "/pub/scm/build/linux-test"
-    files = ['net/ipv4/tcp_output.c', 'drivers/pci/msi.c', 'drivers/pci/pci.c']
+    files = ['drivers/mfd/ab8500-debugfs.c']
 
     count = 0
     for sfile in files:
