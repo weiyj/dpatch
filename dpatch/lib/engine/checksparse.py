@@ -144,6 +144,8 @@ class CheckSparseEngine(PatchEngine):
             if not fread is None:
                 self.warning('FAKE WARNING: %s\n  %s' % (line, _line))
             return True
+        if re.search('^EXPORT_SYMBOL\w*(', _line):
+            return True
         _cmd = "grep -r 'EXPORT_SYMBOL\w*(%s)' %s > /dev/null" % (_sym, self._get_build_path())
         if subprocess.call(_cmd, shell=True) == 0:
             if not fread is None:
