@@ -81,6 +81,12 @@ class CheckCocciPatchEngine(PatchEngine):
             diff.append(line)
         return diff
 
+    def has_error(self):
+        for line in self._diff:
+            if line.find('Fatal error: exception Common.Timeout') != -1:
+                return True
+        return False
+
     def _modify_source_file(self):
         # sometimes the engine give as a diff that does not pass
         # the checkpatch, we need fix it first.
@@ -134,6 +140,12 @@ class CheckCocciReportEngine(ReportEngine):
     def get_type(self):
         cocci = self._coccis[self._token]
         return self._type + cocci.id
+
+    def has_error(self):
+        for line in self._diff:
+            if line.find('Fatal error: exception Common.Timeout') != -1:
+                return True
+        return False
 
     def _execute_shell(self, args):
         if isinstance(args, basestring):
