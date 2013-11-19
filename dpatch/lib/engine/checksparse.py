@@ -29,11 +29,9 @@ from dpatch.lib.common.const import CHECK_SPARSE_TYPE
 class CheckSparseEngine(PatchEngine):
     def __init__(self, repo, logger = None, build = None):
         PatchEngine.__init__(self, repo, logger, build)
-        self._content = []
         self._nochk_dirs = ["arch", "Documentation", "include", "tools", "usr", "samples", "scripts"]
-        self._included = False
-        self._used = False
         self._type = CHECK_SPARSE_TYPE
+        self._diff = []
 
     def _execute_shell(self, args):
         if isinstance(args, basestring):
@@ -104,7 +102,10 @@ class CheckSparseEngine(PatchEngine):
 
         return _desc
 
-    def _is_skip_type_list(self):
+    def _is_skip_type_list(self, line):
+        _objname = re.sub("\.c$", ".o", self._fname)
+        if re.search('make: \*\*\* \[%s\] Error' % _objname, line):
+            return True
         return False
 
     def _is_symbol_function(self, nr, sym):
@@ -177,9 +178,11 @@ class CheckSparseEngine(PatchEngine):
                     self._make_line_static(_nr - i)
                     _fix = True
                     break
-            if not re.search('\)\s*$', _inlines[4]):
+            if not re.search('\)\s*$', _inlines[4]) and not re.search('\(\s*$', _inlines[4]):
                 for i in [1, 2, 3, 4]:
                     line = _inlines[4 + i]
+                    if re.search('^\t\w+', line):
+                        break
                     self._make_line_static_indent(_nr + i)
                     if re.search('\)\s*$', line):
                         break
@@ -282,7 +285,7 @@ class CheckSparseEngine(PatchEngine):
 
 if __name__ == "__main__":
     repo = "/pub/scm/build/linux-test"
-    files = ['drivers/mfd/ab8500-debugfs.c']
+    files = ['drivers/mfd/ab8500-debugfs.c', 'init/main.c']
 
     count = 0
     for sfile in files:
