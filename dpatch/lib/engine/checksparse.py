@@ -268,10 +268,13 @@ class CheckSparseEngine(PatchEngine):
             self._execute_shell("cd %s; make allmodconfig" % self._build)
             args = "cd %s; make C=2 %s | grep '^%s'" % (self._build, _objname, self._fname)
             self._diff = self._execute_shell(args)
-        args = "cd %s; make C=2 M=%s" % (self._build, os.path.dirname(self._fname))
-        _modresult = self._execute_shell(args)
+        if len(os.path.dirname(self._fname).split(os.sep)) > 2:
+            args = "cd %s; make C=2 M=%s" % (self._build, os.path.dirname(self._fname))
+            _modresult = self._execute_shell(args)
+        else:
+            _modresult = None
         for line in self._diff:
-            if not line in _modresult:
+            if not _modresult is None and not line in _modresult:
                 continue
             if self._is_symbol_not_declared(line):
                 if not self._is_fake_symbol_not_declared(line):
