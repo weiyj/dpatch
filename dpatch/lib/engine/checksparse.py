@@ -240,13 +240,13 @@ class CheckSparseEngine(PatchEngine):
             self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
 
     def _is_buildable(self):
-        _objname = re.sub("\.c$", ".o", self._fname)
+        #_objname = re.sub("\.c$", ".o", self._fname)
         if not os.path.exists(self._build):
             return False
         if not os.path.exists(os.path.join(self._build, 'vmlinux')):
-            return True
-        if not os.path.exists(os.path.join(self._build, _objname)):
             return False
+        #if not os.path.exists(os.path.join(self._build, _objname)):
+        #    return False
         return True
 
     def _should_patch(self):
@@ -262,7 +262,17 @@ class CheckSparseEngine(PatchEngine):
         _objname = re.sub("\.c$", ".o", self._fname)
         args = "cd %s; make C=2 %s | grep '^%s'" % (self._build, _objname, self._fname)
         self._diff = self._execute_shell(args)
+        logresult = '\n'.join(self._diff)
+        # make may error and need make allmodconfig
+        if logresult.find('include/config/auto.conf') != -1:
+            self._execute_shell("cd %s; make allmodconfig" % self._build)
+            args = "cd %s; make C=2 %s | grep '^%s'" % (self._build, _objname, self._fname)
+            self._diff = self._execute_shell(args)
+        args = "cd %s; make C=2 M=%s" % (self._build, os.path.dirname(self._fname))
+        _modresult = self._execute_shell(args)
         for line in self._diff:
+            if not line in _modresult:
+                continue
             if self._is_symbol_not_declared(line):
                 if not self._is_fake_symbol_not_declared(line):
                     return True

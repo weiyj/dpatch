@@ -193,6 +193,12 @@ def main(args):
                     buildlog += log
                     buildlog += '\n'
 
+                    dname = os.path.dirname(patch.file)
+                    buildlog += '# make C=2 M=%s\n' % dname
+                    ret, log = execute_shell_log("cd %s; make C=2 M=%s" % (repo.builddir(), dname), logger)
+                    buildlog += log
+                    buildlog += '\n'
+
                 ret, log = execute_shell_log("cd %s; git am %s" % (repo.builddir(), fname), logger)
                 buildlog += '# git am %s\n' % os.path.basename(fname)
                 buildlog += log
