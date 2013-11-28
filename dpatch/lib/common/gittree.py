@@ -146,12 +146,13 @@ class GitTree(object):
         if scommit == ecommit and len(scommit) != 0:
             return []
         dateusing = read_config('git.diff.using.datetime', False)
+        daysdelta = read_config('git.diff.datetime.delta', 1)
         if self.is_linux_next():
             if dateusing is True and delta is False:
                 if not isinstance(update, datetime.datetime):
                     stime = strftime("%Y-%m-%d %H:%M:%S", localtime(time() - 2 * 24 * 60 * 60))
                 else:
-                    stime = update# - datetime.timedelta(days=2)
+                    stime = update - datetime.timedelta(days=daysdelta)
                 lines = execute_shell('cd %s; git log --after="%s" --name-only --format="%%" | sort -u | grep "\w"' % (self._dpath, stime))
                 return lines
             else:
