@@ -58,7 +58,7 @@ class CheckSparseEngine(PatchEngine):
         return False
 
     def _get_patch_title(self):
-        _cnt = {'total': 0, 'symbol': 0, 'null': 0, 'unused': 0}
+        _cnt = {'total': 0, 'symbol': 0, 'null': 0, 'unused': 0, 'non_ansi': 0}
         title = 'fix sparse warning'
         for line in self._diff:
             if self._is_symbol_not_declared(line): 
@@ -67,6 +67,9 @@ class CheckSparseEngine(PatchEngine):
             elif self._is_plain_integer_as_null(line):
                 _cnt['null'] += 1
                 _cnt['total'] += 1
+            elif self._is_non_ansi_function_declaration(line):
+                _cnt['non_ansi'] += 1
+                _cnt['total'] += 1
 
         if _cnt['symbol'] == _cnt['total']:
             title = 'fix sparse non static symbol warning'
@@ -74,6 +77,8 @@ class CheckSparseEngine(PatchEngine):
             title = 'fix sparse unused variable warning'
         elif _cnt['null'] == _cnt['total']:
             title = 'fix sparse NULL pointer warning'
+        elif _cnt['non_ansi'] == _cnt['total']:
+            title = 'fix sparse non-ANSI function warning'
         # fix sparse endianness warnings
 
         if _cnt['total'] > 1:
@@ -227,6 +232,19 @@ class CheckSparseEngine(PatchEngine):
         self._execute_shell("sed -i '%ss/\([^0-9]\)0\([^0-9]\)/\\1NULL\\2/' %s" % (a[1], self._get_build_path()))
         return True
 
+    def _is_non_ansi_function_declaration(self, line):
+        if re.search("non-ANSI function declaration of function", line):
+            return True
+        return False
+
+    def _fix_non_ansi_function_declaration(self, line):
+        a = line.split(':')
+        if len(a) < 5:
+            return False
+        _fun = re.sub("'", "", a[-1].strip().split(' ')[-1])
+        self._execute_shell("sed -i '%ss/%s\s*(\s*)/%s(void)/' %s" % (a[1], _fun, _fun, self._get_build_path()))
+        return True
+
     def _modify_source_file(self):
         _rmlines = []
         for line in self._diff:
@@ -236,6 +254,8 @@ class CheckSparseEngine(PatchEngine):
                 self._fix_plain_integer_as_null(line)
             elif self._is_unused_variable(line):
                 _rmlines.extend(self._fix_unused_variable(line))
+            elif self._is_non_ansi_function_declaration(line):
+                self._fix_non_ansi_function_declaration(line)
         for _nr in sorted(_rmlines, reverse = True):
             self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
 
@@ -282,6 +302,8 @@ class CheckSparseEngine(PatchEngine):
             elif self._is_plain_integer_as_null(line):
                 return True
             elif self._is_unused_variable(line):
+                return True
+            elif self._is_non_ansi_function_declaration(line):
                 return True
             elif self._is_skip_type_list(line):
                 return False
