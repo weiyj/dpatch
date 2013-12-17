@@ -96,6 +96,7 @@ def main(args):
                 continue
             patch.commit = commit
             patch.save()
+            break
 
     for report in Report.objects.filter(commit = '', status = STATUS_ACCEPTED):
         if not os.path.exists(os.path.join(patch.tag.repo.dirname(), patch.file)):
@@ -113,6 +114,7 @@ def main(args):
                 continue
             report.commit = commit
             report.save()
+            break
 
     ob_days = read_config('patch.status.obsoleted_days', 0)
 
