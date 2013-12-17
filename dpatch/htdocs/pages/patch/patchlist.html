@@ -52,7 +52,7 @@
 
 			$("#patchlist .fetch").click(function () {
 				id = $(this).attr('id');
-				showModelDialog("/patch/fetch/" + id, {}, 'POST', '#patchlist');
+				showModelDialog("/patch/fetch/" + id + "/", {}, 'GET', '#patchlist');
 			});
 {% endif %}
 		}

@@ -51,7 +51,7 @@
 
 			$("#reportlist .fetch").click(function () {
 				id = $(this).attr('id');
-				showModelDialog("/report/fetch/" + id, {}, 'POST', '#reportlist');
+				showModelDialog("/report/fetch/" + id + "/", {}, 'GET', '#reportlist');
 			});
 {% endif %}
 		}

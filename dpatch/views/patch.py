@@ -1017,7 +1017,8 @@ def patch_stable(request):
 def patch_fetch_commit(request, patch_id):
     patch = get_object_or_404(Patch, id = patch_id)
     cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
-    for line in execute_shell(cmds):
+    ret, lines = execute_shell(cmds)
+    for line in lines.split("\n"):
         if line.find('|') == -1:
             continue
         commit = line.split('|')[0]

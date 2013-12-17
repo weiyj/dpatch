@@ -993,7 +993,8 @@ def report_stable(request):
 def report_fetch_commit(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
-    for line in execute_shell(cmds):
+    ret, lines = execute_shell(cmds)
+    for line in lines.split("\n"):
         commit = line.split('|')[0]
         if Report.objects.filter(commit = commit).count() != 0:
             continue
