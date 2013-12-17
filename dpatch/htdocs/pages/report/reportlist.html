@@ -48,6 +48,11 @@
 				id = $(this).attr('id');
 				ajaxShowDialog("#reportsend", "GET", '/report/send/wizard/' + id, {});
 			});
+
+			$("#reportlist .fetch").click(function () {
+				id = $(this).attr('id');
+				showModelDialog("/report/fetch/" + id, {}, 'POST', '#reportlist');
+			});
 {% endif %}
 		}
 
