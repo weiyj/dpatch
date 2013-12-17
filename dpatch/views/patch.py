@@ -179,10 +179,13 @@ def patchlistdata(request, tag_name):
             if patch.mglist is None or len(patch.mglist.strip()) == 0:
                 action += '<a href="#" class="fix" id="%s">Fix</a>' % patch.id
             action += '<a href="#" class="edit" id="%s">Edit</a>' % patch.id
-        elif patch.status == STATUS_ACCEPTED and len(patch.commit) > 0:
-            url = "%s;a=commit;h=%s" % (repo[0].url, patch.commit)
-            url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
-            action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
+        elif patch.status == STATUS_ACCEPTED:
+            if len(patch.commit) > 0:
+                url = "%s;a=commit;h=%s" % (repo[0].url, patch.commit)
+                url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+                action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
+            else:
+                action += '<a href="#" class="fetch" id="%s">Fetch</a>' % patch.id
 
         if patch.build in [BUILD_PASS, BUILD_FAIL, BUILD_WARN]:
             build = '<a href="#" class="build" id="%s">%s</a>' % (patch.id, build_name_html(patch.build))
@@ -1010,3 +1013,17 @@ def patch_stable(request):
 
     logevent("STABLE: patch [%s], SUCCEED" % pids, True)
     return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)
+
+def patch_fetch_commit(request, patch_id):
+    patch = get_object_or_404(Patch, id = patch_id)
+    cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)
+    for line in execute_shell(cmds):
+        if line.find('|') == -1:
+            continue
+        commit = line.split('|')[0]
+        if Patch.objects.filter(commit = commit).count() != 0:
+            continue
+        patch.commit = commit
+        patch.save()
+        return HttpResponse('FETCH SUCCEED: patch id [%s], commit [%s]' % (patch_id, commit))
+    return HttpResponse('FETCH ERROR: no git commit match for pid [%s]' % patch_id)

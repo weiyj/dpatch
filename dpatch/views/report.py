@@ -171,11 +171,14 @@ def report_list_data(request, tag_name):
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
             if request.user.is_authenticated():
                 action += '<a href="#" class="edit" id="%s">Edit</a>' % report.id
-        elif report.status == STATUS_ACCEPTED and len(report.commit) > 0:
-            url = "%s;a=commit;h=%s" % (repo[0].url, report.commit)
-            url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+        elif report.status == STATUS_ACCEPTED:
             action = '<a href="#" class="patch" id="%s">Patch</a>' % report.id
-            action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
+            if len(report.commit) > 0:
+                url = "%s;a=commit;h=%s" % (repo[0].url, report.commit)
+                url = re.sub("git://git.kernel.org/pub/scm/", "http://git.kernel.org/?p=", url)
+                action += '<a href="%s" class="commit" target="__blank">Commit</a>' % url
+            else:
+                action += '<a href="#" class="fetch" id="%s">Fetch</a>' % report.id
         else:
             action += '<a href="#" class="patch" id="%s">Patch</a>' % report.id
 
@@ -986,3 +989,15 @@ def report_stable(request):
 
     logevent("STABLE: patch [%s], SUCCEED" % pids, True)
     return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)
+
+def report_fetch_commit(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
+    for line in execute_shell(cmds):
+        commit = line.split('|')[0]
+        if Report.objects.filter(commit = commit).count() != 0:
+            continue
+        report.commit = commit
+        report.save()
+        return HttpResponse('FETCH SUCCEED: report id [%s], commit [%s]' % (report_id, commit))
+    return HttpResponse('FETCH ERROR: no git commit match for report id [%s]' % report_id)
