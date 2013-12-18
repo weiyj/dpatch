@@ -34,6 +34,7 @@ from dpatch.lib.engine.manager import patch_engine_list, report_engine_list
 from dpatch.lib.common.logger import MyLogger
 from dpatch.lib.db.sysconfig import read_config
 from dpatch.lib.common.status import *
+from dpatch.lib.common.flags import TYPE_SCAN_NEXT_ONLY
 
 def update_patch_status(patch, status):
     patch.status = status
@@ -208,6 +209,10 @@ def main(args):
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
                     elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status == STATUS_NEW:
+                        if rtype.type != 1:
+                            continue
+                        if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0:
+                            continue
                         tststable = dot(stablerepo.dirname(), logger.logger, stablerepo.builddir())
                         tststable.set_token(test.get_token())
                         tststable.set_filename(patch.file)
@@ -298,13 +303,19 @@ def main(args):
                                 update_report_status(patch, STATUS_FIXED)
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
-                    elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status in [STATUS_NEW, STATUS_PATCHED]:
+                    elif repo.name == 'linux-next.git' and patch.mergered == 0:
+                        if rtype.type != 1:
+                            continue
+                        if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0:
+                            continue
+                        if not patch.status in [STATUS_NEW, STATUS_PATCHED]:
+                            continue
                         tststable = dot(stablerepo.dirname(), logger.logger, stablerepo.builddir())
                         tststable.set_token(test.get_token())
                         tststable.set_filename(patch.file)
                         if not os.path.exists(tststable._get_file_path()):
                             continue
-                        if tststable.should_patch() and not tststable.has_error():
+                        if tststable.should_report() and not tststable.has_error():
                             ntag = GitTag.objects.filter(repo__id = stablerepo.id).order_by("-id")
                             if len(ntag) == 0:
                                 continue
