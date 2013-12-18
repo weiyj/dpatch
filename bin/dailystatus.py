@@ -116,9 +116,10 @@ def main(args):
             report.save()
             break
 
-    ob_days = read_config('patch.status.obsoleted_days', 0)
-
+    stablerepo = None
     for repo in GitRepo.objects.filter(status = True):
+        if stablerepo is None:
+            stablerepo = repo
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
                        starttime = strftime("%Y-%m-%d %H:%M:%S", localtime()),
@@ -138,7 +139,7 @@ def main(args):
                 tag.running = False
                 tag.save()
 
-        pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'skip': 0}
+        pcount = {'total': 0, 'removed': 0, 'fixed': 0, 'applied': 0, 'stable': 0}
         for dot in patch_engine_list():
             test = dot(repo.dirname(), logger.logger, repo.builddir())
             for i in range(test.tokens()):
@@ -206,16 +207,24 @@ def main(args):
                             update_patch_status(patch, STATUS_ACCEPTED)
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
-                    elif ob_days > 0:
-                        if patch.status != STATUS_NEW:
+                    elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status == STATUS_NEW:
+                        tststable = dot(stablerepo.dirname(), logger.logger, stablerepo.builddir())
+                        tststable.set_token(test.get_token())
+                        tststable.set_filename(patch.file)
+                        if not os.path.exists(tststable._get_file_path()):
                             continue
-                        times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
-                        dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
-                        delta = datetime.now() - dt
-                        if delta.days > ob_days:
-                            update_patch_status(patch, STATUS_OBSOLETED)
-                            pcount['skip'] += 1
-                            logger.logger.info('skip patch %d' % patch.id)
+                        if tststable.should_patch() and not tststable.has_error():
+                            ntag = GitTag.objects.filter(repo__id = stablerepo.id).order_by("-id")
+                            if len(ntag) == 0:
+                                continue
+                            patch.tag.total = patch.tag.total - 1
+                            patch.tag.save()
+                            patch.tag = ntag[0]
+                            patch.save()
+                            patch.tag.total = patch.tag.total + 1
+                            patch.tag.save()
+                            pcount['stable'] += 1
+                            logger.logger.info('stable patch %d' % patch.id)
 
                 logger.info('End scan type %d' % test.get_type())
                 logs.logs = logger.getlog()
@@ -244,7 +253,7 @@ def main(args):
                 for patch in patchs:
                     if not patch.mglist is None and len(patch.mglist) != 0:
                         continue
-    
+
                     if may_reject_cleanup(patch.file):
                         update_patch_status(patch, STATUS_REJECTED)
                         logger.logger.info('rejected patch %d' % patch.id)
@@ -289,24 +298,32 @@ def main(args):
                                 update_report_status(patch, STATUS_FIXED)
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
-                    elif ob_days > 0:
-                        if patch.status != STATUS_NEW:
+                    elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status in [STATUS_NEW, STATUS_PATCHED]:
+                        tststable = dot(stablerepo.dirname(), logger.logger, stablerepo.builddir())
+                        tststable.set_token(test.get_token())
+                        tststable.set_filename(patch.file)
+                        if not os.path.exists(tststable._get_file_path()):
                             continue
-                        times = execute_shell_full("cd %s; git log -n 1 --pretty=format:'%%ci' %s" % (patch.tag.repo.dirname(), patch.file))
-                        dt = datetime.strptime(' '.join(times[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
-                        delta = datetime.now() - dt
-                        if delta.days > ob_days:
-                            update_patch_status(patch, STATUS_OBSOLETED)
-                            pcount['skip'] += 1
-                            logger.logger.info('skip patch %d' % patch.id)
+                        if tststable.should_patch() and not tststable.has_error():
+                            ntag = GitTag.objects.filter(repo__id = stablerepo.id).order_by("-id")
+                            if len(ntag) == 0:
+                                continue
+                            patch.tag.rptotal = patch.tag.rptotal - 1
+                            patch.tag.save()
+                            patch.tag = ntag[0]
+                            patch.save()
+                            patch.tag.rptotal = patch.tag.rptotal + 1
+                            patch.tag.save()
+                            pcount['stable'] += 1
+                            logger.logger.info('stable patch %d' % patch.id)
     
                 logger.info('End scan type %d' % rtype.id)
                 logs.logs = logger.getlog()
                 logs.save()
                 test.next_token()
 
-        logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d, skip: %s' % (
-                        pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'], pcount['skip'])
+        logs.desc = 'total checked: %d, removed: %d, fixed: %d, applied: %d, stable: %s' % (
+                        pcount['total'], pcount['removed'], pcount['fixed'], pcount['applied'], pcount['stable'])
         logs.endtime = strftime("%Y-%m-%d %H:%M:%S", localtime())
         logs.logs = logger.getlog()
         logs.save()
