@@ -59,8 +59,9 @@ class CheckSparseEngine(PatchEngine):
 
     def _get_patch_title(self):
         _cnt = {'total': 0, 'symbol': 0, 'null': 0, 'unused': 0,
-                'non_ansi': 0, 'duplicate': 0}
+                'non_ansi': 0, 'duplicate': 0, 'dubious_not': 0}
         title = 'fix sparse warning'
+        _dubious_type = []
         for line in self._diff:
             if self._is_symbol_not_declared(line): 
                 _cnt['symbol'] += 1
@@ -74,6 +75,12 @@ class CheckSparseEngine(PatchEngine):
             elif self._is_duplicate_symbol(line):
                 _cnt['duplicate'] += 1
                 _cnt['total'] += 1
+            elif self._is_dubious_bitwise_with_not(line):
+                _cnt['dubious_not'] += 1
+                _cnt['total'] += 1
+                _type = line.split(':')[-1].strip()
+                if _dubious_type.count(_type) == 0:
+                    _dubious_type.append(_type)
 
         if _cnt['symbol'] == _cnt['total']:
             title = 'fix sparse non static symbol warning'
@@ -85,6 +92,11 @@ class CheckSparseEngine(PatchEngine):
             title = 'fix sparse non-ANSI function warning'
         elif _cnt['duplicate'] == _cnt['total']:
             title = 'fix sparse duplicate const warning'
+        elif _cnt['dubious_not'] == _cnt['total']:
+            if len(_dubious_type) == 1:
+                title = 'fix sparse dubious %s warning' % _dubious_type[0]
+            else:
+                title = 'fix sparse dubious bitwise operation on !x warning'
         # fix sparse endianness warnings
 
         if _cnt['total'] > 1:
@@ -267,6 +279,55 @@ class CheckSparseEngine(PatchEngine):
         self._execute_shell("sed -i '%ss/\(\s*%s\s*\)%s\s*/\\1/' %s" % (a[1], _sym, _sym, self._get_build_path()))
         return True
 
+    def _is_dubious_bitwise_with_not(self, line):
+        a = line.split(':')
+        if a[0] != self._fname:
+            return False
+        if re.search("warning: dubious: ", line):
+            return True
+        return False
+
+    def _fix_dubious_bitwise_with_not(self, line):
+        a = line.split(':')
+        if len(a) < 6:
+            return False
+        line = a[1]
+        dtype = a[5].strip()
+
+        if dtype == '!x & y':
+            #ok1  = !1 &&  2;
+            #bad1 = !1 &   2;
+            #!rtlpriv->dm.dm_flag & DYNAMIC_FUNC_DIG
+            self._execute_shell("sed -i '%ss/!\(\w[a-zA-Z_.>-]*\)\s*\&\s*\([A-Z_][A-Z_]*\)/!(\\1 \\& \\2)/' %s" % (line, self._get_build_path()))
+            # !rtlpriv->dm.dm_flag & rtlpriv->dm.dm_flag
+            self._execute_shell("sed -i '%ss/!\(\w[a-zA-Z_.>-]*\)\s*\&\s*\(\w[a-zA-Z_.>-]*\)/!\\1 \\&\\& \\2/' %s" % (line, self._get_build_path()))
+        elif dtype == '!x | y':
+            #ok2  = !1 ||  2;
+            #bad2 = !1 |   2;
+            # !rtlpriv->dm.dm_flag | rtlpriv->dm.dm_flag
+            self._execute_shell("sed -i '%ss/!\(\w[a-zA-Z_.>-]*\)\s*|\s*\(\w[a-zA-Z_.>-]*\)/!\\1 || \\2/' %s" % (line, self._get_build_path()))
+        elif dtype == 'x & !y':
+            #ok3  =  1 && !2;
+            #bad3 =  1 &  !2;
+            #DYNAMIC_FUNC_DIG & !rtlpriv->dm.dm_flag
+            self._execute_shell("sed -i '%ss/\([A-Z_][A-Z_]*\)\s*\&\s*!\(\w[a-zA-Z_.>-]*\)/!(\\1 \\& \\2)/' %s" % (line, self._get_build_path()))
+            # !rtlpriv->dm.dm_flag & rtlpriv->dm.dm_flag
+            self._execute_shell("sed -i '%ss/\(\w[a-zA-Z_.>-]*\)\s*\&\s*!\(\w[a-zA-Z_.>-]*\)/\\1 \\&\\& !\\2/' %s" % (line, self._get_build_path()))
+        elif dtype == 'x | !y':
+            #ok4  =  1 || !2;
+            #bad4 =  1 |  !2;
+            self._execute_shell("sed -i '%ss/\(\w[a-zA-Z_.>-]*\)\s*|\s*!\(\w[a-zA-Z_.>-]*\)/\\1 || !\\2/' %s" % (line, self._get_build_path()))
+        elif dtype == '!x & !y':
+            #ok5  = !1 && !2;
+            #bad5 = !1 &  !2;
+            self._execute_shell("sed -i '%ss/!\(\w[a-zA-Z_.>-]*\)\s*&\s*!\(\w[a-zA-Z_.>-]*\)/!\\1 \\&\\& !\\2/' %s" % (line, self._get_build_path()))
+        elif dtype == '!x | !y':
+            #ok6  = !1 || !2;
+            #bad6 = !1 |  !2;
+            self._execute_shell("sed -i '%ss/!\(\w[a-zA-Z_.>-]*\)\s*|\s*!\(\w[a-zA-Z_.>-]*\)/!\\1 || !\\2/' %s" % (line, self._get_build_path()))
+
+        return True
+
     def _modify_source_file(self):
         _rmlines = []
         for line in self._diff:
@@ -280,6 +341,8 @@ class CheckSparseEngine(PatchEngine):
                 self._fix_non_ansi_function_declaration(line)
             elif self._is_duplicate_symbol(line):
                 self._fix_duplicate_symbol(line)
+            elif self._is_dubious_bitwise_with_not(line):
+                self._fix_dubious_bitwise_with_not(line)
         for _nr in sorted(_rmlines, reverse = True):
             self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
 
@@ -317,6 +380,8 @@ class CheckSparseEngine(PatchEngine):
             _modresult = self._execute_shell(args)
         else:
             _modresult = None
+        if self._is_skip_type_list('\n'.join(self._diff)):
+            return
         for line in self._diff:
             if not _modresult is None and not line in _modresult:
                 continue
@@ -330,6 +395,8 @@ class CheckSparseEngine(PatchEngine):
             elif self._is_non_ansi_function_declaration(line):
                 return True
             elif self._is_duplicate_symbol(line):
+                return True
+            elif self._is_dubious_bitwise_with_not(line):
                 return True
             elif self._is_skip_type_list(line):
                 return False
