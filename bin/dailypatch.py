@@ -90,6 +90,10 @@ def check_patch(repo, git, rtag, flists, commit):
             else:
                 cmt = cmts[0]
 
+            if cmt.commit == commit:
+                test.next_token()
+                continue
+
             if repo.delta == False:
                 oldcommit = cmt.commit
                 if oldcommit != repo.commit:
