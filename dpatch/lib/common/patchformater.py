@@ -420,7 +420,10 @@ class PatchFormater(object):
             patch += self.get_mail_list()
         except:
             patch += self._weak_email_list()
-        patch += "\n%s\n\n" % self.format_desc()
+        try:
+            patch += "\n%s\n\n" % self.format_desc()
+        except:
+            patch += "\n%s\n\n" % unicode(self.format_desc(), 'utf-8')
         patch += "Signed-off-by: %s <%s>\n" % (self._user, self._email)
         if self._comment != None and len(self._comment) > 0:
             patch += "%s\n" % self._comment
