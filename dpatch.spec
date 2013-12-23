@@ -3,22 +3,23 @@
 Summary: Automated Linux Kernel Patch Generate Engine
 Name: dpatch
 Version: 0.9
-Release: 5%{?dist}
+Release: 0%{?dist}
 License: GPLv2
 Group: System Environment/Base
 URL: https://github.com/weiyj/dpatch
 Source0: https://github.com/weiyj/dpatch/archive/dpatch-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-Requires: git
-Requires: Django
-Requires: coccinelle
-Requires: gcc make
 BuildArch: noarch
 ExcludeArch: ppc64 s390 s390x
 
 %package core
 Summary: Automated Linux Kernel Patch Generate Engine Core
 Group: System Environment/Base
+
+Requires: git
+Requires: Django
+Requires: coccinelle
+Requires: gcc make
 
 %package webui
 Summary: Automated Linux Kernel Patch Generate Engine Web UI
@@ -96,7 +97,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %pre core
 /usr/sbin/groupadd -r dpatch &>/dev/null || :
-/usr/sbin/useradd -r -s /sbin/nologin -d /usr/share/dpatch -M \
+/usr/sbin/useradd -r -s /sbin/nologin -d /home/dpatch -M \
         -c 'Dailypatch User' -s /bin/sh -g dpatch dpatch &>/dev/null || :
 if [ -e /var/lib/dpatch/database/sqlite.db ]; then
 	cp -rf /var/lib/dpatch/database/sqlite.db /var/lib/dpatch/database/sqlite.db.save
