@@ -267,6 +267,10 @@ def main(args):
         else:
             commit = git.get_commit()
 
+        if git.is_linux_next() == True and commit == git.get_stable():
+            # we update linux-next tree failed
+            continue
+
         # if delta scan is enbled, skip the first time since we git clone
         # the tree, treat there is no file change
         if repo.delta == True:
