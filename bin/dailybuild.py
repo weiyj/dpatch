@@ -188,10 +188,11 @@ def main(args):
     
                 objfile = "%s.o" % patch.file[:-2]
                 if patch.type.flags & TYPE_BUILD_SPARSE_CHECK:
-                    buildlog += '# make C=2 %s\n' % objfile
-                    ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
-                    buildlog += log
-                    buildlog += '\n'
+                    if not os.path.isdir(os.path.join(repo.builddir(), patch.file)):
+                        buildlog += '# make C=2 %s\n' % objfile
+                        ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
+                        buildlog += log
+                        buildlog += '\n'
 
                     dname = os.path.dirname(patch.file)
                     if len(dname.split(os.sep)) > 2:
@@ -275,10 +276,18 @@ def main(args):
                         continue
 
                 if patch.type.flags & TYPE_BUILD_SPARSE_CHECK:
-                    buildlog += '# make C=2 %s\n' % objfile
-                    ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
-                    buildlog += log
-                    buildlog += '\n'
+                    if not os.path.isdir(os.path.join(repo.builddir(), patch.file)):
+                        buildlog += '# make C=2 %s\n' % objfile
+                        ret, log = execute_shell_log("cd %s; make C=2 %s" % (repo.builddir(), objfile), logger)
+                        buildlog += log
+                        buildlog += '\n'
+
+                    dname = os.path.dirname(patch.file)
+                    if len(dname.split(os.sep)) > 2:
+                        buildlog += '# make C=2 M=%s\n' % dname
+                        ret, log = execute_shell_log("cd %s; make C=2 M=%s" % (repo.builddir(), dname), logger)
+                        buildlog += log
+                        buildlog += '\n'
 
                 pcount['pass'] += 1
                 if buildlog.find(': warning: ') != -1:
