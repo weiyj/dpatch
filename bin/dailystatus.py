@@ -209,6 +209,8 @@ def main(args):
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
                     elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status == STATUS_NEW:
+                        if patch.tag.repo.name == 'linux-next.git':
+                            continue
                         if rtype.type != 1:
                             continue
                         if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0:
@@ -222,12 +224,14 @@ def main(args):
                             ntag = GitTag.objects.filter(repo__id = stablerepo.id).order_by("-id")
                             if len(ntag) == 0:
                                 continue
-                            patch.tag.total = patch.tag.total - 1
-                            patch.tag.save()
-                            patch.tag = ntag[0]
+                            oldtag = patch.tag
+                            newtag = ntag[0]
+                            oldtag.total = oldtag.total - 1
+                            newtag.total = newtag.total + 1
+                            oldtag.save()
+                            newtag.save()
+                            patch.tag = newtag
                             patch.save()
-                            patch.tag.total = patch.tag.total + 1
-                            patch.tag.save()
                             pcount['stable'] += 1
                             logger.logger.info('stable patch %d' % patch.id)
 
@@ -304,6 +308,8 @@ def main(args):
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
                     elif repo.name == 'linux-next.git' and patch.mergered == 0:
+                        if patch.tag.repo.name == 'linux-next.git':
+                            continue
                         if rtype.type != 1:
                             continue
                         if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0:
@@ -319,12 +325,14 @@ def main(args):
                             ntag = GitTag.objects.filter(repo__id = stablerepo.id).order_by("-id")
                             if len(ntag) == 0:
                                 continue
-                            patch.tag.rptotal = patch.tag.rptotal - 1
-                            patch.tag.save()
-                            patch.tag = ntag[0]
+                            oldtag = patch.tag
+                            newtag = ntag[0]
+                            oldtag.rptotal = oldtag.rptotal - 1
+                            newtag.rptotal = newtag.rptotal + 1
+                            oldtag.save()
+                            newtag.save()
+                            patch.tag = newtag
                             patch.save()
-                            patch.tag.rptotal = patch.tag.rptotal + 1
-                            patch.tag.save()
                             pcount['stable'] += 1
                             logger.logger.info('stable patch %d' % patch.id)
     
