@@ -277,6 +277,7 @@ class CheckSparseEngine(PatchEngine):
             return False
         _sym = a[-1].strip().split(' ')[-1]
         self._execute_shell("sed -i '%ss/\(\s*%s\s*\)%s\s*/\\1/' %s" % (a[1], _sym, _sym, self._get_build_path()))
+        self._execute_shell("sed -i '%ss/const char const \*/const char * const/' %s" % (a[1], self._get_build_path()))
         return True
 
     def _is_dubious_bitwise_with_not(self, line):
