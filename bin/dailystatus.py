@@ -32,6 +32,7 @@ from django.db.models import Q
 from dpatch.models import GitRepo, GitTag, Type, Patch, Report, ScanLog
 from dpatch.lib.engine.manager import patch_engine_list, report_engine_list
 from dpatch.lib.common.logger import MyLogger
+from dpatch.lib.common.gittree import GitTree
 from dpatch.lib.db.sysconfig import read_config
 from dpatch.lib.common.status import *
 from dpatch.lib.common.flags import TYPE_SCAN_NEXT_ONLY
@@ -121,6 +122,9 @@ def main(args):
     for repo in GitRepo.objects.filter(status = True):
         if stablerepo is None:
             stablerepo = repo
+        git = GitTree(repo.name, repo.dirname(), repo.url, repo.commit, repo.stable)
+        if git.is_linux_next() == True and git.get_commit() == git.get_stable():
+            continue
         logger = MyLogger()
         logs = ScanLog(reponame = repo.name, tagname = '-',
                        starttime = strftime("%Y-%m-%d %H:%M:%S", localtime()),
