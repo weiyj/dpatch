@@ -32,6 +32,7 @@ class CheckSparseEngine(PatchEngine):
         self._nochk_dirs = ["arch", "Documentation", "include", "tools", "usr", "samples", "scripts"]
         self._type = CHECK_SPARSE_TYPE
         self._diff = []
+        self._includes = []
 
     def _execute_shell(self, args):
         if isinstance(args, basestring):
@@ -182,6 +183,16 @@ class CheckSparseEngine(PatchEngine):
             return True
         return False
 
+    def _is_symbol_declared_not_include(self, _sym):
+        _incfiles = self._execute_shell("/usr/bin/grep --exclude=*.c -r '\W%s\W' %s" %
+                                        (_sym, os.path.dirname(self._get_build_path())))
+        if len(_incfiles) != 0:
+            _incfile = os.path.basename(_incfiles[0].split(':')[0])
+            if self._includes.count(_incfile) == 0:
+                self._includes.append(_incfile)
+            return True
+        return False
+
     def _fix_symbol_not_declared(self, line):
         a = line.split(':')
         if len(a) < 5:
@@ -192,6 +203,8 @@ class CheckSparseEngine(PatchEngine):
             return
         _inlines = self._execute_shell("sed -n '%d,%dp' %s" % (_nr -4, _nr + 4, self._get_build_path()))
         if self._is_fake_symbol_not_declared(_inlines[4], _sym, False):
+            return
+        if self._is_symbol_declared_not_include(_sym):
             return
         if re.search('%s\s*\(' % _sym, _inlines[4]):
             _fix = False
@@ -331,6 +344,7 @@ class CheckSparseEngine(PatchEngine):
 
     def _modify_source_file(self):
         _rmlines = []
+        self._includes = []
         for line in self._diff:
             if self._is_symbol_not_declared(line): 
                 self._fix_symbol_not_declared(line)
@@ -346,6 +360,15 @@ class CheckSparseEngine(PatchEngine):
                 self._fix_dubious_bitwise_with_not(line)
         for _nr in sorted(_rmlines, reverse = True):
             self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
+
+        if len(self._includes) != 0:
+            _incs = self._execute_shell("/usr/bin/grep -nr '^[\\s]*#include\\s' %s" % self._get_build_path())
+            if len(_incs) != 0:
+                _nr = _incs[-1].split(':')[0]
+            else:
+                _nr = "1"
+            for _finc in self._includes:
+                self._execute_shell("sed -i '%s a#include \"%s\"' %s" % (_nr, _finc, self._get_build_path()))
 
     def _is_buildable(self):
         #_objname = re.sub("\.c$", ".o", self._fname)
