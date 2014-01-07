@@ -213,7 +213,7 @@ def main(args):
                             pcount['applied'] += 1
                             logger.logger.info('applied patch %d' % patch.id)
                     elif repo.name == 'linux-next.git' and patch.mergered == 0 and patch.status == STATUS_NEW:
-                        if patch.tag.repo.name == 'linux-next.git':
+                        if patch.tag.repo.name != 'linux-next.git':
                             continue
                         if rtype.type != 1:
                             continue
@@ -312,7 +312,7 @@ def main(args):
                                 pcount['fixed'] += 1
                                 logger.logger.info('fixed patch %d' % patch.id)
                     elif repo.name == 'linux-next.git' and patch.mergered == 0:
-                        if patch.tag.repo.name == 'linux-next.git':
+                        if patch.tag.repo.name != 'linux-next.git':
                             continue
                         if rtype.type != 1:
                             continue
