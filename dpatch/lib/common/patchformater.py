@@ -385,7 +385,7 @@ class PatchFormater(object):
         else:
             seq = ':'
         if self._capitalize and title.find('[') == -1:
-            title = title.capitalize()
+            title = title[0].upper() + title[1:]
         if title.find('[PATCH') != -1:
             return title
         elif target == 'linux':
