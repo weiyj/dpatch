@@ -41,6 +41,7 @@ class PatchFormater(object):
         self._module = None
         self._patch = ''
         self._mlist = None
+        self._capitalize = False
 
     def _fullpath(self):
         return os.path.join(self._repo, self._fname)
@@ -63,6 +64,8 @@ class PatchFormater(object):
         modules = {}
         mcount = 0
         module = ''
+        capcnt = 0
+        total = 0
         for m in lists:
             if m.find(":") != -1:
                 if re.match('\w+\s*:\s*\w+\s*- ', m):
@@ -74,6 +77,10 @@ class PatchFormater(object):
                     continue
                 if len(mname) == 0:
                     continue
+                _ptitle = m.replace(mname, '')[1:].strip()
+                if _ptitle[0] == _ptitle[0].upper():
+                    capcnt += 1
+                total += 1
                 if module.find("%s:" % mname) != -1:
                     continue
                 if modules.has_key(mname):
@@ -94,7 +101,10 @@ class PatchFormater(object):
             module = self._dirname()
 
         self._module = module
-
+        if total < capcnt * 2:
+            self._capitalize = True
+        else:
+            self._capitalize = False
         return module
 
     def _guest_email_list(self):
@@ -374,6 +384,8 @@ class PatchFormater(object):
             seq = ''
         else:
             seq = ':'
+        if self._capitalize and title.find('[') == -1:
+            title = title.capitalize()
         if title.find('[PATCH') != -1:
             return title
         elif target == 'linux':
