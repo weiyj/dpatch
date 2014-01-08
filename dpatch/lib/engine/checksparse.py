@@ -33,6 +33,7 @@ class CheckSparseEngine(PatchEngine):
         self._type = CHECK_SPARSE_TYPE
         self._diff = []
         self._includes = []
+        self._recheck = False
 
     def _execute_shell(self, args):
         if isinstance(args, basestring):
@@ -102,6 +103,9 @@ class CheckSparseEngine(PatchEngine):
 
         if _cnt['total'] > 1:
             title += 's'
+
+        if self._recheck is True:
+            title = 'cHECK-' + title
 
         return title
 
@@ -393,6 +397,7 @@ class CheckSparseEngine(PatchEngine):
         _objname = re.sub("\.c$", ".o", self._fname)
         args = "cd %s; make C=2 %s | grep '^%s'" % (self._build, _objname, self._fname)
         self._diff = self._execute_shell(args)
+        self._recheck = False
         logresult = '\n'.join(self._diff)
         # make may error and need make allmodconfig
         if logresult.find('include/config/auto.conf') != -1:
@@ -407,8 +412,9 @@ class CheckSparseEngine(PatchEngine):
         if self._is_skip_type_list('\n'.join(self._diff)):
             return
         for line in self._diff:
+            # module build does not exists for this one?
             if not _modresult is None and not line in _modresult:
-                continue
+                self._recheck = True
             if self._is_symbol_not_declared(line):
                 if not self._is_fake_symbol_not_declared(line):
                     return True
