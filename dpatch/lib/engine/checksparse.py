@@ -188,7 +188,7 @@ class CheckSparseEngine(PatchEngine):
         return False
 
     def _is_symbol_declared_not_include(self, _sym):
-        _incfiles = self._execute_shell("/usr/bin/grep --exclude=*.c -r '\W%s\W' %s" %
+        _incfiles = self._execute_shell("/usr/bin/grep --include=*.h -r '\W%s\W' %s" %
                                         (_sym, os.path.dirname(self._get_build_path())))
         if len(_incfiles) != 0:
             _incfile = os.path.basename(_incfiles[0].split(':')[0])
