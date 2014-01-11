@@ -26,7 +26,7 @@ from checksparse import CheckSparseEngine
 from checkcoccinelle import CheckCocciPatchEngine, CheckCocciReportEngine
 
 def patch_engine_list():
-    return [CheckVersionEngine, CheckReleaseEngine, CheckIncludeEngine, CheckCocciPatchEngine, CheckSparseEngine]
+    return [CheckVersionEngine, CheckReleaseEngine, CheckIncludeEngine, CheckSparseEngine, CheckCocciPatchEngine]
 
 def report_engine_list():
     return [CheckCocciReportEngine]
