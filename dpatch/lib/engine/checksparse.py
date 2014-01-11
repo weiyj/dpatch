@@ -206,6 +206,8 @@ class CheckSparseEngine(PatchEngine):
         if _nr < 5:
             return
         _inlines = self._execute_shell("sed -n '%d,%dp' %s" % (_nr -4, _nr + 4, self._get_build_path()))
+        if len(_inlines) < 9:
+            return
         if self._is_fake_symbol_not_declared(_inlines[4], _sym, False):
             return
         if self._is_symbol_declared_not_include(_sym):
