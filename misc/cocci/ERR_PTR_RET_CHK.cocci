@@ -19,7 +19,6 @@ nfs_lookup\|
 mlx5_ib_create_srq\|
 ib_alloc_pd\|
 cl_req_alloc\|
-cl_env_nested_get\|
 keyring_search\|
 ext2_new_inode\|
 regmap_init\|
@@ -35,6 +34,7 @@ v9fs_get_inode\|
 mthca_alloc_mtt\|
 cl_env_get\|
 cifs_compose_mount_options\|
+omap_mbox_get\|
 iio_channel_get_all\|
 svc_prepare_thread\|
 v9fs_writeback_fid\|
@@ -56,7 +56,6 @@ vxfs_iget\|
 rtc_device_register\|
 rxrpc_kernel_accept_call\|
 dw_dma_cyclic_prep\|
-ovs_flow_tbl_rehash\|
 qdisc_alloc\|
 key_get_instantiation_authkey\|
 nilfs_iget_for_gc\|
@@ -65,7 +64,6 @@ copy_utsname\|
 omap_voltage_get_voltdata\|
 wimax_msg_alloc\|
 rxrpc_get_null_key\|
-add_partition\|
 itcw_add_tidaw\|
 nfs4_create_sec_client\|
 jffs2_setup_xattr_datum\|
@@ -80,10 +78,12 @@ kern_mount\|
 cfs_crypto_hash_init\|
 gfs2_inode_lookup\|
 devm_of_phy_provider_register\|
+btrfs_alloc_dummy_root\|
 clk_get_sys\|
 ceph_parse_options\|
 qib_init_iba7322_funcs\|
 drm_sysfs_create\|
+lu_object_find\|
 ovs_vport_cmd_build_info\|
 ipu_dc_get\|
 dm_kcopyd_client_create\|
@@ -137,6 +137,7 @@ drm_fbdev_cma_init\|
 ecryptfs_get_locked_page\|
 rds_message_map_pages\|
 request_trusted_key\|
+file_open_name\|
 msm_gem_vaddr\|
 phy_create\|
 platform_create_bundle\|
@@ -145,6 +146,7 @@ tcf_action_init_1\|
 ib_sa_join_multicast\|
 mount_pseudo\|
 ipu_di_get\|
+ext2_iget\|
 dma_buf_attach\|
 xprt_create_transport\|
 hwmon_device_register\|
@@ -164,7 +166,7 @@ fsfilt_get_ops\|
 ceph_osdc_new_request\|
 lookup_user_key\|
 apne_probe\|
-idle_thread_get\|
+add_partition\|
 omap_device_get_by_hwmod_name\|
 btrfs_create_tree\|
 rdev_add_virtual_intf\|
@@ -182,6 +184,7 @@ sysv_iget\|
 squashfs_read_xattr_id_table\|
 dm_pool_metadata_open\|
 dasd_get_user_string\|
+dm_bufio_new\|
 imx27_add_mx2_emmaprp\|
 ib_create_ah_from_wc\|
 dm_io_client_create\|
@@ -198,7 +201,6 @@ devm_rtc_device_register\|
 osduld_path_lookup\|
 ovs_vport_add\|
 hci_connect\|
-regmap_init_i2c\|
 ubifs_recover_log_leb\|
 gfs2_lookup_by_inum\|
 crypto_alloc_shash\|
@@ -206,6 +208,7 @@ fib_create_info\|
 ip6_sk_dst_lookup_flow\|
 ocfs2_iget\|
 omfs_iget\|
+ovs_nla_alloc_flow_actions\|
 exynos_drm_framebuffer_init\|
 gether_connect\|
 sfi_check_table\|
@@ -228,12 +231,11 @@ ext3_journal_start\|
 read_cache_page_async\|
 squashfs_read_table\|
 fld_cache_init\|
-devm_request_and_ioremap\|
 p9_client_stat\|
 get_lock_data_page\|
 crypto_get_attr_alg\|
 get_new_data_page\|
-nfs_fhget\|
+cl_object_find\|
 core_tpg_pre_addlun\|
 class_create\|
 ntfs_attr_lookup\|
@@ -247,7 +249,6 @@ wil_cfg80211_init\|
 dev_pm_opp_find_freq_exact\|
 shmem_read_mapping_page_gfp\|
 powercap_register_control_type\|
-ip_route_output_flow\|
 btrfs_alloc_device\|
 ext3_new_inode\|
 phy_connect\|
@@ -272,7 +273,6 @@ gphonet_setup_default\|
 ufs_new_inode\|
 xt_request_find_match\|
 get_node_page_ra\|
-dm_bufio_new\|
 rqst_exp_get_by_name\|
 copy_ipcs\|
 gru_alloc_thread_state\|
@@ -280,6 +280,7 @@ gether_setup\|
 crypto_alloc_cipher\|
 afs_cell_lookup\|
 find_data_page\|
+imx31_alloc_mx3_camera\|
 textsearch_prepare\|
 mic_request_card_irq\|
 __smu_get_sdb_partition\|
@@ -308,6 +309,7 @@ v9fs_fid_clone\|
 btrfs_ref_to_path\|
 aa_dfa_unpack\|
 posix_acl_from_mode\|
+v4l2_clk_register_fixed\|
 ab8500_btemp_get\|
 nfs4_alloc_slot\|
 dm_bufio_client_create\|
@@ -315,6 +317,7 @@ securityfs_create_dir\|
 vfio_group_get_external_user\|
 rpc_mkpipe\|
 hvc_alloc\|
+eventfd_ctx_fileget\|
 ufs_get_locked_page\|
 omap_device_build\|
 tegra_bo_create_with_handle\|
@@ -337,17 +340,15 @@ mthca_init_user_db_tab\|
 clk_register_divider\|
 devpts_pty_new\|
 jffs2_iget\|
-smc_init\|
 xenvif_alloc\|
 rxrpc_find_peer\|
 ib_open_qp\|
 lprocfs_add_simple\|
 clk_register_composite\|
-virtio_find_single_vq\|
+nfs_fhget\|
 lu_object_find_at\|
 dentry_path_raw\|
 s3c_cpufreq_clk_get\|
-zpci_alloc_device\|
 qib_alloc_devdata\|
 d_materialise_unique\|
 rpc_run_bc_task\|
@@ -367,6 +368,7 @@ register_user_hw_breakpoint\|
 p9_client_getattr_dotl\|
 kern_path_create\|
 wlcore_alloc_hw\|
+devm_lcd_device_register\|
 __ext4_journal_start_sb\|
 coda_iget\|
 dasd_alloc_block\|
@@ -378,6 +380,7 @@ nf_tables_set_lookup\|
 lookup_free_ino_inode\|
 nouveau_connector_create\|
 gether_setup_default\|
+caam_jr_alloc\|
 vsp1_lif_create\|
 crypto_alg_mod_lookup\|
 ubifs_iget\|
@@ -395,8 +398,8 @@ ntfs_mapping_pairs_decompress\|
 afs_lookup_server\|
 of_pwm_get\|
 cryptd_alloc_ablkcipher\|
+idle_thread_get\|
 dm_sm_metadata_init\|
-omap_mbox_get\|
 rxrpc_kernel_begin_call\|
 drbd_crypto_alloc_digest_safe\|
 rpc_mkdir\|
@@ -406,9 +409,11 @@ v4l2_m2m_ctx_init\|
 tcf_action_init\|
 i2400m_msg_to_dev\|
 crypto_attr_alg2\|
+hfsplus_iget\|
 nvme_map_user_pages\|
 ab8500_gpadc_get\|
 tiler_reserve_1d\|
+ext3_orphan_get\|
 btrfs_join_transaction\|
 a3xx_gpu_init\|
 hid_allocate_device\|
@@ -425,11 +430,13 @@ ll_prep_md_op_data\|
 hugetlb_file_setup\|
 platform_device_register_simple\|
 x509_cert_parse\|
+regmap_init_i2c\|
 raw3270_request_alloc\|
 ll_fault_io_init\|
 jffs2_write_dnode\|
 perf_event_create_kernel_counter\|
 crypto_spawn_skcipher\|
+vpdma_create\|
 ntfs_attr_find_vcn_nolock\|
 crypto_alloc_ahash\|
 logfs_new_inode\|
@@ -478,7 +485,6 @@ pinctrl_lookup_state\|
 cifs_sb_tlink\|
 class_newdev\|
 ocfs2_begin_quota_recovery\|
-ovs_flow_tbl_expand\|
 mm_access\|
 ll_lookup_one_len\|
 pinctrl_get\|
@@ -486,9 +492,9 @@ sget\|
 mdp4_plane_init\|
 fault_create_debugfs_attr\|
 ip6_dst_lookup_flow\|
+ip_route_output_flow\|
 minix_iget\|
 crypto_spawn_cipher\|
-i82596_probe\|
 get_net_ns_by_pid\|
 lmv_get_target\|
 regulator_get_exclusive\|
@@ -507,7 +513,6 @@ rpc_create\|
 nfs4_create_server\|
 iw_create_cm_id\|
 cryptd_alloc_aead\|
-ovs_flow_actions_alloc\|
 zfcp_port_enqueue\|
 shmem_read_mapping_page\|
 devm_regulator_register\|
@@ -526,7 +531,6 @@ ldc_alloc\|
 __fscache_lookup_cache_tag\|
 wil_if_alloc\|
 dasd_alloc_device\|
-imx31_alloc_mx3_camera\|
 pwm_request_from_chip\|
 __local_file_create\|
 read_cache_page\|
@@ -550,7 +554,7 @@ ubifs_start_scan\|
 ceph_mdsc_build_path\|
 xt_hook_link\|
 configfs_pin_fs\|
-blkdev_get_by_path\|
+rtnl_link_get_net\|
 mount_subtree\|
 ext4_journal_start_sb\|
 ovs_vport_alloc\|
@@ -596,16 +600,17 @@ zfcp_adapter_enqueue\|
 __ip_route_output_key\|
 msm_ioremap\|
 fsfilt_start_log\|
-clk_get_parent\|
 drm_prime_pages_to_sg\|
 rxrpc_lookup_local\|
 rds_ib_create_mr_pool\|
 nfs4_proc_lookup_mountpoint\|
+mwifiex_add_virtual_intf\|
 read_mapping_page_async\|
 crypto_alloc_comp\|
 clk_register_gate\|
 fsnotify_add_notify_event\|
 __scsi_add_device\|
+squashfs_decompressor_create\|
 functionfs_acquire_dev_callback\|
 notifier_err_inject_init\|
 btrfs_lookup_dir_item\|
@@ -613,7 +618,6 @@ ib_create_ah\|
 init_ipath\|
 get_nfs_version\|
 aead_geniv_alloc\|
-dma_buf_map_attachment\|
 drm_gem_get_pages\|
 fuse_get_req_nopages\|
 transport_init_session\|
@@ -621,9 +625,7 @@ ipc_obtain_object\|
 rxrpc_incoming_call\|
 ib_umem_get\|
 audit_dupe_rule\|
-hfsplus_iget\|
 rds_conn_create_outgoing\|
-iio_channel_get\|
 __neigh_create\|
 map_mft_record\|
 devm_phy_get\|
@@ -634,9 +636,8 @@ pinctrl_get_select\|
 clk_get_io\|
 alloc_nfs_open_context\|
 v4l2_m2m_init\|
-rtnl_link_get_net\|
+blkdev_get_by_path\|
 ehca_alloc_pd\|
-anon_inode_getfile_private\|
 request_key_auth_new\|
 shash_alloc_instance\|
 v9fs_get_new_inode_from_fid\|
@@ -702,7 +703,9 @@ efs_iget\|
 hwmon_device_register_with_groups\|
 kthread_run\|
 ext4_read_dirblock\|
+alloc_anon_inode\|
 pwm_get\|
+iio_channel_get\|
 ceph_extract_encoded_string\|
 ctx_get_frame\|
 core_alua_allocate_tg_pt_gp_mem\|
@@ -711,8 +714,8 @@ tun_get_socket\|
 rxrpc_incoming_connection\|
 ieee80211_aes_key_setup_encrypt\|
 squashfs_read_fragment_index_table\|
-squashfs_decompressor_init\|
 hfs_bnode_find\|
+cifs_root_iget\|
 i2o_msg_get\|
 tty_alloc_driver\|
 ntfs_cluster_alloc\|
@@ -736,16 +739,15 @@ ubifs_recover_leb\|
 ib_create_qp\|
 hypfs_create_u64\|
 ipu_idmac_get\|
-cl_object_find\|
 vsp1_wpf_create\|
 svc_get_next_xprt\|
 cachefiles_get_directory\|
 f2fs_iget\|
 wl12xx_get_platform_data\|
 platform_device_register_resndata\|
-file_open_name\|
 ib_alloc_fmr\|
 rtnl_create_link\|
+devm_backlight_device_register\|
 dget\|
 ocfs2_start_trans\|
 getname\|
@@ -764,6 +766,7 @@ copy_msg\|
 get_node_page\|
 ptlrpcd_alloc_work\|
 crypto_alloc_instance2\|
+ll_lease_open\|
 kthread_create_on_node\|
 i915_gem_obj_lookup_or_create_vma\|
 ceph_auth_init\|
@@ -797,13 +800,12 @@ devm_regmap_init_i2c\|
 nfs_create_request\|
 crypto_attr_alg\|
 syscon_regmap_lookup_by_compatible\|
-cifs_root_iget\|
+cl_env_nested_get\|
 gru_alloc_gts\|
 devm_regmap_init_si476x\|
 addrconf_dst_alloc\|
 dasd_device_from_devindex\|
 journal_start\|
-lu_object_find\|
 brcmf_add_if\|
 hypfs_create_str\|
 v9fs_fid_lookup\|
@@ -841,10 +843,10 @@ devm_regulator_get_optional\|
 thermal_zone_device_register\|
 ib_alloc_mw\|
 fimc_get_sysreg_regmap\|
+virtio_find_single_vq\|
 bio_copy_kern\|
 authenc_ahash_fn\|
 ubifs_tnc_next_ent\|
-eventfd_ctx_fileget\|
 ib_alloc_fast_reg_page_list\|
 follow_huge_addr\|
 file_open_root\|
@@ -867,6 +869,8 @@ devm_pwm_get\|
 ip_route_output_gre\|
 gpiod_get_index\|
 cio_probe_console\|
+squashfs_decompressor_setup\|
+bch_btree_node_get\|
 ntfs_attr_iget\|
 dev_pm_opp_get_notifier\|
 msm_gem_new\|
