@@ -143,6 +143,15 @@
 			}
 		}
 
+		function onPatchMoveLatest() {
+			var ids = getGridSelected();
+			if (ids.length < 1) {
+				alertBox("LATEST ERROR: at least one row must be selected!");
+			} else {
+				showModelDialog("/patch/latest/", {'ids': ids.join()}, 'GET', '#patchlist');
+			}
+		}
+
 		function onPatchMarkStatus(name, div, value) {
 			var ids = getGridSelected();
 
@@ -211,6 +220,8 @@
 				            { name : 'Export All', bclass : 'export', onpress: onPatchExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onPatchBuild },
+				            { separator : true },
+				            { name : 'Latest', bclass : 'export', onpress: onPatchMoveLatest },
 {% if repo != "1" %}
 				            { separator : true },
 				            { name : 'Stable', bclass : 'export', onpress: onPatchStable },

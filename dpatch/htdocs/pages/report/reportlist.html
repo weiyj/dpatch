@@ -132,6 +132,16 @@
 			}			
 		}
 
+		function onReportMoveLatest() {
+			var ids = getGridSelected();
+			
+			if (ids.length < 1) {
+				alertBox('LATEST: at least one row must be selected!');
+			} else {
+				showModelDialog("/report/latest/", {'ids': ids.join()}, 'GET', '#reportlist');
+			}
+		}
+
 		function onReportSpecialFile() {
 			var ids = getGridSelected();
 			
@@ -210,6 +220,8 @@
 				            { name : 'Export All', bclass : 'export', onpress: onReportExportAll },
 				            { separator : true },
 				            { name : 'Build All', bclass : 'export', onpress: onReportBuild },
+				            { separator : true },
+				            { name : 'Latest', bclass : 'export', onpress: onReportMoveLatest },
 				            { separator : true },
 {% if repo != "1" %}
 				            { name : 'Stable', bclass : 'export', onpress: onReportStable },

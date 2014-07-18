@@ -1014,6 +1014,35 @@ def patch_stable(request):
     logevent("STABLE: patch [%s], SUCCEED" % pids, True)
     return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)
 
+@login_required
+def patch_latest(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('LATEST ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    patchs = []
+    for i in ids:
+        patch = Patch.objects.filter(id = i)
+        if len(patch) == 0:
+            logevent("LATEST: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('LATEST ERROR: patch %s does not exists' % i)
+        patchs.append(patch[0])
+
+    for patch in patchs:
+        ntag = GitTag.objects.filter(repo__id = patch.tag.repo.id).order_by("-id")
+        if len(ntag) == 0:
+            continue
+        patch.tag.total = patch.tag.total - 1
+        patch.tag.save()
+        patch.tag = ntag[0]
+        patch.save()
+        patch.tag.total = patch.tag.total + 1
+        patch.tag.save()
+
+    logevent("LATEST: patch [%s], SUCCEED" % pids, True)
+    return HttpResponse('LATEST SUCCEED: patch ids [%s]' % pids)
+
 def patch_fetch_commit(request, patch_id):
     patch = get_object_or_404(Patch, id = patch_id)
     cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (patch.tag.repo.dirname(), patch.tag.repo.user, patch.file)

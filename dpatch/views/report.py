@@ -990,6 +990,35 @@ def report_stable(request):
     logevent("STABLE: patch [%s], SUCCEED" % pids, True)
     return HttpResponse('STABLE SUCCEED: patch ids [%s]' % pids)
 
+@login_required
+def report_latest(request):
+    pids = get_request_paramter(request, 'ids')
+    if pids is None:
+        return HttpResponse('LATEST ERROR: no patch id specified')
+
+    ids = pids.split(',')
+    reports = []
+    for i in ids:
+        report = Report.objects.filter(id = i)
+        if len(report) == 0:
+            logevent("LATEST: patch [%s], ERROR: patch %s does not exists" % (pids, i))
+            return HttpResponse('LATEST ERROR: patch %s does not exists' % i)
+        reports.append(report[0])
+
+    for report in reports:
+        ntag = GitTag.objects.filter(repo__id = report.tag.repo.id).order_by("-id")
+        if len(ntag) == 0:
+            continue
+        report.tag.rptotal = report.tag.rptotal - 1
+        report.tag.save()
+        report.tag = ntag[0]
+        report.save()
+        report.tag.rptotal = report.tag.rptotal + 1
+        report.tag.save()
+
+    logevent("LATEST: patch [%s], SUCCEED" % pids, True)
+    return HttpResponse('LATEST SUCCEED: patch ids [%s]' % pids)
+
 def report_fetch_commit(request, report_id):
     report = get_object_or_404(Report, id=report_id)
     cmds = 'cd %s; git log --author="%s" --pretty="format:%%H|%%s" %s' % (report.tag.repo.dirname(), report.tag.repo.user, report.file)
