@@ -168,12 +168,16 @@ class GitTree(object):
     def is_change_obsoleted(self, fname, diff):
         dates = []
         days = read_config('patch.obsoleted.days', 30)
-        for line in find_remove_lines(diff):
-            dates = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:%%ci%%n %s" % (self._dpath, line, fname))
-            if len(dates) == 0:
-                continue
-            dt = datetime.datetime.strptime(' '.join(dates[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
-            delta = datetime.datetime.now() - dt
-            if delta.days < days:
-                return False
-        return True
+        try:
+            for line in find_remove_lines(diff):
+                dates = execute_shell("cd %s; git log -n 1 -S '%s' --pretty=format:%%ci%%n %s" % (self._dpath, line, fname))
+                if len(dates) == 0:
+                    continue
+                dt = datetime.datetime.strptime(' '.join(dates[0].split(' ')[:-1]), "%Y-%m-%d %H:%M:%S")
+                delta = datetime.datetime.now() - dt
+                if delta.days < days:
+                    return False
+            return True
+        except:
+            return True
+
