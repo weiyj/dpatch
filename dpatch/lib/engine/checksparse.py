@@ -164,6 +164,8 @@ class CheckSparseEngine(PatchEngine):
             _nr = a[1]
             _sym = re.sub("'", "", a[-1].strip().split(' ')[1])
             _inlines = self._execute_shell("sed -n '%s,1p' %s" % (_nr, self._get_build_path()))
+            if len(_inlines) < 1:
+                return False
             _line = _inlines[0]
         else:
             _line = line
@@ -244,7 +246,10 @@ class CheckSparseEngine(PatchEngine):
             return []
         _nr = int(a[1])
         _sym = re.sub("'", "", a[-1].strip().split(' ')[2])
-        line = self._execute_shell("sed -n '%d,1p' %s" % (_nr, self._get_build_path()))[0]
+	try:
+            line = self._execute_shell("sed -n '%d,1p' %s" % (_nr, self._get_build_path()))[0]
+        except:
+            return []
         if line.find(',') != -1:
             self._execute_shell("sed -i '%ds/\(\w\)%s, /\\1/' %s" % (_nr, _sym, self._get_build_path()))
             self._execute_shell("sed -i '%ds/, %s\(\w\)/\\1/' %s" % (_nr, _sym, self._get_build_path()))
@@ -351,21 +356,24 @@ class CheckSparseEngine(PatchEngine):
     def _modify_source_file(self):
         _rmlines = []
         self._includes = []
-        for line in self._diff:
-            if self._is_symbol_not_declared(line): 
-                self._fix_symbol_not_declared(line)
-            elif self._is_plain_integer_as_null(line):
-                self._fix_plain_integer_as_null(line)
-            elif self._is_unused_variable(line):
-                _rmlines.extend(self._fix_unused_variable(line))
-            elif self._is_non_ansi_function_declaration(line):
-                self._fix_non_ansi_function_declaration(line)
-            elif self._is_duplicate_symbol(line):
-                self._fix_duplicate_symbol(line)
-            elif self._is_dubious_bitwise_with_not(line):
-                self._fix_dubious_bitwise_with_not(line)
-        for _nr in sorted(_rmlines, reverse = True):
-            self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
+        try:
+            for line in self._diff:
+                if self._is_symbol_not_declared(line): 
+                    self._fix_symbol_not_declared(line)
+                elif self._is_plain_integer_as_null(line):
+                    self._fix_plain_integer_as_null(line)
+                elif self._is_unused_variable(line):
+                    _rmlines.extend(self._fix_unused_variable(line))
+                elif self._is_non_ansi_function_declaration(line):
+                    self._fix_non_ansi_function_declaration(line)
+                elif self._is_duplicate_symbol(line):
+                    self._fix_duplicate_symbol(line)
+                elif self._is_dubious_bitwise_with_not(line):
+                    self._fix_dubious_bitwise_with_not(line)
+            for _nr in sorted(_rmlines, reverse = True):
+                self._execute_shell("sed -i '%dd' %s" % (_nr, self._get_build_path()))
+        except:
+            return false
 
         if len(self._includes) != 0:
             _incs = self._execute_shell("/usr/bin/grep -nr '^[\\s]*#include\\s' %s" % self._get_build_path())
