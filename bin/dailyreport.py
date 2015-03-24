@@ -47,104 +47,108 @@ def checkreport(repo, rtag, flists):
         scount = 0
         test = dot(repo.dirname(), logger.logger, repo.builddir())
         for i in range(test.tokens()):
-            rtype = None
             try:
-                rtype = Type.objects.filter(id = test.get_type())[0]
-            except:
-                test.next_token()
-                continue
-            if rtype.status == False:
-                test.next_token()
-                continue
-
-            cmts = GitCommit.objects.filter(repo = repo, type = rtype)
-            if len(cmts) == 0:
-                cmt = GitCommit(repo = repo, type = rtype)
-                cmt.save()
-            else:
-                cmt = cmts[0]
-
-            rflists = flists
-            if repo.delta == False:
-                oldcommit = cmt.commit
-                if oldcommit != repo.commit:
-                    if git.is_linux_next():
-                        oldcommit = git.get_stable()
-                    rflists = git.get_changelist(oldcommit, repo.commit, None, True)
-                else:
-                    rflists = flists
-
-            logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
-
-            exceptfiles = []
-            for fn in ExceptFile.objects.filter(type = rtype):
-                exceptfiles.append(fn.file)
-
-            rcount = 0
-            for fname in rflists:
-                if is_source_file(fname) == False:
+                rtype = None
+                try:
+                    rtype = Type.objects.filter(id = test.get_type())[0]
+                except:
+                    test.next_token()
                     continue
-
-                if exceptfiles.count(fname) != 0:
+                if rtype.status == False:
+                    test.next_token()
                     continue
     
-                reports = Report.objects.filter(file = fname, type = rtype)
-                if not os.path.exists(os.path.join(repo.dirname(), fname)):
-                    for r in reports:
-                        if r.status in [STATUS_NEW, STATUS_PATCHED]:
-                            r.status = STATUS_REMOVED
-                            r.save()
-                    continue
-
-                test.set_filename(fname)
-                should_report = test.should_report()
-                if test.has_error():
-                    continue
-                if should_report is False:
-                    for r in reports:
-                        if r.status in [STATUS_NEW, STATUS_PATCHED]:
-                            if r.mergered == 0:
-                                r.status = STATUS_FIXED
+                cmts = GitCommit.objects.filter(repo = repo, type = rtype)
+                if len(cmts) == 0:
+                    cmt = GitCommit(repo = repo, type = rtype)
+                    cmt.save()
+                else:
+                    cmt = cmts[0]
+    
+                rflists = flists
+                if repo.delta == False:
+                    oldcommit = cmt.commit
+                    if oldcommit != repo.commit:
+                        if git.is_linux_next():
+                            oldcommit = git.get_stable()
+                        rflists = git.get_changelist(oldcommit, repo.commit, None, True)
+                    else:
+                        rflists = flists
+    
+                logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
+    
+                exceptfiles = []
+                for fn in ExceptFile.objects.filter(type = rtype):
+                    exceptfiles.append(fn.file)
+    
+                rcount = 0
+                for fname in rflists:
+                    if is_source_file(fname) == False:
+                        continue
+    
+                    if exceptfiles.count(fname) != 0:
+                        continue
+        
+                    reports = Report.objects.filter(file = fname, type = rtype)
+                    if not os.path.exists(os.path.join(repo.dirname(), fname)):
+                        for r in reports:
+                            if r.status in [STATUS_NEW, STATUS_PATCHED]:
+                                r.status = STATUS_REMOVED
                                 r.save()
-                            else:
-                                mreport = Report.objects.filter(id = r.mergered)
-                                if len(mreport) != 0:
-                                    if mreport[0].status in [STATUS_SENT]:
-                                        mreport[0].status = STATUS_ACCEPTED
-                                        r.status = STATUS_ACCEPTED
-                                    else:
-                                        mreport[0].status = STATUS_FIXED
-                                        r.status = STATUS_FIXED
-                                    mreport[0].save()
-                                else:
+                        continue
+    
+                    test.set_filename(fname)
+                    should_report = test.should_report()
+                    if test.has_error():
+                        continue
+                    if should_report is False:
+                        for r in reports:
+                            if r.status in [STATUS_NEW, STATUS_PATCHED]:
+                                if r.mergered == 0:
                                     r.status = STATUS_FIXED
+                                    r.save()
+                                else:
+                                    mreport = Report.objects.filter(id = r.mergered)
+                                    if len(mreport) != 0:
+                                        if mreport[0].status in [STATUS_SENT]:
+                                            mreport[0].status = STATUS_ACCEPTED
+                                            r.status = STATUS_ACCEPTED
+                                        else:
+                                            mreport[0].status = STATUS_FIXED
+                                            r.status = STATUS_FIXED
+                                        mreport[0].save()
+                                    else:
+                                        r.status = STATUS_FIXED
+                                    r.save()
+                            elif r.status in [STATUS_SENT]:
+                                r.status = STATUS_ACCEPTED
                                 r.save()
-                        elif r.status in [STATUS_SENT]:
-                            r.status = STATUS_ACCEPTED
-                            r.save()
-                    continue
+                        continue
+    
+                    lcount = 0
+                    for r in reports:
+                        if r.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
+                            lcount += 1
+    
+                    if lcount > 0:
+                        continue
+    
+                    text = test.get_report()
+                    report = Report(tag = rtag, file = fname, type = rtype, 
+                                    status = STATUS_NEW, reportlog = '\n'.join(text))
+                    report.title = rtype.ptitle
+                    report.desc = rtype.pdesc
+                    report.save()
+                    rcount += 1
+                    scount += 1
+    
+                cmt.commit = repo.commit
+                cmt.save()
+                rtype.commit = repo.commit
+                rtype.save()
 
-                lcount = 0
-                for r in reports:
-                    if r.status in [STATUS_NEW, STATUS_PATCHED, STATUS_SENT]:
-                        lcount += 1
-
-                if lcount > 0:
-                    continue
-
-                text = test.get_report()
-                report = Report(tag = rtag, file = fname, type = rtype, 
-                                status = STATUS_NEW, reportlog = '\n'.join(text))
-                report.title = rtype.ptitle
-                report.desc = rtype.pdesc
-                report.save()
-                rcount += 1
-                scount += 1
-
-            cmt.commit = repo.commit
-            cmt.save()
-            rtype.commit = repo.commit
-            rtype.save()
+            except:
+                logger.info('Scan ERROR: type %d' % rtype.id)
 
             logger.info('End scan type %d, report %d' % (rtype.id, rcount))
             logs.logs = logger.getlog()
@@ -180,7 +184,10 @@ def main(args):
         rtag.save()
 
         print "Check Report for repo %s" % os.path.basename(repo.url)
-        rcount = checkreport(repo, rtag, flists)
+        try:
+            rcount = checkreport(repo, rtag, flists)
+        except:
+            pass
 
         rtag.rptotal += rcount
         rtag.running = False

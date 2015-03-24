@@ -59,159 +59,163 @@ def check_patch(repo, git, rtag, flists, commit):
         scount = 0
         test = dot(repo.dirname(), logger.logger, repo.builddir())
         for i in range(test.tokens()):
-            rtype = None
             try:
-                rtype = Type.objects.filter(id = test.get_type())[0]
-            except:
-                test.next_token()
-                continue
-
-            if rtype.status == False:
-                test.next_token()
-                continue
-
-            if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0 and not git.is_linux_next():
-                test.next_token()
-                continue
-
-            if rtype.type == 0 and sche_weekend_enable is True and len(flists) > sche_weekend_limit and weekday < 5:
-                # if we does not have a patch for this cleanup type in
-                # sche_weekend_limit days, schedule scan only on weekend
-                stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
-                if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
-                    logger.info('Delay scan type %d to weekend' % test.get_type())
+                rtype = None
+                try:
+                    rtype = Type.objects.filter(id = test.get_type())[0]
+                except:
                     test.next_token()
                     continue
-
-            cmts = GitCommit.objects.filter(repo = repo, type = rtype)
-            if len(cmts) == 0:
-                cmt = GitCommit(repo = repo, type = rtype)
-                cmt.save()
-            else:
-                cmt = cmts[0]
-
-            if cmt.commit == commit:
-                test.next_token()
-                continue
-
-            if repo.delta == False:
-                oldcommit = cmt.commit
-                if oldcommit != repo.commit:
-                    if git.is_linux_next():
-                        oldcommit = git.get_stable()
-                    rflists = git.get_changelist(oldcommit, commit, None, True)
+    
+                if rtype.status == False:
+                    test.next_token()
+                    continue
+    
+                if (rtype.flags & TYPE_SCAN_NEXT_ONLY) != 0 and not git.is_linux_next():
+                    test.next_token()
+                    continue
+    
+                if rtype.type == 0 and sche_weekend_enable is True and len(flists) > sche_weekend_limit and weekday < 5:
+                    # if we does not have a patch for this cleanup type in
+                    # sche_weekend_limit days, schedule scan only on weekend
+                    stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
+                    if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
+                        logger.info('Delay scan type %d to weekend' % test.get_type())
+                        test.next_token()
+                        continue
+    
+                cmts = GitCommit.objects.filter(repo = repo, type = rtype)
+                if len(cmts) == 0:
+                    cmt = GitCommit(repo = repo, type = rtype)
+                    cmt.save()
+                else:
+                    cmt = cmts[0]
+    
+                if cmt.commit == commit:
+                    test.next_token()
+                    continue
+    
+                if repo.delta == False:
+                    oldcommit = cmt.commit
+                    if oldcommit != repo.commit:
+                        if git.is_linux_next():
+                            oldcommit = git.get_stable()
+                        rflists = git.get_changelist(oldcommit, commit, None, True)
+                    else:
+                        rflists = flists
                 else:
                     rflists = flists
-            else:
-                rflists = flists
-
-            if rtype.type == 0 and sche_weekend_enable is True and len(rflists) > sche_weekend_limit and weekday < 5:
-                stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
-                if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
-                    logger.info('Delay scan type %d to weekend' % test.get_type())
-                    test.next_token()
-                    continue
-
-            logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
-
-            exceptfiles = []
-            for fn in ExceptFile.objects.filter(type = rtype):
-                exceptfiles.append(fn.file)
-
-            pcount = 0
-            for sfile in rflists:
-                if not is_source_file(sfile):
-                    continue
-
-                if exceptfiles.count(sfile) != 0:
-                    logger.logger.info('skip except file %s, type %d' % (sfile, rtype.id))
-                    continue
-
-                # treat patch marked with Rejected as except file
-                if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_REJECTED).count() > 0:
-                    continue
-
-                # treat patch marked with Applied and commit is '' as EXISTS patch
-                if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_ACCEPTED, commit = '').count() > 0:
-                    continue
-
-                patchs = Patch.objects.filter(file = sfile, type = rtype)
-                rpatchs = []
-                for p in patchs:
-                    if not p.status in [STATUS_NEW, STATUS_SENT, STATUS_MARKED]:
+    
+                if rtype.type == 0 and sche_weekend_enable is True and len(rflists) > sche_weekend_limit and weekday < 5:
+                    stime = datetime.datetime.now() - datetime.timedelta(days=sche_weekend_delta)
+                    if Patch.objects.filter(type = rtype, date__gte=stime).count() == 0:
+                        logger.info('Delay scan type %d to weekend' % test.get_type())
+                        test.next_token()
                         continue
-                    rpatchs.append(p)
-
-                test.set_filename(sfile)
-                # source file maybe removed
-                if not os.path.exists(test._get_file_path()):
-                    for p in rpatchs:
-                        p.status = STATUS_REMOVED
-                        p.save()
-                    continue
-
-                # if the same file has a patch for this type, ignore it
-                # because the last patch does not accepted
-                should_patch = test.should_patch()
-                if test.has_error():
-                    continue
-                if len(rpatchs) != 0 and should_patch == False:
-                    for p in rpatchs:
-                        if p.status == STATUS_SENT:
-                            p.status = STATUS_ACCEPTED
-                        elif p.mergered != 0:
-                            mpatch = Patch.objects.filter(id = p.mergered)
-                            if len(mpatch) != 0:
-                                if mpatch[0].status == STATUS_SENT:
-                                    mpatch[0].status = STATUS_ACCEPTED
-                                    p.status = STATUS_ACCEPTED
+    
+                logger.info('Starting scan type %d, total %d files' % (test.get_type(), len(rflists)))
+    
+                exceptfiles = []
+                for fn in ExceptFile.objects.filter(type = rtype):
+                    exceptfiles.append(fn.file)
+    
+                pcount = 0
+                for sfile in rflists:
+                    if not is_source_file(sfile):
+                        continue
+    
+                    if exceptfiles.count(sfile) != 0:
+                        logger.logger.info('skip except file %s, type %d' % (sfile, rtype.id))
+                        continue
+    
+                    # treat patch marked with Rejected as except file
+                    if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_REJECTED).count() > 0:
+                        continue
+    
+                    # treat patch marked with Applied and commit is '' as EXISTS patch
+                    if Patch.objects.filter(file = sfile, type = rtype, status = STATUS_ACCEPTED, commit = '').count() > 0:
+                        continue
+    
+                    patchs = Patch.objects.filter(file = sfile, type = rtype)
+                    rpatchs = []
+                    for p in patchs:
+                        if not p.status in [STATUS_NEW, STATUS_SENT, STATUS_MARKED]:
+                            continue
+                        rpatchs.append(p)
+    
+                    test.set_filename(sfile)
+                    # source file maybe removed
+                    if not os.path.exists(test._get_file_path()):
+                        for p in rpatchs:
+                            p.status = STATUS_REMOVED
+                            p.save()
+                        continue
+    
+                    # if the same file has a patch for this type, ignore it
+                    # because the last patch does not accepted
+                    should_patch = test.should_patch()
+                    if test.has_error():
+                        continue
+                    if len(rpatchs) != 0 and should_patch == False:
+                        for p in rpatchs:
+                            if p.status == STATUS_SENT:
+                                p.status = STATUS_ACCEPTED
+                            elif p.mergered != 0:
+                                mpatch = Patch.objects.filter(id = p.mergered)
+                                if len(mpatch) != 0:
+                                    if mpatch[0].status == STATUS_SENT:
+                                        mpatch[0].status = STATUS_ACCEPTED
+                                        p.status = STATUS_ACCEPTED
+                                    else:
+                                        mpatch[0].status = STATUS_FIXED
+                                        p.status = STATUS_FIXED
+                                    mpatch[0].save()
                                 else:
-                                    mpatch[0].status = STATUS_FIXED
                                     p.status = STATUS_FIXED
-                                mpatch[0].save()
                             else:
                                 p.status = STATUS_FIXED
-                        else:
-                            p.status = STATUS_FIXED
-                        p.save()
-
-                if should_patch == True and len(rpatchs) == 0:
-                    text = test.get_patch()
-
-                    if (rtype.flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
-                        if git.is_change_obsoleted(sfile, text) is True:
-                            continue
-                    elif rtype.id > 3000 and rtype.type == 0 and sche_obsolete_skip is True:
-                        if git.is_change_obsoleted(sfile, text) is True:
-                            logger.logger.info('skip obsoleted file %s, type %d' % (sfile, rtype.id))
-                            continue
-
-                    patch = Patch(tag = rtag, file = sfile, type = rtype, 
-                                  status = STATUS_NEW, diff = text)
-                    patch.save()
-
-                    # format patch and cache to patch
-                    user = patch.username()
-                    email = patch.email()
-                    desc = test.get_patch_description()
-                    title = test.get_patch_title()
-                    if desc is None:
-                        desc = rtype.pdesc
-                    if title is None:
-                        title = rtype.ptitle
-                    formater = PatchFormater(repo.dirname(), sfile, user, email, title, desc, text)
-                    patch.content = formater.format_patch()
-                    patch.title = formater.format_title()
-                    patch.desc = formater.format_desc()
-                    patch.emails = formater.get_mail_list()
-                    patch.module = formater.get_module()
-                    patch.save()
-
-                    scount += 1
-                    pcount += 1
-
-            cmt.commit = commit
-            cmt.save()
+                            p.save()
+    
+                    if should_patch == True and len(rpatchs) == 0:
+                        text = test.get_patch()
+    
+                        if (rtype.flags & TYPE_CHANGE_DATE_CHECK) == TYPE_CHANGE_DATE_CHECK:
+                            if git.is_change_obsoleted(sfile, text) is True:
+                                continue
+                        elif rtype.id > 3000 and rtype.type == 0 and sche_obsolete_skip is True:
+                            if git.is_change_obsoleted(sfile, text) is True:
+                                logger.logger.info('skip obsoleted file %s, type %d' % (sfile, rtype.id))
+                                continue
+    
+                        patch = Patch(tag = rtag, file = sfile, type = rtype, 
+                                      status = STATUS_NEW, diff = text)
+                        patch.save()
+    
+                        # format patch and cache to patch
+                        user = patch.username()
+                        email = patch.email()
+                        desc = test.get_patch_description()
+                        title = test.get_patch_title()
+                        if desc is None:
+                            desc = rtype.pdesc
+                        if title is None:
+                            title = rtype.ptitle
+                        formater = PatchFormater(repo.dirname(), sfile, user, email, title, desc, text)
+                        patch.content = formater.format_patch()
+                        patch.title = formater.format_title()
+                        patch.desc = formater.format_desc()
+                        patch.emails = formater.get_mail_list()
+                        patch.module = formater.get_module()
+                        patch.save()
+    
+                        scount += 1
+                        pcount += 1
+    
+                cmt.commit = commit
+                cmt.save()
+    
+            except:
+                logger.info('Scan ERROR: type %d' % test.get_type())
 
             logger.info('End scan type %d, patch %d' % (test.get_type(), pcount))
             logs.logs = logger.getlog()
@@ -301,7 +305,10 @@ def main(args):
         rtag.save()
 
         print "Check for repo %s" % os.path.basename(repo.url)
-        pcount = check_patch(repo, git, rtag, flists, commit)
+        try:
+            pcount = check_patch(repo, git, rtag, flists, commit)
+        except:
+            pass
 
         rtag.total += pcount
         rtag.flist = ','.join(flists)
