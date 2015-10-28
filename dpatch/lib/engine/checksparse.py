@@ -136,6 +136,15 @@ class CheckSparseEngine(PatchEngine):
             return True
         return False
 
+    def _is_fake_warning(self, line):
+	try:
+            __sfname = os.path.basename(self._fname)
+	    if __sfname != os.path.basename(line.split(':')[0]):
+                return True
+	except:
+            return True
+        return False
+
     def _is_symbol_function(self, nr, sym):
         _lines = self._execute_shell("sed -n '%s,1p' %s" % (nr, self._get_build_path()))
         _line = _lines[0]
@@ -152,6 +161,10 @@ class CheckSparseEngine(PatchEngine):
         return True
 
     def _is_symbol_not_declared(self, line):
+        if re.search('arch/x86/purgatory/purgatory.c', line):
+            return True
+        if re.search('arch/x86/purgatory/../boot/string.c', line):
+            return True
         if re.search("symbol '\w+' was not declared", line):
             return True
         return False
@@ -358,6 +371,8 @@ class CheckSparseEngine(PatchEngine):
         self._includes = []
         try:
             for line in self._diff:
+                if self._is_fake_warning(line):
+                    continue
                 if self._is_symbol_not_declared(line): 
                     self._fix_symbol_not_declared(line)
                 elif self._is_plain_integer_as_null(line):
@@ -425,6 +440,8 @@ class CheckSparseEngine(PatchEngine):
             # module build does not exists for this one?
             if not _modresult is None and not line in _modresult:
                 self._recheck = True
+            if self._is_fake_warning(line):
+                continue
             if self._is_symbol_not_declared(line):
                 if not self._is_fake_symbol_not_declared(line):
                     return True
