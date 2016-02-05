@@ -21,6 +21,7 @@
 
 import os
 import sys
+import django
 
 from time import localtime, strftime
 
@@ -198,4 +199,5 @@ def main(args):
     return 0
 
 if __name__ == '__main__':
+    django.setup()
     sys.exit(main(sys.argv))

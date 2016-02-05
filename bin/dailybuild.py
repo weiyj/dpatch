@@ -22,6 +22,7 @@
 import os
 import sys
 import subprocess
+import django
 
 from time import localtime, strftime
 
@@ -412,4 +413,5 @@ def main(args):
         os.system("cd %s; git reset --hard %s" % (repo.builddir(), commit))
 
 if __name__ == '__main__':
+    django.setup()
     sys.exit(main(sys.argv))

@@ -22,6 +22,7 @@
 import os
 import sys
 import datetime
+import django
 
 from time import localtime, strftime
 
@@ -234,6 +235,8 @@ def check_patch(repo, git, rtag, flists, commit):
     return count
 
 def main(args):
+    django.setup()
+
     for repo in GitRepo.objects.all():
         # repo is disabled
         if repo.status == False:
