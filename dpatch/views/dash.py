@@ -21,11 +21,12 @@
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
-from django.utils import simplejson
 from django.template import RequestContext
 
 from dpatch.models import GitRepo, GitTag, Type, Patch, Report, ScanLog
 from dpatch.lib.common.status import STATUS_ACCEPTED
+
+import simplejson
 
 def patch_status(request, repo_id):
     context = RequestContext(request)

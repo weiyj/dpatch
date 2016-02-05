@@ -25,6 +25,7 @@ import tempfile
 import subprocess
 import urllib
 import urlparse
+import simplejson
 
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -32,7 +33,6 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
-from django.utils import simplejson
 from time import gmtime, strftime
 
 from dpatch.lib.common.cocciformater import CocciFormater
@@ -381,7 +381,7 @@ def semantic_export(request):
         rewrite_engine(cocci[0])
         files.append(cocci[0].fullpath())
 
-    response = HttpResponse(mimetype='application/x-gzip')
+    response = HttpResponse(content_type='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=cocci-semantics-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
@@ -400,7 +400,7 @@ def semantic_export_all(request):
         rewrite_engine(cocci)
         files.append(cocci.fullpath())
 
-    response = HttpResponse(mimetype='application/x-gzip')
+    response = HttpResponse(content_type='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=cocci-semantics-all-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
@@ -922,7 +922,7 @@ def report_semantic_export(request):
         rewrite_report_engine(cocci[0])
         files.append(cocci[0].fullpath())
 
-    response = HttpResponse(mimetype='application/x-gzip')
+    response = HttpResponse(content_type='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=cocci-reports-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 
@@ -941,7 +941,7 @@ def report_semantic_export_all(request):
         rewrite_report_engine(cocci)
         files.append(cocci.fullpath())
 
-    response = HttpResponse(mimetype='application/x-gzip')
+    response = HttpResponse(content_type='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename=cocci-reports-all-%s.tar.gz' % strftime("%Y%m%d%H%M%S", gmtime())
     archive = tarfile.open(fileobj=response, mode='w:gz')
 

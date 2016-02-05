@@ -28,11 +28,12 @@ from time import gmtime, strftime
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.http import HttpResponse
-from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
 from dpatch.models import GitRepo, Event, SysConfig
+
+import simplejson
 
 def logevent(event, status = False):
     evt = Event(event = event, status = status)

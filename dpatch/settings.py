@@ -7,7 +7,7 @@ TEMPLATE_DEBUG = DEBUG
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 PACKAGE_DIR = os.path.dirname(ROOT_DIR)
 BIN_DIR = os.path.join(PACKAGE_DIR, 'bin')
-DATA_DIR = os.path.dirname(ROOT_DIR)
+DATA_DIR = '/var/lib/dpatch'
 
 ADMINS = (
     ('Wei Yongjun', 'weiyj.lk@gmail.com'),
@@ -128,7 +128,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    os.path.join(ROOT_DIR, 'htdocs/pages/')
+    os.path.join(ROOT_DIR, 'htdocs/pages/'),
 )
 
 INSTALLED_APPS = (

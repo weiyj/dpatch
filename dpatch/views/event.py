@@ -19,9 +19,10 @@
 # along with Patchwork; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import simplejson
+
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
-from django.utils import simplejson
 from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 
